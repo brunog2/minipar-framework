@@ -21,6 +21,13 @@ Código MiniPar (Frontend)
   → Resposta + log em PostgreSQL
 ```
 
+## Diagramas de arquitetura
+
+Diagramas Mermaid em [`docs/diagrams/`](docs/diagrams/):
+
+- [architecture.mmd](docs/diagrams/architecture.mmd) — componentes, LPS, deploy e reuso
+- [pipeline-sequence.mmd](docs/diagrams/pipeline-sequence.mmd) — sequência `POST /api/v1/process`
+
 ## Estrutura do monorepo
 
 ```
@@ -49,6 +56,17 @@ docker compose up --build
 - API Gateway: http://localhost:3000
 - Health: http://localhost:3000/health
 - PostgreSQL: `localhost:5432` (user/pass/db: `minipar`)
+
+## Deploy
+
+### Frontend (Vercel)
+
+Interface web em produção: **[https://minipar-framework.vercel.app/](https://minipar-framework.vercel.app/)**
+
+| Ambiente | URL |
+|----------|-----|
+| Produção (Vercel) | https://minipar-framework.vercel.app/ |
+| Docker / local | http://localhost:4200 |
 
 ## Desenvolvimento local
 

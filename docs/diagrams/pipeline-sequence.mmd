@@ -1,0 +1,35 @@
+%% Fluxo de uma requisição POST /api/v1/process (modo http)
+%% Complementa architecture.mmd — visão temporal do pipeline.
+
+sequenceDiagram
+  autonumber
+  actor U as Usuário
+  participant FE as Frontend Angular
+  participant GW as API Gateway
+  participant PG as PostgreSQL
+  participant P as ms-front-end
+  participant S as ms-semantic
+  participant C as ms-parallel-coord
+  participant B as Back-end LPS
+
+  U->>FE: Código MiniPar + variabilidade + modo
+  FE->>GW: POST /api/v1/process
+  GW->>PG: INSERT compilation_history (pending)
+
+  GW->>P: POST /parse { sourceCode }
+  P-->>GW: AST JSON
+
+  GW->>S: POST /analyze { ast }
+  S-->>GW: AST anotada + symbolTable
+
+  alt executionMode = DISTRIBUTED_SOCKETS
+    GW->>C: POST /coordinate { ast, symbolTable, hosts }
+    C-->>GW: resultados agregados (sockets)
+  end
+
+  GW->>B: POST /execute ou /generate { ast, symbolTable, target }
+  B-->>GW: output (+ código gerado, se compilador)
+
+  GW->>PG: UPDATE status, output, error
+  GW-->>FE: ProcessResponse (AST, steps, saída)
+  FE-->>U: Editor + painel de resultado

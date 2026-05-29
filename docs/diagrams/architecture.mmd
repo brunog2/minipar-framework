@@ -1,0 +1,76 @@
+%% MiniPar Framework 2026.1 — Arquitetura proposta (microsserviços + LPS)
+%% Renderizar: Mermaid Live Editor, VS Code (ext. Mermaid), ou exportar SVG/PNG para o relatório.
+
+flowchart TB
+  classDef client fill:#e8f4fc,stroke:#1a73e8,color:#111
+  classDef ui fill:#fff3e0,stroke:#e65100,color:#111
+  classDef orch fill:#f3e5f5,stroke:#6a1b9a,color:#111
+  classDef data fill:#e8f5e9,stroke:#2e7d32,color:#111
+  classDef ms fill:#fce4ec,stroke:#c2185b,color:#111
+  classDef lps fill:#fff8e1,stroke:#f9a825,color:#111
+  classDef dist fill:#eceff1,stroke:#455a64,color:#111
+  classDef reuse fill:#efebe9,stroke:#5d4037,color:#111,stroke-dasharray: 5 5
+
+  User(["Usuário / Avaliador"]):::client
+
+  subgraph Presentation["Camada de apresentação"]
+    direction TB
+    FE_DOCKER["Frontend Angular + nginx<br/>Docker :4200<br/>proxy /api → gateway"]:::ui
+    FE_VERCEL["Frontend Angular<br/>Vercel — produção<br/>minipar-framework.vercel.app"]:::ui
+  end
+
+  subgraph Orchestration["Orquestração central"]
+    GW["API Gateway — NestJS<br/>POST /api/v1/process · GET /health<br/>:3000<br/>PIPELINE_MODE: mock | http"]:::orch
+  end
+
+  subgraph Persistence["Persistência"]
+    PG[("PostgreSQL<br/>compilation_history<br/>:5432")]:::data
+  end
+
+  subgraph Analysis["Microsserviços de análise (sempre no pipeline)"]
+    direction LR
+    MS_FE["ms-front-end :3001<br/>POST /parse<br/>Léxico + Sintático → AST JSON"]:::ms
+    MS_SEM["ms-semantic :3002<br/>POST /analyze<br/>Semântica + tabela de símbolos"]:::ms
+    MS_FE --> MS_SEM
+  end
+
+  subgraph LPS["Back-ends — ponto de variação LPS (um por requisição)"]
+    direction TB
+    MS_INT["ms-interpreter :3003<br/>POST /execute<br/>Variante: Interpretador"]:::lps
+    MS_C["ms-codegen-c :3004<br/>POST /generate<br/>Variantes: C · C++ · gcc -O2"]:::lps
+    MS_RUST["ms-codegen-rust :3005<br/>POST /generate<br/>Variante: Rust"]:::lps
+    MS_ARM["ms-codegen-arm :3007<br/>POST /generate<br/>Variante: Assembly ARMv7"]:::lps
+  end
+
+  subgraph Distributed["Execução distribuída (quando executionMode = DISTRIBUTED_SOCKETS)"]
+    MS_COORD["ms-parallel-coord :3006<br/>POST /coordinate"]:::dist
+    W1["Máquina 1 — QuickSort"]:::dist
+    W2["Máquina 2 — Matrizes"]:::dist
+    W3["Máquina 3 — Fatorial"]:::dist
+    MS_COORD -->|sockets| W1
+    MS_COORD -->|sockets| W2
+    MS_COORD -->|sockets| W3
+  end
+
+  subgraph Reuse["Reuso sistemático (code_references/)"]
+    REF_JAVA["cl-minipar (Java)<br/>BNF OO · AST"]:::reuse
+    REF_PY["projeto_compiladores (Python)<br/>Codegen C · ARM"]:::reuse
+  end
+
+  User --> FE_DOCKER
+  User --> FE_VERCEL
+  FE_DOCKER -->|"HTTP POST /api/v1/process"| GW
+  FE_VERCEL -.->|"apiUrl / rewrites (produção)"| GW
+
+  GW -->|"grava histórico"| PG
+  GW --> MS_FE
+  MS_SEM --> MS_INT
+  MS_SEM --> MS_C
+  MS_SEM --> MS_RUST
+  MS_SEM --> MS_ARM
+  MS_SEM -->|"antes do back-end"| MS_COORD
+
+  REF_JAVA -.->|"reuso gramática / AST"| MS_FE
+  REF_JAVA -.-> MS_SEM
+  REF_PY -.-> MS_C
+  REF_PY -.-> MS_ARM
