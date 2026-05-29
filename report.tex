@@ -1,0 +1,155 @@
+\documentclass[12pt]{article}
+
+% --- PACOTES BÁSICOS ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{xcolor}
+\usepackage{indentfirst}
+\usepackage{listings}
+\usepackage{hyperref}
+
+\geometry{a4paper, left=3cm, top=3cm, right=2cm, bottom=2cm}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue,
+    citecolor=blue
+}
+
+% --- CONFIGURAÇÃO DE CÓDIGO ---
+\lstset{
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue},
+    stringstyle=\color{red},
+    commentstyle=\color{green!60!black},
+    breaklines=true,
+    frame=single,
+    captionpos=b
+}
+
+\newcommand{\placeholder}[1]{\textit{[#1]}}
+
+\begin{document}
+
+% --- CAPA ---
+\begin{titlepage}
+    \begin{center}
+        \IfFileExists{logo_ufal.png}{%
+            \includegraphics[width=0.2\textwidth]{logo_ufal.png}\\[0.5cm]
+        }{%
+            \vspace*{1.5cm}
+        }
+        {\large \textbf{UNIVERSIDADE FEDERAL DE ALAGOAS}} \\
+        {\large \textbf{INSTITUTO DE COMPUTAÇÃO}} \\
+        {\large \textbf{CIÊNCIA DA COMPUTAÇÃO}} \\
+        \vfill
+        {\Large \textbf{RELATÓRIO TÉCNICO FINAL INTEGRADO}} \\
+        {\large \textbf{Framework para Compiladores e Interpretadores Usando Microsserviços}} \\
+        \vfill
+        \textbf{Equipe:}\\
+        Bruno (Responsável pelas 3 disciplinas) \\
+        Alan, Karlisson e Maria \\
+        \vfill
+        \textbf{Professor Orientador:}\\
+        Dr.\ Arturo Hernandez Dominguez \\
+        \vfill
+        Maceió, AL \\
+        2026
+    \end{center}
+\end{titlepage}
+
+% --- SUMÁRIO ---
+\tableofcontents
+\newpage
+
+% --- 1. INTRODUÇÃO ---
+\section{Introdução}
+\subsection{Enunciado do Projeto}
+Descrição do framework de microsserviços para a linguagem MiniPar 2026.1.
+\subsection{Objetivos}
+Evolução da linguagem para OO, paralelismo real e arquitetura distribuída.
+
+% --- 2. METODOLOGIA ÁGIL ---
+\section{Metodologia Ágil e Planejamento}
+\subsection{Scrum e Sprints}
+Descrição de como a equipe se organizou para o desenvolvimento.
+\subsection{Backlogs}
+\begin{itemize}
+    \item \textbf{Product Backlog:} Funcionalidades do framework.
+    \item \textbf{Sprint Backlog:} Tarefas específicas de cada membro da equipe.
+\end{itemize}
+
+% --- 3. ARQUITETURA DO SISTEMA (LPS e MICROSSERVIÇOS) ---
+\section{Arquitetura do Sistema}
+\subsection{Arquitetura de Microsserviços}
+Diagrama e descrição da separação dos serviços e do \texttt{api-gateway} como orquestrador central.
+\subsection{Gestão da Variabilidade (LPS)}
+Diagrama de Features e identificação de variantes (Compilador vs.\ Interpretador).
+
+% --- 4. MODELAGEM UML ---
+\section{Modelagem UML}
+\subsection{Diagrama de Casos de Uso}
+Interação do usuário com o framework.
+\subsection{Arquitetura de Componentes}
+Modelagem dos componentes independentes (Lexer, Parser, Semântico).
+\subsection{Diagrama de Classes}
+Estrutura interna das classes para suporte a Orientação a Objetos.
+
+% --- 5. ANÁLISE DE COMPILADORES ---
+\section{Fases do Compilador MiniPar 2026.1}
+\subsection{Gramática BNF}
+Apresentação da gramática OO baseada no trabalho de Eduardo Maciel (2025.1) e suas expansões.
+\subsection{Pseudocódigos}
+Inserir aqui a lógica dos analisadores:
+\begin{itemize}
+    \item \textbf{Analisador Léxico:}
+    \item \textbf{Analisador Sintático e AST:}
+    \item \textbf{Analisador Semântico e Tabela de Símbolos:}
+\end{itemize}
+
+% --- 6. REUSO DE SOFTWARE ---
+\section{Técnicas de Reuso}
+\subsection{Padrão Template Method}
+Descrição do esqueleto do algoritmo de tradução e os hotspots utilizados para as variabilidades (C, Rust, Assembly).
+\subsection{Componentes Reutilizados}
+Detalhamento do reuso das implementações do MiniPar 2025.1.
+
+% --- 7. IMPLEMENTAÇÃO E TECNOLOGIAS ---
+\section{Implementação}
+\subsection{Estrutura do Monorepo}
+O projeto \texttt{minipar-framework} organiza as aplicações em pastas genéricas:
+\texttt{frontend}, \texttt{api-gateway}, \texttt{database} e \texttt{microservices/}.
+\subsection{Tecnologias Utilizadas}
+Interface web, gateway de API, microsserviços de compilação, PostgreSQL e Docker Compose.
+\subsection{API Gateway e Microsserviços}
+Especificação documentada das rotas e portas de cada serviço (ver pasta \texttt{microservices/}).
+
+% --- 8. TESTES E RESULTADOS ---
+\section{Testes e Resultados}
+\subsection{Teste de Real Paralelismo (3 Computadores)}
+Exibição da execução coordenada via sockets do Quicksort, Multiplicação de Matrizes e Fatorial.
+\subsection{Simulação de Fractal}
+Apresentação da matriz de caracteres gerada pelo código MiniPar OO.
+
+% --- 9. CONCLUSÃO E LINKS ---
+\section{Conclusão}
+\subsection{Link para o Repositório (GitHub)}
+\placeholder{inserir URL do repositório}
+\subsection{Link para o Vídeo de Apresentação}
+\placeholder{inserir URL do vídeo}
+
+% --- 10. REFERÊNCIAS ---
+\begin{thebibliography}{9}
+\bibitem{maciel2025}
+Maciel, E.\ MiniPar 2025.1 --- interpretador orientado a objetos.
+\bibitem{rego2025}
+Rego, H.\ Projeto compiladores MiniPar --- geradores de código C e ARM.
+\bibitem{minipar2026}
+Especificação MiniPar 2026.1 --- framework de microsserviços (documento interno da disciplina).
+\end{thebibliography}
+
+\end{document}

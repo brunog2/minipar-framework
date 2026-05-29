@@ -1,0 +1,123 @@
+<div class="shell">
+  <header class="shell__header">
+    <mat-toolbar class="toolbar">
+      <div class="toolbar__brand">
+        <mat-icon class="toolbar__logo" aria-hidden="true">terminal</mat-icon>
+        <div class="toolbar__titles">
+          <h1>{{ meta.title }} <span class="toolbar__version">{{ meta.version }}</span></h1>
+        </div>
+      </div>
+
+      <span class="toolbar__spacer"></span>
+
+      <div class="toolbar__actions">
+        <mat-chip-set aria-label="Informações do projeto">
+          <mat-chip>{{ meta.institution }}</mat-chip>
+        </mat-chip-set>
+
+        <button
+          mat-icon-button
+          type="button"
+          matTooltip="Limpar painel de saída"
+          aria-label="Limpar saída"
+          (click)="clearOutput()"
+        >
+          <mat-icon>cleaning_services</mat-icon>
+        </button>
+
+        <a
+          mat-icon-button
+          [href]="repositoryUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          matTooltip="Abrir repositório no GitHub"
+          aria-label="Repositório no GitHub"
+        >
+          <mat-icon>code</mat-icon>
+        </a>
+
+        <mat-slide-toggle
+          class="theme-toggle"
+          [checked]="themeService.isDark()"
+          (change)="onThemeToggle($event.checked)"
+          matTooltip="Alternar tema claro / escuro"
+        >
+          <mat-icon aria-hidden="true">{{ themeService.isDark() ? 'dark_mode' : 'light_mode' }}</mat-icon>
+          <span class="theme-toggle__label">{{ themeService.isDark() ? 'Escuro' : 'Claro' }}</span>
+        </mat-slide-toggle>
+      </div>
+    </mat-toolbar>
+  </header>
+
+  <main class="shell__main workspace">
+    <section class="workspace__editor-panel" aria-label="Editor de código MiniPar">
+      <mat-card class="editor-card">
+        <mat-card-header>
+          <mat-card-title>Código-fonte</mat-card-title>
+          <mat-card-subtitle>MiniPar 2026.1 — orientação a objetos</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <app-code-editor />
+        </mat-card-content>
+      </mat-card>
+    </section>
+
+    <aside class="workspace__sidebar" aria-label="Configuração de variabilidade">
+      <app-feature-panel
+        [targetVariability]="targetVariability()"
+        [executionMode]="executionMode()"
+        [loading]="loading()"
+        (targetChange)="targetVariability.set($event)"
+        (executionChange)="executionMode.set($event)"
+        (processClick)="process()"
+      />
+    </aside>
+
+    <section class="workspace__output-panel" aria-label="Resultado do processamento">
+      <app-output-panel [result]="result()" [errorMessage]="httpError()" />
+    </section>
+  </main>
+
+  <footer class="shell__footer app-footer">
+    <div class="app-footer__grid">
+      <section class="app-footer__block">
+        <h2>Disciplinas</h2>
+        <ul>
+          @for (discipline of meta.disciplines; track discipline) {
+            <li>{{ discipline }}</li>
+          }
+        </ul>
+      </section>
+
+      <mat-divider [vertical]="true" class="app-footer__divider" />
+
+      <section class="app-footer__block">
+        <h2>Orientação académica</h2>
+        <p class="app-footer__highlight">{{ meta.professor }}</p>
+        <p>{{ meta.institution }}</p>
+        <p>{{ meta.course }}</p>
+      </section>
+
+      <mat-divider [vertical]="true" class="app-footer__divider" />
+
+      <section class="app-footer__block app-footer__block--links">
+        <h2>Projeto</h2>
+        <p>Equipe: {{ meta.team }}</p>
+        <a
+          mat-stroked-button
+          color="primary"
+          [href]="repositoryUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <mat-icon>open_in_new</mat-icon>
+          Repositório no GitHub
+        </a>
+      </section>
+    </div>
+
+    <p class="app-footer__copy">
+      {{ meta.title }} {{ meta.version }} · {{ meta.year }} · Relatório integrado (Compiladores, Reuso e LPS)
+    </p>
+  </footer>
+</div>

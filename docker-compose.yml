@@ -1,0 +1,49 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: minipar-postgres
+    environment:
+      POSTGRES_USER: minipar
+      POSTGRES_PASSWORD: minipar
+      POSTGRES_DB: minipar
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U minipar -d minipar']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: minipar-api-gateway
+    ports:
+      - '3000:3000'
+    environment:
+      DATABASE_URL: postgresql://minipar:minipar@postgres:5432/minipar
+      PIPELINE_MODE: mock
+      PORT: 3000
+      MS_FRONTEND_URL: http://host.docker.internal:3001
+      MS_SEMANTIC_URL: http://host.docker.internal:3002
+      MS_INTERPRETER_URL: http://host.docker.internal:3003
+      MS_CODEGEN_C_URL: http://host.docker.internal:3004
+      MS_CODEGEN_RUST_URL: http://host.docker.internal:3005
+      MS_PARALLEL_COORD_URL: http://host.docker.internal:3006
+      MS_CODEGEN_ARM_URL: http://host.docker.internal:3007
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    container_name: minipar-frontend
+    ports:
+      - '4200:80'
+    depends_on:
+      - api-gateway
+
+volumes:
+  postgres_data:

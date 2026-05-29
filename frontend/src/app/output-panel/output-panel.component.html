@@ -1,0 +1,39 @@
+<mat-card class="output" appearance="outlined">
+  <mat-card-header>
+    <mat-card-title>Saída</mat-card-title>
+  </mat-card-header>
+
+  <mat-card-content>
+    @if (errorMessage()) {
+      <pre class="error">{{ errorMessage() }}</pre>
+    }
+
+    @if (result(); as r) {
+      @if (r.success) {
+        <p class="success">Processamento concluído (history: {{ r.historyId }})</p>
+        @if (r.output) {
+          <h3>Mensagem</h3>
+          <pre>{{ r.output }}</pre>
+        }
+        @if (r.pipelineSteps?.length) {
+          <h3>Pipeline</h3>
+          <mat-list>
+            @for (step of r.pipelineSteps; track step) {
+              <mat-list-item>{{ step }}</mat-list-item>
+            }
+          </mat-list>
+        }
+        @if (r.generatedCode) {
+          <h3>Código gerado</h3>
+          <pre class="code">{{ r.generatedCode }}</pre>
+        }
+        <h3>AST (debug)</h3>
+        <pre class="json">{{ r.ast | json }}</pre>
+      } @else if (r.error) {
+        <pre class="error">{{ r.error }}</pre>
+      }
+    } @else if (!errorMessage()) {
+      <p class="placeholder">Execute um programa para ver o resultado.</p>
+    }
+  </mat-card-content>
+</mat-card>

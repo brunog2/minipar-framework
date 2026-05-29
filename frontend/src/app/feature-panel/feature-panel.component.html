@@ -1,0 +1,51 @@
+<mat-card class="panel">
+  <mat-card-header>
+    <mat-card-title>Variabilidade (LPS)</mat-card-title>
+  </mat-card-header>
+
+  <mat-card-content>
+    <section>
+      <h3>Back-end de compilação</h3>
+      <mat-radio-group
+        aria-label="Back-end de compilação"
+        [value]="targetVariability()"
+        (change)="onTargetChange($event.value)"
+      >
+        @for (t of targets; track t.value) {
+          <mat-radio-button class="option" [value]="t.value">
+            {{ t.label }}
+          </mat-radio-button>
+        }
+      </mat-radio-group>
+    </section>
+
+    <section>
+      <h3>Modo de execução</h3>
+      <mat-radio-group
+        aria-label="Modo de execução"
+        [value]="executionMode()"
+        (change)="onExecutionChange($event.value)"
+      >
+        @for (e of executions; track e.value) {
+          <mat-radio-button class="option" [value]="e.value">
+            {{ e.label }}
+          </mat-radio-button>
+        }
+      </mat-radio-group>
+    </section>
+
+    <button
+      mat-flat-button
+      color="primary"
+      type="button"
+      class="process-btn"
+      [disabled]="loading()"
+      (click)="processClick.emit()"
+    >
+      @if (loading()) {
+        <mat-spinner diameter="20" />
+      }
+      {{ loading() ? 'Processando…' : 'Processar' }}
+    </button>
+  </mat-card-content>
+</mat-card>
