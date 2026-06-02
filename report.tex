@@ -1,6 +1,5 @@
 \documentclass[12pt]{article}
 
-% --- PACOTES BÁSICOS ---
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[brazil]{babel}
@@ -20,7 +19,6 @@
     citecolor=blue
 }
 
-% --- CONFIGURAÇÃO DE CÓDIGO ---
 \lstset{
     basicstyle=\ttfamily\small,
     keywordstyle=\color{blue},
@@ -35,7 +33,6 @@
 
 \begin{document}
 
-% --- CAPA ---
 \begin{titlepage}
     \begin{center}
         \IfFileExists{logo_ufal.png}{%
@@ -62,94 +59,320 @@
     \end{center}
 \end{titlepage}
 
-% --- SUMÁRIO ---
 \tableofcontents
 \newpage
 
-% --- 1. INTRODUÇÃO ---
 \section{Introdução}
 \subsection{Enunciado do Projeto}
-Descrição do framework de microsserviços para a linguagem MiniPar 2026.1.
-\subsection{Objetivos}
-Evolução da linguagem para OO, paralelismo real e arquitetura distribuída.
+Este relatório consolida o trabalho desenvolvido como requisito parcial integrado das disciplinas ministradas pelo Prof.\ Arturo Hernandez Dominguez no Instituto de Computação da UFAL, abrangendo Compiladores, Reuso de Software e Linhas de Produto de Software (LPS). O artefato central é o \emph{MiniPar Framework 2026.1}: uma linha de produto de software organizada em microsserviços, destinada ao processamento da linguagem MiniPar com orientação a objetos, construções de paralelismo \texttt{par}/\texttt{seq} e múltiplos back-ends (interpretador, C/C++, Rust e ARM).
 
-% --- 2. METODOLOGIA ÁGIL ---
+A especificação acadêmica do framework \cite{minipar2026} deriva a evolução da MiniPar 2025.1 documentada por Maciel \cite{maciel2025} e pelos geradores procedimentais de Rego \cite{rego2025}. O repositório mantém uma auditoria viva de conformidade frente aos requisitos integrados das três disciplinas em \texttt{COMPLIANCE\_AUDIT.md} (gaps, itens parciais e backlog para implementações futuras). Em vez de concentrar todas as fases de compilação em um único binário monolítico, adotou-se arquitetura distribuída em que cada etapa ou variante de saída corresponde a um serviço autônomo, comunicando-se por REST e JSON. Essa decisão articula, de um lado, a engenharia de domínio aplicada ao domínio ``compiladores MiniPar'' e, de outro, o desacoplamento típico de sistemas baseados em microsserviços.
+
+\subsection{Objetivos}
+Objetiva-se (i)~completar o suporte orientado a objetos na gramática e na AST da MiniPar 2026.1; (ii)~expor análise léxica, sintática e semântica como serviços HTTP consumíveis por um front-end e por um API Gateway; (iii)~materializar os back-ends da LPS (interpretador, geração para C/C++, Rust e ARM) como microsserviços que reutilizam um núcleo comum (\texttt{minipar-core}); e (iv)~registrar, na documentação e nos diagramas do repositório, os pontos de variação e as variantes que caracterizam a linha de produto.
+
 \section{Metodologia Ágil e Planejamento}
 \subsection{Scrum e Sprints}
-Descrição de como a equipe se organizou para o desenvolvimento.
+O cronograma seguiu desenvolvimento incremental por sprints, com entrega prevista para 10 de junho de 2026. Na \textbf{Fase~1} (2--4/jun), priorizou-se o desbloqueio do pipeline real até a análise semântica: lexer, parser descendente recursivo, serialização da AST e verificação de classes e herança. Na \textbf{Fase~2} (3--5/jun), incorporou-se o padrão \emph{Template Method} no pacote \texttt{translation/}, os microsserviços de interpretação e de geração de código, e a orquestração do gateway com \texttt{PIPELINE\_BACKEND\_MODE=http}. Na \textbf{Fase~3} (5--7/jun), implementou-se o coordenador \texttt{ms-parallel-coord}, os \emph{workers} socket, o fractal de Sierpinski em MiniPar OO e a integração E2E do modo \texttt{DISTRIBUTED\_SOCKETS}.
+
 \subsection{Backlogs}
 \begin{itemize}
-    \item \textbf{Product Backlog:} Funcionalidades do framework.
-    \item \textbf{Sprint Backlog:} Tarefas específicas de cada membro da equipe.
+    \item \textbf{Product Backlog:} gestão da variabilidade LPS (modo interpretador \emph{versus} compilador, back-end alvo, ambiente local ou distribuído); casos de teste de paralelismo; demonstração do fractal.
+    \item \textbf{Sprint Backlog Fase 1:} pacote \texttt{minipar-core}; microsserviços \texttt{ms-front-end} e \texttt{ms-semantic}; Docker Compose com \texttt{PIPELINE\_MODE=http}.
+    \item \textbf{Sprint Backlog Fase 2:} módulo \texttt{translation/} (\emph{Template Method}); \texttt{ms-interpreter}; \texttt{ms-codegen-c}, \texttt{ms-codegen-rust}, \texttt{ms-codegen-arm}; variável \texttt{PIPELINE\_BACKEND\_MODE=http}.
+    \item \textbf{Sprint Backlog Fase 3:} \texttt{ms-parallel-coord}; workers socket; fractal Sierpinski (\texttt{13\_sierpinski.minipar}); integração \texttt{DISTRIBUTED\_SOCKETS} E2E.
 \end{itemize}
-
-% --- 3. ARQUITETURA DO SISTEMA (LPS e MICROSSERVIÇOS) ---
-\section{Arquitetura do Sistema}
 \subsection{Arquitetura de Microsserviços}
-Diagrama e descrição da separação dos serviços e do \texttt{api-gateway} como orquestrador central.
-\subsection{Gestão da Variabilidade (LPS)}
-Diagrama de Features e identificação de variantes (Compilador vs.\ Interpretador).
+O ponto de entrada único é o \texttt{api-gateway} (porta~3000), que expõe \texttt{POST /api/v1/process} e encaminha o fluxo conforme a variabilidade informada pelo cliente. O serviço \texttt{ms-front-end} (:3001) realiza a análise léxica e sintática, devolvendo a AST em JSON; o \texttt{ms-semantic} (:3002) consome essa AST e produz a tabela de símbolos e eventuais diagnósticos semânticos. Os back-ends da LPS (:3003--3007) recebem a AST já validada e executam ou geram código conforme o valor de \texttt{targetVariability} selecionado na interface.
 
-% --- 4. MODELAGEM UML ---
+Do ponto de vista de engenharia de domínio, o domínio ``pipeline MiniPar'' foi particionado em subsistemas com contratos estáveis (\texttt{\_AST\_CONTRACT.md}), de modo que novas variantes de back-end possam ser acopladas sem alterar o lexer ou o analisador semântico. A Figura conceitual e os fluxos detalhados encontram-se em \texttt{docs/diagrams/}: \texttt{architecture.mmd}, \texttt{pipeline-sequence.mmd}, \texttt{template-method.mmd}, \texttt{codegen-c-flow.mmd}, \texttt{reuse-map.mmd} e \texttt{validation-cases.mmd}.
+
+\subsection{Gestão da Variabilidade (LPS)}
+Identificam-se três pontos de variação principais \cite{pohl2010}: (1)~modo de execução (interpretador ou compilador); (2)~back-end de código (C, C++, Rust, ARM); (3)~ambiente de execução (local ou distribuído via \texttt{ms-parallel-coord}). O diagrama de \emph{features} encontra-se em \texttt{docs/diagrams/feature-tree.mmd}. Cada combinação válida mapeia para um subconjunto de microsserviços invocado pelo gateway.
+
 \section{Modelagem UML}
 \subsection{Diagrama de Casos de Uso}
-Interação do usuário com o framework.
-\subsection{Arquitetura de Componentes}
-Modelagem dos componentes independentes (Lexer, Parser, Semântico).
-\subsection{Diagrama de Classes}
-Estrutura interna das classes para suporte a Orientação a Objetos.
+Os casos de uso principais são: editar código MiniPar, selecionar variante LPS, executar pipeline, visualizar AST e tabela de símbolos, executar paralelismo distribuído (3 máquinas) e visualizar o fractal de Sierpinski. O diagrama encontra-se em \texttt{docs/diagrams/uml-use-cases.mmd}.
 
-% --- 5. ANÁLISE DE COMPILADORES ---
-\section{Fases do Compilador MiniPar 2026.1}
-\subsection{Gramática BNF}
-Apresentação da gramática OO baseada no trabalho de Eduardo Maciel (2025.1) e suas expansões.
-\subsection{Pseudocódigos}
-Inserir aqui a lógica dos analisadores:
+\subsection{Arquitetura de Componentes}
+Na modelagem por componentes, Léxico, Parser, Analisador Semântico e Geradores aparecem como unidades substituíveis encapsuladas em microsserviços FastAPI, orquestradas pelo \texttt{api-gateway} NestJS. O diagrama UML de componentes está em \texttt{docs/diagrams/uml-components.mmd}. Na Fase~1, concentrou-se a lógica de análise em \texttt{packages/minipar-core}. Na Fase~2, o subsistema de tradução (\texttt{minipar\_core/translation}) agrega TAC, interpretador e emissores de código, todos subordinados ao esqueleto \texttt{AbstractBackendTranslator}. Na Fase~3, adicionou-se o subsistema de paralelismo (\texttt{ms-parallel-coord} + workers).
+
+\subsection{Diagrama de Classes --- framework e AST}
+O diagrama de classes do framework (Template Method, Lexer, Parser, back-ends) encontra-se em \texttt{docs/diagrams/uml-classes-framework.mmd}. A AST orientada a objetos replica, em JSON, a estrutura dos nós Java de Maciel \cite{maciel2025}. Os nós centrais são:
 \begin{itemize}
-    \item \textbf{Analisador Léxico:}
-    \item \textbf{Analisador Sintático e AST:}
-    \item \textbf{Analisador Semântico e Tabela de Símbolos:}
+    \item \texttt{Program} --- raiz; atributo \texttt{declarations[]}
+    \item \texttt{ClassDecl} --- \texttt{name}, \texttt{extends}, \texttt{members[]}
+    \item \texttt{MethodDecl} --- \texttt{returnType}, \texttt{name}, \texttt{parameters}, \texttt{body}
+    \item \texttt{ParBlock} / \texttt{SeqBlock} --- paralelismo estruturado e sequência
+    \item \texttt{NewInstance}, \texttt{MethodCall}, \texttt{PrintStmt} --- instanciação, despacho de métodos e saída
 \end{itemize}
 
-% --- 6. REUSO DE SOFTWARE ---
+\section{Fases do Compilador MiniPar 2026.1}
+\subsection{Gramática BNF}
+A gramática evolui a MiniPar 2025.1 \cite{maciel2025} com orientação a objetos e paralelismo. Produções principais:
+
+\begin{lstlisting}[caption={BNF MiniPar 2026.1 OO (extrato)}]
+<programa>      ::= { <declaracao> }
+<declaracao>    ::= <classe> | <funcao> | <canal> | <stmt>
+<classe>        ::= "class" ID [ "extends" ID ] "{" { <membro> } "}"
+<membro>        ::= <atributo_oo> | <metodo>
+<atributo_oo>   ::= <tipo> ID [ "=" <expr> ] ";"
+<metodo>        ::= <tipo> ID "(" [ <param> { "," <param> } ] ")" <bloco>
+<stmt>          ::= <bloco> | <if> | <while> | <for> | <print> | <return>
+                  | "par" "{" { <stmt> } "}" | "seq" "{" { <stmt> } "}"
+<expr>          ::= <atrib> | <logico_or>
+<atrib>         ::= <logico_or> [ "=" <atrib> ]
+<instanciacao>  ::= "new" ID "(" [ <expr> { "," <expr> } ] ")"
+<chamada_met>   ::= <expr> "." ID "(" [ <expr> { "," <expr> } ] ")"
+<tipo>          ::= "void" | "number" | "string" | "bool" | ID
+\end{lstlisting}
+
+Tokens de paralelismo: \texttt{par}, \texttt{seq}, \texttt{s\_channel}, \texttt{c\_channel}. Palavras reservadas OO: \texttt{class}, \texttt{extends}, \texttt{new}, \texttt{this}, \texttt{super}.
+\subsection{Pseudocódigos dos Analisadores}
+\subsubsection{Analisador Léxico}
+O módulo \texttt{minipar\_core.lexer} implementa a classe \texttt{Lexer}, cujo método \texttt{tokenize()} percorre o código-fonte aplicando \texttt{skip\_whitespace()}, \texttt{skip\_comment()} e os leitores especializados abaixo.
+
+\begin{lstlisting}[language=Python,caption={Fluxo de \texttt{Lexer.tokenize()} (minipar\_core.lexer)}]
+enquanto pos < len(source):
+    skip_whitespace()
+    se skip_comment(): continuar
+    se digito           -> read_number()      # NUMBER_LITERAL
+    se aspas duplas     -> read_string()      # STRING_LITERAL
+    se letra ou _       -> read_identifier()  # KEYWORD ou IDENTIFIER
+    senao               -> operadores e delimitadores (#, ==, par, ...)
+emitir Token(EOF)
+\end{lstlisting}
+
+\subsubsection{Analisador Sintático e AST}
+O \texttt{Parser} descendente recursivo consome a lista de \texttt{Token} e constrói um \texttt{Program}. As produções de alto nível incluem \texttt{class\_declaration()}, \texttt{method\_declaration()}, \texttt{oo\_var\_declaration()} (tipo, nome e inicializador opcional), blocos \texttt{par}/\texttt{seq}, e comandos \texttt{print}/\texttt{println}. A serialização para intercâmbio entre microsserviços utiliza \texttt{ast\_json.to\_dict}.
+
+\subsubsection{Coordenador de Paralelismo Distribuído}
+\begin{lstlisting}[caption={Pseudocodigo ms-parallel-coord /coordinate}]
+para cada host em [quicksort, matrix, factorial]:
+    disparar thread dispatch_worker(host, port)
+aguardar todas as threads
+ordenar resultados por role
+montar output agregado com rotulos PC1, PC2, PC3
+retornar { output, results[] }
+\end{lstlisting}
+
+\subsubsection{Worker socket (processo independente)}
+\begin{lstlisting}[caption={Pseudocodigo worker socket}]
+servidor escuta na porta configurada (9001--9003)
+ao receber conexao:
+    ler comando "RUN"
+    executar algoritmo (QuickSort | Matriz | Fatorial)
+    enviar JSON { role, machine, data } via socket
+    fechar conexao
+\end{lstlisting}
+
+\subsubsection{Analisador Semântico e Tabela de Símbolos}
+A função \texttt{semantic\_json.analyze\_ast\_dict} percorre o dicionário da AST: registra declarações de classe, valida cláusulas \texttt{extends}, sinaliza membros duplicados e monta \texttt{symbolTable.scopes[]} para inspeção na UI e persistência opcional no PostgreSQL.
+
 \section{Técnicas de Reuso}
 \subsection{Padrão Template Method}
-Descrição do esqueleto do algoritmo de tradução e os hotspots utilizados para as variabilidades (C, Rust, Assembly).
-\subsection{Componentes Reutilizados}
-Detalhamento do reuso das implementações do MiniPar 2025.1.
+A variabilidade entre back-ends da LPS não foi tratada com ramificações dispersas no gateway, e sim com engenharia de domínio apoiada no padrão \emph{Template Method} \cite{gamma1995}. A classe \texttt{AbstractBackendTranslator}, em \texttt{packages/minipar-core/minipar\_core/translation/}, define o esqueleto fixo \texttt{translate(ast\_dict)}: \texttt{validate} $\rightarrow$ \texttt{prepare} $\rightarrow$ \texttt{emit} (hotspot) $\rightarrow$ \texttt{finalize}. Cada variante concreta especializa os hotspots de emissão e de materialização do resultado.
 
-% --- 7. IMPLEMENTAÇÃO E TECNOLOGIAS ---
+\begin{itemize}
+    \item \texttt{InterpreterBackend} --- percorrência direta da AST, portando a semântica dinâmica de \texttt{cl-minipar} \cite{maciel2025};
+    \item \texttt{CBackend} / \texttt{CppBackend} --- geração via TAC e invocação de \texttt{gcc -O2}, conforme a cadeia de Rego \cite{rego2025};
+    \item \texttt{RustBackend} --- emissão mínima com \texttt{rustc};
+    \item \texttt{ARMBackend} --- lowering TAC $\rightarrow$ ARMv7.
+\end{itemize}
+
+O diagrama de classes do padrão encontra-se em \texttt{docs/diagrams/template-method.mmd}; o mapa de artefatos reutilizados, em \texttt{reuse-map.mmd}.
+
+\begin{lstlisting}[language=Python,caption={Esqueleto \texttt{AbstractBackendTranslator.translate} (base\_translator.py)}]
+def translate(self, ast_dict):
+    self.validate(ast_dict)
+    if self._errors:
+        return TranslationResult(..., errors=self._errors)
+    self.prepare(ast_dict)
+    self.emit(ast_dict)      # hotspot por back-end
+    return self.finalize()
+\end{lstlisting}
+
+\subsection{Componentes Reutilizados}
+O reuso sistemático partiu dos repositórios de referência da turma 2025.1, migrados para Python no núcleo compartilhado:
+
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Origem} & \textbf{Destino no framework} \\
+\hline
+\texttt{cl-minipar} (Lexer, Parser, AST OO, Interpreter) & \texttt{minipar-core} + \texttt{translation/interpreter.py} \\
+\texttt{projeto\_compiladores} (TAC, C, ARM, gcc) & \texttt{translation/tac\_codegen.py}, \texttt{c\_backend.py}, \texttt{arm\_backend.py} \\
+\texttt{projeto\_compiladores} (semântica procedural) & base de \texttt{semantic.py} / \texttt{semantic\_json.py} \\
+\hline
+\end{tabular}
+
 \section{Implementação}
 \subsection{Estrutura do Monorepo}
-O projeto \texttt{minipar-framework} organiza as aplicações em pastas genéricas:
-\texttt{frontend}, \texttt{api-gateway}, \texttt{database} e \texttt{microservices/}.
+O repositório agrupa \texttt{frontend/} (Angular), \texttt{api-gateway/} (NestJS), \texttt{packages/minipar-core/}, \texttt{microservices/}, \texttt{database/} (scripts PostgreSQL) e \texttt{docs/diagrams/}.
+
 \subsection{Tecnologias Utilizadas}
-Interface web, gateway de API, microsserviços de compilação, PostgreSQL e Docker Compose.
+Front-end em Angular; gateway em NestJS; microsserviços de análise e código em FastAPI (Python~3.11); persistência de histórico de compilações em PostgreSQL; orquestração local via Docker Compose.
+
 \subsection{API Gateway e Microsserviços}
-Especificação documentada das rotas e portas de cada serviço (ver pasta \texttt{microservices/}).
+\begin{tabular}{|l|l|l|l|}
+\hline
+\textbf{Serviço} & \textbf{Rota} & \textbf{Porta} & \textbf{Fase} \\
+\hline
+ms-front-end & POST /parse & 3001 & 1 \\
+ms-semantic & POST /analyze & 3002 & 1 \\
+ms-interpreter & POST /execute & 3003 & 2 \\
+ms-codegen-c & POST /generate & 3004 & 2 \\
+ms-codegen-rust & POST /generate & 3005 & 2 \\
+ms-codegen-arm & POST /generate & 3007 & 2 \\
+ms-parallel-coord & POST /coordinate & 3006 & 3 \\
+worker-quicksort & socket & 9001 & 3 \\
+worker-matrix & socket & 9002 & 3 \\
+worker-factorial & socket & 9003 & 3 \\
+api-gateway & POST /api/v1/process & 3000 & 1--3 \\
+\hline
+\end{tabular}
 
-% --- 8. TESTES E RESULTADOS ---
+As variáveis de ambiente \texttt{PIPELINE\_MODE=http} e \texttt{PIPELINE\_BACKEND\_MODE=http}, definidas no Docker Compose da Fase~2, alternam o encaminhamento entre implementações embutidas e chamadas HTTP aos microsserviços.
+
 \section{Testes e Resultados}
+\subsection{Resultados da Fase 1}
+Validou-se o pipeline de análise estática pela interface web (ação \textbf{Executar}, atalhos \texttt{Ctrl+Enter} e \texttt{F5}) e por requisições diretas ao gateway:
+
+\begin{lstlisting}[caption={Exemplo curl --- AST e symbolTable reais}]
+curl -X POST http://localhost:3000/api/v1/process \
+  -H "Content-Type: application/json" \
+  -d '{"sourceCode":"class Main { void run() { println(\"ok\"); } }",
+       "targetVariability":"INTERPRETER","executionMode":"LOCAL"}'
+\end{lstlisting}
+
+A resposta contém \texttt{pipelineSteps} com \texttt{ms-front-end: parse} e \texttt{ms-semantic: analyze} (sem sufixo \texttt{mock}), além de nós \texttt{ClassDecl} na AST serializada.
+
+\subsection{Casos de validação manual}
+Os \emph{fixtures} em \texttt{sources/examples/} cobrem erros sintáticos, semânticos e casos válidos (ver \texttt{docs/diagrams/validation-cases.mmd}):
+
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Caso} & \textbf{Arquivo} & \textbf{Resultado} \\
+\hline
+Classe com herança válida & \texttt{02\_class\_extends} & \texttt{success: true} \\
+\texttt{extends Arvore} inexistente & \texttt{04\_semantic\_extends\_unknown} & Erro semântico \\
+\texttt{extends} sem nome & \texttt{05\_parse\_extends\_missing} & \texttt{Expected superclass name} \\
+\texttt{exts} (palavra-chave inválida) & \texttt{06\_parse\_invalid\_keyword} & \texttt{Expected LBRACE} \\
+Expressão solta \texttt{a} & \texttt{07\_expr\_only} & \texttt{ExprStmt} (análise OK) \\
+\hline
+\end{tabular}
+
+\subsection{Casos de validação --- Fase 2 (back-ends)}
+\begin{tabular}{|l|l|l|l|}
+\hline
+\textbf{Arquivo} & \textbf{LPS} & \textbf{Resultado} & \textbf{Pipeline step} \\
+\hline
+\texttt{08\_interpreter\_ok} & INTERPRETER & Saída \texttt{ok} & \texttt{ms-interpreter: execute} \\
+\texttt{09\_oo\_new} & INTERPRETER & Saída \texttt{woof} & idem \\
+\texttt{10\_par\_seq} & INTERPRETER & Saída \texttt{a b c} & idem \\
+\texttt{11\_codegen\_c} & C & C + \texttt{gcc -O2} + stdout & \texttt{ms-codegen-c: generate} \\
+\texttt{12\_codegen\_rust\_stub} & RUST & Código Rust MVP & \texttt{ms-codegen-rust: generate} \\
+\hline
+\end{tabular}
+
+Mensagens representativas registradas na Fase~1:
+\begin{itemize}
+    \item \texttt{Semantic error: Superclass 'Arvore' not found for class 'Dog'}
+    \item \texttt{Parser error at 5:20: Expected superclass name}
+    \item \texttt{Parser error at 5:11: Expected LBRACE}
+\end{itemize}
+
+Erros de análise aparecem no painel \textbf{Console} da UI (chip de status e mensagem destacada); execuções bem-sucedidas habilitam as abas Saída, Símbolos e AST.
+
+\subsection{Resultados da Fase 2 --- Back-ends reais}
+Com \texttt{PIPELINE\_BACKEND\_MODE=http}, interpretador e geradores passaram a responder com saída produzida pelo núcleo \texttt{minipar-core}, e não por respostas simuladas:
+
+\begin{lstlisting}[caption={Interpretador --- stdout real}]
+# targetVariability: INTERPRETER
+# output: "ok\n"
+class Main { void run() { println("ok"); } }
+\end{lstlisting}
+
+\begin{lstlisting}[caption={Codegen C --- resposta E2E}]
+curl -X POST http://localhost:3000/api/v1/process \
+  -H "Content-Type: application/json" \
+  -d '{"sourceCode":"class Main { void run() { println(\"ok\"); } }",
+       "targetVariability":"C","executionMode":"LOCAL"}'
+# pipelineSteps: ms-front-end: parse, ms-semantic: analyze,
+#                ms-codegen-c: generate
+# output: "Compiled with gcc -O2\nok\n"
+# generatedCode: program.c gerado
+\end{lstlisting}
+
+Os arquivos \texttt{08\_interpreter\_ok} a \texttt{12\_codegen\_rust\_stub} documentam o comportamento observado. Para o back-end C, o fluxo completo (TAC, emissão, compilação) está em \texttt{codegen-c-flow.mmd}. As variantes Rust e ARM permanecem em nível MVP: geram código sintaticamente válido e retornam mensagem explícita quando \texttt{rustc} ou a \emph{toolchain} ARM não estão disponíveis no contêiner.
+
 \subsection{Teste de Real Paralelismo (3 Computadores)}
-Exibição da execução coordenada via sockets do Quicksort, Multiplicação de Matrizes e Fatorial.
-\subsection{Simulação de Fractal}
-Apresentação da matriz de caracteres gerada pelo código MiniPar OO.
+Implementou-se o microsserviço \texttt{ms-parallel-coord} (:3006) e três \emph{workers} Python como processos independentes (\texttt{worker-quicksort}, \texttt{worker-matrix}, \texttt{worker-factorial}) comunicando-se exclusivamente via sockets TCP (:9001--9003). O modo \texttt{DISTRIBUTED\_SOCKETS} na UI dispara o coordenador após a análise semântica; os resultados agregados aparecem no Console e no campo \texttt{distributedResults} da resposta JSON.
 
-% --- 9. CONCLUSÃO E LINKS ---
-\section{Conclusão}
-\subsection{Link para o Repositório (GitHub)}
-\placeholder{inserir URL do repositório}
-\subsection{Link para o Vídeo de Apresentação}
-\placeholder{inserir URL do vídeo}
+\begin{lstlisting}[caption={curl --- teste 3 maquinas via gateway}]
+curl -X POST http://localhost:3000/api/v1/process \
+  -H "Content-Type: application/json" \
+  -d '{"sourceCode":"class Main { void run() { println(\"ok\"); } }",
+       "targetVariability":"INTERPRETER",
+       "executionMode":"DISTRIBUTED_SOCKETS"}'
+# pipelineSteps inclui ms-parallel-coord: coordinate
+# output agrega QuickSort (PC1), Matriz (PC2), Fatorial (PC3)
+\end{lstlisting}
 
-% --- 10. REFERÊNCIAS ---
-\begin{thebibliography}{9}
+O diagrama de sequência encontra-se em \texttt{docs/diagrams/sequence-3-machines.mmd}. Fixture: \texttt{sources/examples/14\_distributed\_menu.minipar}.
+
+\subsection{Simulacao de Fractal}
+Implementou-se o tapete de Sierpinski recursivo em MiniPar OO (\texttt{sources/examples/13\_sierpinski.minipar}): a classe \texttt{Sierpinski} utiliza o metodo recursivo \texttt{isBlack} e exibe uma matriz de caracteres \texttt{*} (solido) e \texttt{.} (vazio) no Console da UI via interpretador. Ordem~3 produz matriz $27 \times 27$.
+
+\begin{lstlisting}[caption={Trecho do fractal MiniPar OO}]
+class Sierpinski {
+  number isBlack(number x, number y, number n) {
+    if (n == 1) { return 1; }
+    number m = n / 3;
+    if (x >= m && x < 2 * m && y >= m && y < 2 * m) { return 0; }
+    return this.isBlack(x % m, y % m, m);
+  }
+  void draw(number order) { /* imprime matriz linha a linha */ }
+}
+\end{lstlisting}
+
+\subsection{Casos de validacao --- Fase 3}
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Arquivo} & \textbf{Modo} & \textbf{Resultado} \\
+\hline
+\texttt{13\_sierpinski} & INTERPRETER + LOCAL & Matriz fractal no Console \\
+\texttt{14\_distributed\_menu} & INTERPRETER + DISTRIBUTED\_SOCKETS & Resultados PC1--PC3 \\
+\texttt{09\_oo\_new} & C + LOCAL & \texttt{gcc -O2} + saída \texttt{woof} (OO codegen) \\
+\hline
+\end{tabular}
+
+\section{Conclusao}
+O \emph{MiniPar Framework 2026.1} integra as tres vertentes do projeto: pipeline de compilador MiniPar OO (lexer, parser, semantica, geradores), reuso sistematico via \emph{Template Method} e componentes reutilizados de 2025.1, e gestao de variabilidade LPS materializada em microsserviços REST orquestrados pelo \texttt{api-gateway}. As Fases~1--3 entregam pipeline E2E real, back-ends funcionais (interpretador, C com \texttt{gcc -O2} incluindo OO basico, Rust/ARM MVP), teste de paralelismo distribuido em tres workers socket e simulacao do tapete de Sierpinski na interface web.
+
+\subsection{Link para o Repositorio (GitHub)}
+\url{https://github.com/brunom/compiladores} (monorepo \texttt{minipar-framework}; ajustar URL final na entrega).
+
+\subsection{Link para o Video de Apresentacao}
+\url{https://minipar-framework.vercel.app} (UI de demonstracao; inserir URL do video backup na entrega).
+
+\begin{thebibliography}{12}
 \bibitem{maciel2025}
-Maciel, E.\ MiniPar 2025.1 --- interpretador orientado a objetos.
+Maciel, E.\ \emph{MiniPar 2025.1} --- interpretador orientado a objetos. Implementação de referência \texttt{cl-minipar}, turma Compiladores, UFAL, 2025.
+
 \bibitem{rego2025}
-Rego, H.\ Projeto compiladores MiniPar --- geradores de código C e ARM.
+Rego, H.\ \emph{Projeto compiladores MiniPar} --- geradores de código C e ARM, representação intermediária TAC e integração com \texttt{gcc}. Repositório \texttt{projeto\_compiladores}, UFAL, 2025.
+
 \bibitem{minipar2026}
-Especificação MiniPar 2026.1 --- framework de microsserviços (documento interno da disciplina).
+Hernandez Dominguez, A.\ \emph{Especificação do projeto integrado MiniPar Framework 2026.1} --- framework de microsserviços, LPS e requisitos de demonstração (paralelismo distribuído e fractal). Documento da disciplina, UFAL, 2026.1.
+
+\bibitem{pohl2010}
+Pohl, K.; Böckle, G.; van der Linden, F.\ \emph{Software Product Line Engineering: Foundations, Principles, and Techniques}. Springer, 2010.
+
+\bibitem{sommerville2016}
+Sommerville, I.\ \emph{Software Engineering}. 10th ed. Pearson, 2016.
+
+\bibitem{gamma1995}
+Gamma, E. et al.\ \emph{Design Patterns: Elements of Reusable Object-Oriented Software}. Addison-Wesley, 1995.
 \end{thebibliography}
 
 \end{document}

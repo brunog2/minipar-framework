@@ -31,4 +31,4 @@ Representação JSON alinhada aos nós Java em `code_references/cl-minipar/src/p
 | `NewInstance` | `new T()` |
 | `MethodCall` | Chamada de método |
 
-**Status nesta fase:** contrato documentado; serialização implementada no futuro `ms-front-end`.
+**Status nesta fase:** implementado em `packages/minipar-core` (`ast_json.to_dict`).

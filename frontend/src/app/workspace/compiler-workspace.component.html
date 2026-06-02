@@ -50,28 +50,51 @@
   </header>
 
   <main class="shell__main workspace">
-    <section class="workspace__editor-panel" aria-label="Editor de código MiniPar">
-      <mat-card class="editor-card">
-        <mat-card-header>
-          <mat-card-title>Código-fonte</mat-card-title>
-          <mat-card-subtitle>MiniPar 2026.1 — orientação a objetos</mat-card-subtitle>
-        </mat-card-header>
-        <mat-card-content>
-          <app-code-editor />
-        </mat-card-content>
-      </mat-card>
-    </section>
-
     <aside class="workspace__sidebar" aria-label="Configuração de variabilidade">
       <app-feature-panel
         [targetVariability]="targetVariability()"
         [executionMode]="executionMode()"
-        [loading]="loading()"
         (targetChange)="targetVariability.set($event)"
         (executionChange)="executionMode.set($event)"
-        (processClick)="process()"
       />
     </aside>
+
+    <section class="workspace__editor-panel" aria-label="Editor de código MiniPar">
+      <mat-card class="editor-card">
+        <div class="editor-card__header">
+          <div class="editor-card__titles">
+            <h2 class="editor-card__title">Código-fonte</h2>
+            <p class="editor-card__subtitle">MiniPar 2026.1 — orientação a objetos</p>
+          </div>
+          <div class="editor-card__actions">
+            <button
+              mat-flat-button
+              color="primary"
+              type="button"
+              class="run-btn"
+              [disabled]="loading()"
+              (click)="run()"
+              matTooltip="Executar (Ctrl+Enter ou F5)"
+              aria-label="Executar código MiniPar"
+            >
+              @if (loading()) {
+                <mat-spinner diameter="18" />
+              } @else {
+                <mat-icon aria-hidden="true">play_arrow</mat-icon>
+              }
+              Executar
+            </button>
+          </div>
+        </div>
+        <app-code-template-picker
+          [disabled]="loading()"
+          (templateSelected)="onTemplateSelected($event)"
+        />
+        <mat-card-content>
+          <app-code-editor (runRequested)="run()" />
+        </mat-card-content>
+      </mat-card>
+    </section>
 
     <section class="workspace__output-panel" aria-label="Resultado do processamento">
       <app-output-panel [result]="result()" [errorMessage]="httpError()" />

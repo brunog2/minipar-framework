@@ -1,0 +1,32 @@
+flowchart TB
+  root[MiniParFramework2026]
+  root --> execMode[ModoExecucao]
+  root --> targetLang[LinguagemAlvo]
+  root --> execEnv[AmbienteExecucao]
+
+  execMode --> interpreter[Interpretador]
+  execMode --> compiler[Compilador]
+
+  targetLang --> cLang[C]
+  targetLang --> cppLang[C++]
+  targetLang --> rustLang[Rust]
+  targetLang --> armLang[ARMv7]
+
+  compiler --> cLang
+  compiler --> cppLang
+  compiler --> rustLang
+  compiler --> armLang
+
+  execEnv --> localEnv[Local]
+  execEnv --> distributedEnv[DistribuidoSockets]
+
+  interpreter --> msInterpreter[ms-interpreter:3003]
+  cLang --> msCodegenC[ms-codegen-c:3004]
+  cppLang --> msCodegenC
+  rustLang --> msCodegenRust[ms-codegen-rust:3005]
+  armLang --> msCodegenArm[ms-codegen-arm:3007]
+  distributedEnv --> msParallelCoord[ms-parallel-coord:3006]
+
+  msParallelCoord --> w1[worker-quicksort:9001]
+  msParallelCoord --> w2[worker-matrix:9002]
+  msParallelCoord --> w3[worker-factorial:9003]

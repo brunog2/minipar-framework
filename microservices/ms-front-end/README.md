@@ -45,4 +45,13 @@ Ver também: [_AST_CONTRACT.md](../_AST_CONTRACT.md).
 
 ## Status
 
-**Não implementado** nesta fase de setup — especificação apenas.
+**Implementado** (Fase 1 — jun/2026). Serviço FastAPI em `app/main.py`, pacote `packages/minipar-core`.
+
+### Erros sintáticos (exemplos)
+
+| Entrada | Mensagem |
+|---------|----------|
+| `class Dog extends  {` | `Parser error at L:C: Expected superclass name` |
+| `class Dog exts  {` | `Parser error at L:C: Expected LBRACE` |
+
+Fixtures: `sources/examples/05_*`, `06_*`.

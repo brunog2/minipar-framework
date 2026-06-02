@@ -1,0 +1,11 @@
+class Main {
+  void run() {
+    seq {
+      println("a");
+    }
+    par {
+      println("b");
+      println("c");
+    }
+  }
+}

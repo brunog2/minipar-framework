@@ -7,7 +7,7 @@ import { ThemeService } from './services/theme.service';
   selector: 'app-root',
   imports: [RouterOutlet],
   template: '<router-outlet />',
-  styles: `:host { display: block; min-height: 100vh; }`,
+  styles: `:host { display: block; height: 100%; overflow: hidden; }`,
 })
 export class App {
   constructor() {

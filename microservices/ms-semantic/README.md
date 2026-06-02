@@ -47,4 +47,12 @@
 
 ## Status
 
-**Não implementado** nesta fase de setup.
+**Implementado** (Fase 1 — jun/2026). Análise sobre AST JSON via `minipar_core.semantic_json`.
+
+### Erros semânticos (exemplo)
+
+| Entrada | Mensagem |
+|---------|----------|
+| `class Dog extends Arvore` (Arvore inexistente) | `Semantic error: Superclass 'Arvore' not found for class 'Dog'` |
+
+Fixture: `sources/examples/04_semantic_extends_unknown.minipar`.

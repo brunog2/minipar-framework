@@ -36,7 +36,7 @@
 | Componente | Referência |
 |------------|------------|
 | Interpretador OO | `code_references/cl-minipar/src/interpreter/Interpreter.java` |
-| Runner alternativo | `code_references/projeto_compiladores/src/runner.py` |
+| Template Method | `packages/minipar-core/minipar_core/translation/interpreter.py` |
 
 ## Variabilidade LPS
 
@@ -46,4 +46,6 @@
 
 ## Status
 
-**Não implementado** nesta fase de setup.
+**Implementado** (Fase 2 — jun/2026). FastAPI em `app/main.py`, porta **3003**.
+
+MVP: classes OO, `println`, `new`, métodos, `seq`/`par` (threads), entrada automática `Main.run()`.

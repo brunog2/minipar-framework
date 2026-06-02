@@ -19,6 +19,8 @@ import { ProcessModule } from './process/process.module';
         ),
         entities: [CompilationHistory],
         synchronize: false,
+        retryAttempts: 15,
+        retryDelay: 3000,
       }),
     }),
     HealthModule,

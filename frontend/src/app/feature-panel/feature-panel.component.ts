@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatIconModule } from '@angular/material/icon';
 import { MatRadioModule } from '@angular/material/radio';
 
 import {
@@ -11,12 +10,7 @@ import {
 
 @Component({
   selector: 'app-feature-panel',
-  imports: [
-    MatCardModule,
-    MatRadioModule,
-    MatButtonModule,
-    MatProgressSpinnerModule,
-  ],
+  imports: [MatCardModule, MatRadioModule, MatIconModule],
   templateUrl: './feature-panel.component.html',
   styleUrl: './feature-panel.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -24,11 +18,9 @@ import {
 export class FeaturePanelComponent {
   readonly targetVariability = input.required<TargetVariability>();
   readonly executionMode = input.required<ExecutionMode>();
-  readonly loading = input(false);
 
   readonly targetChange = output<TargetVariability>();
   readonly executionChange = output<ExecutionMode>();
-  readonly processClick = output<void>();
 
   readonly targets: { value: TargetVariability; label: string }[] = [
     { value: 'INTERPRETER', label: 'Interpretador' },

@@ -24,6 +24,7 @@ export class CodeEditorComponent {
 
   readonly initialCode = input<string>('');
   readonly codeChange = output<string>();
+  readonly runRequested = output<void>();
 
   protected source = DEFAULT_SAMPLE;
   protected editorOptions: editor.IStandaloneEditorConstructionOptions = {
@@ -72,20 +73,33 @@ export class CodeEditorComponent {
       this.source = editorInstance.getValue();
       this.codeChange.emit(this.source);
     });
+
+    editorInstance.addCommand(
+      // Ctrl/Cmd+Enter — usa API global do Monaco (evita import ESM no bundle)
+      2048 | 3,
+      () => this.runRequested.emit(),
+    );
+    editorInstance.addCommand(66, () => this.runRequested.emit()); // F5
   }
 
   getCode(): string {
     return this.monacoEditor?.getValue() ?? this.source;
   }
-}
 
-const DEFAULT_SAMPLE = `# MiniPar 2026.1 — exemplo
-class Hello {
-  func greet() -> void {
-    print("Olá, MiniPar!")
+  loadCode(code: string): void {
+    if (this.monacoEditor) {
+      this.monacoEditor.setValue(code);
+      this.monacoEditor.focus();
+    }
+    this.source = code;
+    this.codeChange.emit(code);
   }
 }
 
-var h: Hello = new Hello()
-h.greet()
+const DEFAULT_SAMPLE = `# MiniPar 2026.1 — exemplo (Fase 1)
+class Main {
+  void run() {
+    println("ok");
+  }
+}
 `;

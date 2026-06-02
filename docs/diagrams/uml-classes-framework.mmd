@@ -1,0 +1,68 @@
+classDiagram
+  class AbstractBackendTranslator {
+    <<abstract>>
+    +translate(ast_dict) TranslationResult
+    +validate(ast_dict)
+    +prepare(ast_dict)
+    +emit(ast_dict)*
+    +finalize()*
+  }
+
+  class InterpreterBackend {
+    +emit(ast_dict)
+    +finalize()
+  }
+
+  class CBackend {
+    +emit(ast_dict)
+    +finalize()
+  }
+
+  class RustBackend {
+    +emit(ast_dict)
+    +finalize()
+  }
+
+  class ARMBackend {
+    +emit(ast_dict)
+    +finalize()
+  }
+
+  class Lexer {
+    +tokenize() List~Token~
+  }
+
+  class Parser {
+    +parse() Program
+  }
+
+  class SemanticAnalyzer {
+    +analyze(program)
+  }
+
+  AbstractBackendTranslator <|-- InterpreterBackend
+  AbstractBackendTranslator <|-- CBackend
+  AbstractBackendTranslator <|-- RustBackend
+  AbstractBackendTranslator <|-- ARMBackend
+
+  class Program {
+    +declarations
+  }
+
+  class ClassDecl {
+    +name
+    +extends
+    +members
+  }
+
+  class MethodDecl {
+    +returnType
+    +name
+    +body
+  }
+
+  Program --> ClassDecl
+  ClassDecl --> MethodDecl
+
+  Parser ..> Program : cria
+  Lexer ..> Parser : tokens

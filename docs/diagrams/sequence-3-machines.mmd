@@ -1,0 +1,29 @@
+sequenceDiagram
+  participant UI as Angular_UI
+  participant GW as API_Gateway
+  participant FE as ms_front_end
+  participant SEM as ms_semantic
+  participant CO as ms_parallel_coord
+  participant W1 as worker_quicksort
+  participant W2 as worker_matrix
+  participant W3 as worker_factorial
+  participant BE as Backend_MS
+
+  UI->>GW: POST /api/v1/process DISTRIBUTED_SOCKETS
+  GW->>FE: POST /parse
+  FE-->>GW: AST JSON
+  GW->>SEM: POST /analyze
+  SEM-->>GW: symbolTable
+  GW->>CO: POST /coordinate
+  par Workers paralelos
+    CO->>W1: socket RUN
+    CO->>W2: socket RUN
+    CO->>W3: socket RUN
+  end
+  W1-->>CO: QuickSort result
+  W2-->>CO: Matrix result
+  W3-->>CO: Factorial result
+  CO-->>GW: results agregados
+  GW->>BE: POST execute/generate
+  BE-->>GW: output programa
+  GW-->>UI: output + distributedResults

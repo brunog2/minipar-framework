@@ -11,5 +11,6 @@ ENV NODE_ENV=production
 COPY package*.json ./
 RUN npm ci --omit=dev
 COPY --from=build /app/dist ./dist
+COPY scripts/wait-for-postgres.mjs ./scripts/wait-for-postgres.mjs
 EXPOSE 3000
-CMD ["node", "dist/main.js"]
+CMD ["sh", "-c", "node scripts/wait-for-postgres.mjs && node dist/main.js"]

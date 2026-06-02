@@ -1,5 +1,7 @@
 Este documento apresenta a especificação detalhada do seu projeto de conclusão para as disciplinas do professor Arturo Hernandez Dominguez, integrando os conceitos de **Compiladores**, **Reuso de Software** e **Linhas de Produto de Software (LPS/Tópicos)**.
 
+**Auditoria de conformidade (status real vs. requisitos, gaps e backlog futuro):** [COMPLIANCE_AUDIT.md](./COMPLIANCE_AUDIT.md)
+
 ---
 
 # Especificação do Projeto: Framework para Compiladores e Interpretadores Usando Microsserviços

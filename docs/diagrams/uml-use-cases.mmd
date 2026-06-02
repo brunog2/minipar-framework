@@ -1,0 +1,27 @@
+flowchart LR
+  subgraph actors [Atores]
+    Dev[DesenvolvedorMiniPar]
+  end
+
+  subgraph usecases [Casos de Uso]
+    UC1[EditarCodigoFonte]
+    UC2[SelecionarVarianteLPS]
+    UC3[ExecutarPipeline]
+    UC4[VisualizarAST]
+    UC5[VisualizarSymbolTable]
+    UC6[ExecutarParalelismoDistribuido]
+    UC7[VisualizarFractalSierpinski]
+  end
+
+  Dev --> UC1
+  Dev --> UC2
+  Dev --> UC3
+  Dev --> UC4
+  Dev --> UC5
+  Dev --> UC6
+  Dev --> UC7
+
+  UC3 --> UC4
+  UC3 --> UC5
+  UC6 --> UC3
+  UC7 --> UC3

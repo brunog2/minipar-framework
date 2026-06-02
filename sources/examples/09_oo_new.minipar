@@ -1,0 +1,16 @@
+class Animal {
+  string name;
+}
+
+class Dog extends Animal {
+  void bark() {
+    println("woof");
+  }
+}
+
+class Main {
+  void run() {
+    Dog d = new Dog();
+    d.bark();
+  }
+}

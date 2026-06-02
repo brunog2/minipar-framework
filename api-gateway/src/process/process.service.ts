@@ -46,6 +46,7 @@ export class ProcessService {
         symbolTable: result.symbolTable,
         generatedCode: result.generatedCode,
         pipelineSteps: result.pipelineSteps,
+        distributedResults: result.distributedResults,
       };
     } catch (err: unknown) {
       const message =

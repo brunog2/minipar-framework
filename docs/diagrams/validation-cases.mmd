@@ -1,0 +1,45 @@
+%% Casos de validação manual — Fases 1 e 2 (UI Executar / curl)
+%% Fonte: sources/examples/01–12
+
+flowchart TD
+  subgraph fase1 [Fase1_AnaliseEstatica]
+    OK[02 herança válida]
+    SEM[04 extends Arvore]
+    PAR1[05 extends vazio]
+    PAR2[06 exts typo]
+    EXPR[07 expr solta a]
+  end
+
+  subgraph fase2 [Fase2_Backends]
+    INT08[08 interpreter ok]
+    OO09[09 new + método]
+    PAR10[10 seq + par]
+    C11[11 codegen C]
+    R12[12 codegen Rust MVP]
+  end
+
+  subgraph pipeline [Pipeline HTTP]
+    LEX[ms-front-end]
+    SEMAN[ms-semantic]
+    BE[Back-end LPS real]
+  end
+
+  OK --> LEX
+  SEM --> LEX
+  PAR1 --> LEX
+  PAR2 --> LEX
+  EXPR --> LEX
+  INT08 --> LEX
+  OO09 --> LEX
+  PAR10 --> LEX
+  C11 --> LEX
+  R12 --> LEX
+
+  LEX --> SEMAN
+  SEMAN --> BE
+
+  BE --> OUT_INT["INTERPRETER: stdout real"]
+  BE --> OUT_C["C: code + gcc -O2 + stdout"]
+  BE --> OUT_RUST["RUST: code + msg toolchain"]
+  SEMAN --> OUT_SEM["Erro semântico"]
+  LEX --> OUT_PAR["Erro sintático"]

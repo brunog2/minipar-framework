@@ -63,4 +63,4 @@ Quando `DISTRIBUTED_SOCKETS`, o gateway chama este MS **após** semântica e **a
 
 ## Status
 
-**Não implementado** nesta fase de setup.
+**Implementado** — Fase 3. Coordenador FastAPI + 3 workers socket (`worker-quicksort`, `worker-matrix`, `worker-factorial`) no Docker Compose.

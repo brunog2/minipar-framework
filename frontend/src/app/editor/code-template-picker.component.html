@@ -1,0 +1,38 @@
+<div class="template-picker">
+  <mat-form-field appearance="outline" class="template-picker__select">
+    <mat-label>Exemplos de teste</mat-label>
+    <mat-select
+      [disabled]="disabled()"
+      [value]="selectedId()"
+      (valueChange)="onSelectionChange($event)"
+      panelClass="template-picker__panel"
+      aria-label="Selecionar exemplo de código MiniPar"
+    >
+      <mat-option value="">— Escolha um exemplo —</mat-option>
+      @for (group of groups; track group.category) {
+        <mat-optgroup [label]="group.label">
+          @for (template of group.templates; track template.id) {
+            <mat-option [value]="template.id">{{ template.label }}</mat-option>
+          }
+        </mat-optgroup>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  @if (activeTemplate(); as template) {
+    <div class="template-picker__info" role="status">
+      <mat-icon aria-hidden="true">description</mat-icon>
+      <div class="template-picker__info-text">
+        <p class="template-picker__description">{{ template.description }}</p>
+        <p class="template-picker__expected">
+          <strong>Resultado esperado:</strong> {{ template.expectedResult }}
+        </p>
+      </div>
+    </div>
+  } @else {
+    <p class="template-picker__placeholder">
+      Selecione um exemplo pronto para preencher o editor e testar compilação,
+      análise semântica ou erros de sintaxe.
+    </p>
+  }
+</div>

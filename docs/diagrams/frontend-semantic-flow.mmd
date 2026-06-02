@@ -1,0 +1,18 @@
+%% Fases léxica, sintática e semântica — Fase 1 (Alan / Karlisson no registro acadêmico)
+
+flowchart TD
+  SRC["Código MiniPar 2026.1<br/>classes · extends · print/println · par/seq"] --> LEX
+  LEX["Analisador léxico<br/>minipar_core.lexer<br/>tokens OO + comentários #"] --> PAR
+  PAR["Analisador sintático descendente recursivo<br/>minipar_core.parser"] --> AST
+  AST["AST JSON<br/>minipar_core.ast_json.to_dict"] --> SEM
+  SEM["Análise semântica MVP<br/>minipar_core.semantic_json<br/>classes · extends · symbolTable"] --> OUT["Resposta ms-semantic<br/>ast + symbolTable + errors"]
+
+  subgraph ms_front_end ["ms-front-end :3001"]
+    LEX
+    PAR
+    AST
+  end
+
+  subgraph ms_semantic ["ms-semantic :3002"]
+    SEM
+  end

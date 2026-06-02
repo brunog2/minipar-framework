@@ -1,0 +1,44 @@
+class Sierpinski {
+  number isBlack(number x, number y, number n) {
+    if (n == 1) {
+      return 1;
+    }
+    number m = n / 3;
+    if (x >= m && x < 2 * m && y >= m && y < 2 * m) {
+      return 0;
+    }
+    return this.isBlack(x % m, y % m, m);
+  }
+
+  void draw(number order) {
+    number n = 1;
+    number i = 0;
+    while (i < order) {
+      n = n * 3;
+      i = i + 1;
+    }
+    number row = 0;
+    while (row < n) {
+      number col = 0;
+      string line = "";
+      while (col < n) {
+        if (this.isBlack(col, row, n) == 1) {
+          line = line + "*";
+        } else {
+          line = line + ".";
+        }
+        col = col + 1;
+      }
+      println(line);
+      row = row + 1;
+    }
+  }
+}
+
+class Main {
+  void run() {
+    Sierpinski carpet = new Sierpinski();
+    println("Tapete de Sierpinski (ordem 3, matriz 27x27):");
+    carpet.draw(3);
+  }
+}

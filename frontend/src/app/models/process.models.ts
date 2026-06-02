@@ -23,5 +23,13 @@ export interface ProcessResponse {
   symbolTable?: unknown;
   generatedCode?: string;
   pipelineSteps?: string[];
+  distributedResults?: DistributedWorkerResult[];
+  error?: string;
+}
+
+export interface DistributedWorkerResult {
+  role: string;
+  data: string;
+  machine?: string;
   error?: string;
 }

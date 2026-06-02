@@ -1,0 +1,18 @@
+%% Fluxo ms-codegen-c — AST → TAC → C → gcc -O2 (Fase 2)
+
+flowchart TD
+  AST[AST JSON validada]
+  TAC[TACGenerator.lower]
+  CGen[SimpleCCodeGenerator]
+  SRC[program.c]
+  GCC["gcc -O2 -std=c11"]
+  EXE[Executável temporário]
+  OUT[stdout + log]
+
+  AST --> TAC
+  TAC --> CGen
+  CGen --> SRC
+  SRC --> GCC
+  GCC --> EXE
+  EXE --> OUT
+  CGen --> CODE["Resposta: code + output"]

@@ -1,0 +1,54 @@
+%% Template Method — back-ends MiniPar (Fase 2)
+%% Karlisson — Reuso / SCHEDULE classDiagram
+
+classDiagram
+  class AbstractBackendTranslator {
+    +translate(ast_dict) TranslationResult
+    #validate(ast)
+    #prepare(ast)
+    #emit(ast)*
+    #finalize() TranslationResult
+  }
+
+  class TranslationResult {
+    +output: string
+    +code: string
+    +exit_code: int
+  }
+
+  class InterpreterBackend {
+    +exec/eval AST walk
+    +Environment scopes
+    +ParBlock threads
+  }
+
+  class TACGenerator {
+    +lower(ast) List~TAC~
+  }
+
+  class CBackend {
+    +emit_tac_to_c()
+    +invoke_gcc_O2()
+  }
+
+  class CppBackend {
+    +g++ -std=c++17
+  }
+
+  class RustBackend {
+    +emit_minimal_rust()
+    +try_rustc()
+  }
+
+  class ARMBackend {
+    +emit_tac_to_arm()
+  }
+
+  AbstractBackendTranslator <|-- InterpreterBackend
+  AbstractBackendTranslator <|-- CBackend
+  CBackend <|-- CppBackend
+  AbstractBackendTranslator <|-- RustBackend
+  AbstractBackendTranslator <|-- ARMBackend
+  CBackend ..> TACGenerator : uses
+  ARMBackend ..> TACGenerator : uses
+  AbstractBackendTranslator ..> TranslationResult : produces

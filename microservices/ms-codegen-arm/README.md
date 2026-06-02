@@ -2,7 +2,7 @@
 
 ## Responsabilidade
 
-Gerar **Assembly ARMv7** a partir da AST/TAC para execução em ambiente ARM (ex.: Raspberry Pi, QEMU).
+Gerar **Assembly ARMv7** a partir da AST/TAC.
 
 ## Endpoints
 
@@ -11,23 +11,12 @@ Gerar **Assembly ARMv7** a partir da AST/TAC para execução em ambiente ARM (ex
 | `POST` | `/generate` | Gera `.s` ARMv7 |
 | `GET` | `/health` | Health check |
 
-## Contrato de entrada
-
-```json
-{
-  "ast": { "type": "Program", "declarations": [] },
-  "symbolTable": {},
-  "executionMode": "LOCAL",
-  "target": "ASSEMBLY"
-}
-```
-
 ## Contrato de saída
 
 ```json
 {
-  "output": "Assembly gerado",
-  "code": ".text\n.global _start\n..."
+  "output": "Assembly ARMv7 gerado. ...",
+  "code": ".text\n.global main\n..."
 }
 ```
 
@@ -36,14 +25,8 @@ Gerar **Assembly ARMv7** a partir da AST/TAC para execução em ambiente ARM (ex
 | Componente | Referência |
 |------------|------------|
 | ARM codegen | `code_references/projeto_compiladores/src/arm_codegen.py` |
-| Guia ARM | `code_references/projeto_compiladores/docs/tutorials/ARM_COMPILATION_GUIDE.md` |
-
-## Variabilidade LPS
-
-| Ponto de variação | Variante |
-|-------------------|----------|
-| Back-end | **ASSEMBLY** (ARMv7) |
+| Implementação MVP | `packages/minipar-core/minipar_core/translation/arm_backend.py` |
 
 ## Status
 
-**Não implementado** nesta fase de setup.
+**Implementado MVP** (Fase 2 — jun/2026). Porta **3007**. Execução ARM opcional (toolchain pode estar ausente).

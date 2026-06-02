@@ -20,7 +20,7 @@ flowchart TB
   end
 
   subgraph Orchestration["Orquestração central"]
-    GW["API Gateway — NestJS<br/>POST /api/v1/process · GET /health<br/>:3000<br/>PIPELINE_MODE: mock | http"]:::orch
+    GW["API Gateway — NestJS<br/>POST /api/v1/process · GET /health<br/>:3000<br/>PIPELINE_MODE: http<br/>PIPELINE_BACKEND_MODE: http (Fase 2)"]:::orch
   end
 
   subgraph Persistence["Persistência"]
@@ -29,17 +29,17 @@ flowchart TB
 
   subgraph Analysis["Microsserviços de análise (sempre no pipeline)"]
     direction LR
-    MS_FE["ms-front-end :3001<br/>POST /parse<br/>Léxico + Sintático → AST JSON"]:::ms
-    MS_SEM["ms-semantic :3002<br/>POST /analyze<br/>Semântica + tabela de símbolos"]:::ms
+    MS_FE["ms-front-end :3001 ✅<br/>POST /parse<br/>minipar-core: léxico + sintático"]:::ms
+    MS_SEM["ms-semantic :3002 ✅<br/>POST /analyze<br/>minipar-core: semântica OO MVP"]:::ms
     MS_FE --> MS_SEM
   end
 
   subgraph LPS["Back-ends — ponto de variação LPS (um por requisição)"]
     direction TB
-    MS_INT["ms-interpreter :3003<br/>POST /execute<br/>Variante: Interpretador"]:::lps
-    MS_C["ms-codegen-c :3004<br/>POST /generate<br/>Variantes: C · C++ · gcc -O2"]:::lps
-    MS_RUST["ms-codegen-rust :3005<br/>POST /generate<br/>Variante: Rust"]:::lps
-    MS_ARM["ms-codegen-arm :3007<br/>POST /generate<br/>Variante: Assembly ARMv7"]:::lps
+    MS_INT["ms-interpreter :3003 ✅<br/>POST /execute<br/>Variante: Interpretador"]:::lps
+    MS_C["ms-codegen-c :3004 ✅<br/>POST /generate<br/>Variantes: C · C++ · gcc -O2"]:::lps
+    MS_RUST["ms-codegen-rust :3005 ✅<br/>POST /generate<br/>Variante: Rust"]:::lps
+    MS_ARM["ms-codegen-arm :3007 ✅<br/>POST /generate<br/>Variante: Assembly ARMv7"]:::lps
   end
 
   subgraph Distributed["Execução distribuída (quando executionMode = DISTRIBUTED_SOCKETS)"]
@@ -50,6 +50,10 @@ flowchart TB
     MS_COORD -->|sockets| W1
     MS_COORD -->|sockets| W2
     MS_COORD -->|sockets| W3
+  end
+
+  subgraph CorePkg["Pacote compartilhado (Fase 1–2)"]
+    CORE["packages/minipar-core<br/>lexer · parser · semantic · translation<br/>Template Method + TAC + interpreter"]:::reuse
   end
 
   subgraph Reuse["Reuso sistemático (code_references/)"]
@@ -70,6 +74,14 @@ flowchart TB
   MS_SEM --> MS_ARM
   MS_SEM -->|"antes do back-end"| MS_COORD
 
+  REF_JAVA -.->|"port gramática OO"| CORE
+  REF_PY -.->|"semântica procedural"| CORE
+  CORE --> MS_FE
+  CORE --> MS_SEM
+  CORE --> MS_INT
+  CORE --> MS_C
+  CORE --> MS_RUST
+  CORE --> MS_ARM
   REF_JAVA -.->|"reuso gramática / AST"| MS_FE
   REF_JAVA -.-> MS_SEM
   REF_PY -.-> MS_C

@@ -2,12 +2,12 @@ services:
   postgres:
     image: postgres:16-alpine
     container_name: minipar-postgres
+    networks:
+      - minipar
     environment:
       POSTGRES_USER: minipar
       POSTGRES_PASSWORD: minipar
       POSTGRES_DB: minipar
-    ports:
-      - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./database/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
@@ -17,33 +17,230 @@ services:
       timeout: 5s
       retries: 10
 
+  ms-front-end:
+    build:
+      context: .
+      dockerfile: microservices/ms-front-end/Dockerfile
+    container_name: minipar-ms-front-end
+    networks:
+      - minipar
+    ports:
+      - '3001:3001'
+    healthcheck:
+      test: ['CMD-SHELL', 'python -c "import urllib.request; urllib.request.urlopen(\"http://127.0.0.1:3001/health\")"']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  ms-semantic:
+    build:
+      context: .
+      dockerfile: microservices/ms-semantic/Dockerfile
+    container_name: minipar-ms-semantic
+    networks:
+      - minipar
+    ports:
+      - '3002:3002'
+    healthcheck:
+      test: ['CMD-SHELL', 'python -c "import urllib.request; urllib.request.urlopen(\"http://127.0.0.1:3002/health\")"']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  ms-interpreter:
+    build:
+      context: .
+      dockerfile: microservices/ms-interpreter/Dockerfile
+    container_name: minipar-ms-interpreter
+    networks:
+      - minipar
+    ports:
+      - '3003:3003'
+    healthcheck:
+      test: ['CMD-SHELL', 'python -c "import urllib.request; urllib.request.urlopen(\"http://127.0.0.1:3003/health\")"']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  ms-codegen-c:
+    build:
+      context: .
+      dockerfile: microservices/ms-codegen-c/Dockerfile
+    container_name: minipar-ms-codegen-c
+    networks:
+      - minipar
+    ports:
+      - '3004:3004'
+    healthcheck:
+      test: ['CMD-SHELL', 'python -c "import urllib.request; urllib.request.urlopen(\"http://127.0.0.1:3004/health\")"']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  ms-codegen-rust:
+    build:
+      context: .
+      dockerfile: microservices/ms-codegen-rust/Dockerfile
+    container_name: minipar-ms-codegen-rust
+    networks:
+      - minipar
+    ports:
+      - '3005:3005'
+    healthcheck:
+      test: ['CMD-SHELL', 'python -c "import urllib.request; urllib.request.urlopen(\"http://127.0.0.1:3005/health\")"']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  ms-codegen-arm:
+    build:
+      context: .
+      dockerfile: microservices/ms-codegen-arm/Dockerfile
+    container_name: minipar-ms-codegen-arm
+    networks:
+      - minipar
+    ports:
+      - '3007:3007'
+    healthcheck:
+      test: ['CMD-SHELL', 'python -c "import urllib.request; urllib.request.urlopen(\"http://127.0.0.1:3007/health\")"']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  worker-quicksort:
+    build:
+      context: .
+      dockerfile: microservices/parallel-workers/Dockerfile
+    container_name: minipar-worker-quicksort
+    networks:
+      - minipar
+    environment:
+      WORKER_ROLE: quicksort
+      PORT: 9001
+    ports:
+      - '9001:9001'
+
+  worker-matrix:
+    build:
+      context: .
+      dockerfile: microservices/parallel-workers/Dockerfile
+    container_name: minipar-worker-matrix
+    networks:
+      - minipar
+    environment:
+      WORKER_ROLE: matrix
+      PORT: 9002
+    ports:
+      - '9002:9002'
+
+  worker-factorial:
+    build:
+      context: .
+      dockerfile: microservices/parallel-workers/Dockerfile
+    container_name: minipar-worker-factorial
+    networks:
+      - minipar
+    environment:
+      WORKER_ROLE: factorial
+      PORT: 9003
+    ports:
+      - '9003:9003'
+
+  ms-parallel-coord:
+    build:
+      context: .
+      dockerfile: microservices/ms-parallel-coord/Dockerfile
+    container_name: minipar-ms-parallel-coord
+    networks:
+      - minipar
+    environment:
+      WORKER_QUICKSORT_HOST: worker-quicksort
+      WORKER_MATRIX_HOST: worker-matrix
+      WORKER_FACTORIAL_HOST: worker-factorial
+    ports:
+      - '3006:3006'
+    depends_on:
+      - worker-quicksort
+      - worker-matrix
+      - worker-factorial
+    healthcheck:
+      test: ['CMD-SHELL', 'python -c "import urllib.request; urllib.request.urlopen(\"http://127.0.0.1:3006/health\")"']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
   api-gateway:
     build: ./api-gateway
     container_name: minipar-api-gateway
+    networks:
+      - minipar
+    dns:
+      - 127.0.0.11
     ports:
       - '3000:3000'
     environment:
       DATABASE_URL: postgresql://minipar:minipar@postgres:5432/minipar
-      PIPELINE_MODE: mock
+      PIPELINE_MODE: http
+      PIPELINE_BACKEND_MODE: http
       PORT: 3000
-      MS_FRONTEND_URL: http://host.docker.internal:3001
-      MS_SEMANTIC_URL: http://host.docker.internal:3002
-      MS_INTERPRETER_URL: http://host.docker.internal:3003
-      MS_CODEGEN_C_URL: http://host.docker.internal:3004
-      MS_CODEGEN_RUST_URL: http://host.docker.internal:3005
-      MS_PARALLEL_COORD_URL: http://host.docker.internal:3006
-      MS_CODEGEN_ARM_URL: http://host.docker.internal:3007
+      MS_FRONTEND_URL: http://ms-front-end:3001
+      MS_SEMANTIC_URL: http://ms-semantic:3002
+      MS_INTERPRETER_URL: http://ms-interpreter:3003
+      MS_CODEGEN_C_URL: http://ms-codegen-c:3004
+      MS_CODEGEN_RUST_URL: http://ms-codegen-rust:3005
+      MS_PARALLEL_COORD_URL: http://ms-parallel-coord:3006
+      MS_CODEGEN_ARM_URL: http://ms-codegen-arm:3007
     depends_on:
       postgres:
         condition: service_healthy
+      ms-front-end:
+        condition: service_healthy
+      ms-semantic:
+        condition: service_healthy
+      ms-interpreter:
+        condition: service_healthy
+      ms-codegen-c:
+        condition: service_healthy
+      ms-codegen-rust:
+        condition: service_healthy
+      ms-codegen-arm:
+        condition: service_healthy
+      ms-parallel-coord:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'node -e "fetch(''http://127.0.0.1:3000/health'').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"',
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 45s
 
   frontend:
     build: ./frontend
     container_name: minipar-frontend
+    networks:
+      - minipar
     ports:
       - '4200:80'
     depends_on:
-      - api-gateway
+      api-gateway:
+        condition: service_healthy
+    restart: unless-stopped
+
+networks:
+  minipar:
+    driver: bridge
 
 volumes:
   postgres_data:

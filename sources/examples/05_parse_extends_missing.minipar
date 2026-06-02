@@ -1,0 +1,9 @@
+class Animal {
+  string name;
+}
+
+class Dog extends  {
+  void bark() {
+    println("woof");
+  }
+}

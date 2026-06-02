@@ -1,0 +1,5 @@
+class Main {
+  void run() {
+    println("Menu coordenador: selecione DISTRIBUTED_SOCKETS na UI e Executar.");
+  }
+}

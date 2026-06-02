@@ -1,0 +1,34 @@
+%% Mapa de reuso — referências → minipar-core (Fase 2)
+
+flowchart LR
+  subgraph refs [code_references]
+    CL[cl-minipar Interpreter.java]
+    PC[projeto_compiladores codegen.py]
+    PCC[c_codegen.py]
+    PCA[arm_codegen.py]
+    PCB[backend.py gcc]
+  end
+
+  subgraph core [packages/minipar-core/translation]
+    INT[interpreter.py]
+    TAC[tac_codegen.py]
+    CGC[c_codegen.py]
+    CBE[c_backend.py]
+    ARM[arm_backend.py]
+  end
+
+  subgraph ms [microsserviços]
+    MSI[ms-interpreter :3003]
+    MSC[ms-codegen-c :3004]
+    MSR[ms-codegen-rust :3005]
+    MSA[ms-codegen-arm :3007]
+  end
+
+  CL --> INT
+  PC --> TAC
+  PCC --> CGC
+  PCA --> ARM
+  PCB --> CBE
+  INT --> MSI
+  CBE --> MSC
+  ARM --> MSA

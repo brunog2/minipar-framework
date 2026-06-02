@@ -27,23 +27,37 @@ Diagramas Mermaid em [`docs/diagrams/`](docs/diagrams/):
 
 - [architecture.mmd](docs/diagrams/architecture.mmd) — componentes, LPS, deploy e reuso
 - [pipeline-sequence.mmd](docs/diagrams/pipeline-sequence.mmd) — sequência `POST /api/v1/process`
+- [validation-cases.mmd](docs/diagrams/validation-cases.mmd) — casos de validação manual (Fase 1)
+- [template-method.mmd](docs/diagrams/template-method.mmd) — Template Method (Fase 2)
+- [codegen-c-flow.mmd](docs/diagrams/codegen-c-flow.mmd) — AST → C → gcc (Fase 2)
+- [reuse-map.mmd](docs/diagrams/reuse-map.mmd) — mapa de reuso (Fase 2)
 
 ## Estrutura do monorepo
 
 ```
 minipar-framework/
-├── frontend/             # Interface web (editor + seleção de variabilidade)
-├── api-gateway/          # Orquestração central e persistência
-├── database/init.sql     # Schema PostgreSQL
-├── microservices/        # Especificações (README) de cada MS
-└── docker-compose.yml    # Postgres + Gateway + Frontend
+├── frontend/                 # Angular + nginx (:4200)
+├── api-gateway/              # NestJS — orquestração (:3000)
+├── packages/minipar-core/    # Lexer, parser, semântica, translation/
+├── microservices/
+│   ├── ms-front-end/         # :3001 — parse
+│   ├── ms-semantic/          # :3002 — analyze
+│   ├── ms-interpreter/       # :3003 — execute
+│   ├── ms-codegen-c/         # :3004 — generate (gcc -O2)
+│   ├── ms-codegen-rust/      # :3005 — generate (MVP)
+│   └── ms-codegen-arm/       # :3007 — generate (MVP)
+├── database/init.sql
+├── docs/diagrams/            # Diagramas Mermaid
+├── sources/examples/         # Fixtures 01–14
+├── COMPLIANCE_AUDIT.md       # Conformidade vs. requisitos + backlog futuro
+└── docker-compose.yml
 ```
 
 ## Requisitos
 
-- Node.js 20+
-- Docker e Docker Compose
-- (Futuro) GCC, toolchain ARM para back-ends reais
+- Node.js 20+ (frontend / api-gateway local)
+- Docker e Docker Compose (stack completa)
+- GCC incluído no container `ms-codegen-c` (não precisa instalar no host para E2E Docker)
 
 ## Execução com Docker
 
@@ -52,10 +66,21 @@ cd minipar-framework
 docker compose up --build
 ```
 
-- Frontend: http://localhost:4200
-- API Gateway: http://localhost:3000
-- Health: http://localhost:3000/health
-- PostgreSQL: `localhost:5432` (user/pass/db: `minipar`)
+Serviços (Docker Compose):
+
+| Serviço | Porta host |
+|---------|------------|
+| frontend | 4200 |
+| api-gateway | 3000 |
+| ms-front-end | 3001 |
+| ms-semantic | 3002 |
+| ms-interpreter | 3003 |
+| ms-codegen-c | 3004 |
+| ms-codegen-rust | 3005 |
+| ms-codegen-arm | 3007 |
+| postgres | rede interna |
+
+Variáveis no gateway: `PIPELINE_MODE=http`, `PIPELINE_BACKEND_MODE=http`.
 
 ## Deploy
 
@@ -89,10 +114,33 @@ Configure `src/environments/environment.ts` se o gateway não estiver em `http:/
 
 ## Modo pipeline
 
-| `PIPELINE_MODE` | Comportamento |
-|-----------------|---------------|
-| `mock` (padrão) | Respostas simuladas; fluxo E2E sem microsserviços reais |
-| `http` | Chama URLs em `MS_*_URL` (requer MS implementados) |
+| Variável | Comportamento |
+|----------|---------------|
+| `PIPELINE_MODE` | `mock` — respostas simuladas; `http` — chama MS reais (padrão no Docker Compose) |
+| `PIPELINE_BACKEND_MODE` | `mock` — interpretador/codegen simulados; `http` — MS reais (padrão Docker Compose Fase 2) |
+
+### Fase 1 (implementado)
+
+| Serviço | Porta | Status |
+|---------|-------|--------|
+| ms-front-end | 3001 | ✅ POST /parse |
+| ms-semantic | 3002 | ✅ POST /analyze |
+
+### Fase 2 (implementado)
+
+| Serviço | Porta | Status |
+|---------|-------|--------|
+| ms-interpreter | 3003 | ✅ POST /execute |
+| ms-codegen-c | 3004 | ✅ POST /generate (gcc -O2) |
+| ms-codegen-rust | 3005 | ✅ POST /generate (MVP) |
+| ms-codegen-arm | 3007 | ✅ POST /generate (MVP) |
+| ms-parallel-coord | 3006 | 🟡 POST /coordinate (workers socket; ver COMPLIANCE_AUDIT.md) |
+
+Pacote compartilhado: [`packages/minipar-core/`](packages/minipar-core/) — inclui `translation/` (Template Method).
+
+Exemplos: [`sources/examples/`](sources/examples/) (01–14).
+
+**Conformidade e gaps:** [COMPLIANCE_AUDIT.md](./COMPLIANCE_AUDIT.md).
 
 ## Referências de reuso
 
@@ -108,19 +156,29 @@ curl http://localhost:3000/health
 
 curl -X POST http://localhost:3000/api/v1/process \
   -H "Content-Type: application/json" \
-  -d '{"sourceCode":"print(\"ok\")","targetVariability":"INTERPRETER","executionMode":"LOCAL"}'
+  -d '{"sourceCode":"class Main { void run() { println(\"ok\"); } }","targetVariability":"INTERPRETER","executionMode":"LOCAL"}'
+```
 
+Interface em http://localhost:4200 — botão **Executar** (ou `Ctrl+Enter` / `F5`), painel **Console** com abas Saída / Símbolos / AST. Exemplos e erros esperados: [`sources/examples/README.md`](sources/examples/README.md).
+
+Histórico no Postgres:
+
+```bash
 docker exec minipar-postgres psql -U minipar -d minipar \
   -c "SELECT id, status, target_variability FROM compilation_history ORDER BY created_at DESC LIMIT 5;"
 ```
 
-Interface em http://localhost:4200 — o nginx encaminha `/api/*` para o gateway.
+## Roadmap completo
 
-## Roadmap
+Panorama detalhado por fase, checklist de entrega, status de OO e plano até 10/jun: **[ROADMAP.md](./ROADMAP.md)**.  
+Auditoria de conformidade (requisitos do professor, parcial, pendente, demo): **[COMPLIANCE_AUDIT.md](./COMPLIANCE_AUDIT.md)**.
 
-1. Implementar microsserviços conforme `microservices/*/README.md`
-2. Teste de paralelismo (3 máquinas): QuickSort, matrizes, fatorial via sockets
-3. Fractal (tapete de Sierpinski) em MiniPar OO — ver `../sources/Fractal-python.py`
+## Roadmap (resumo)
+
+1. ~~Implementar `ms-front-end` e `ms-semantic`~~ (Fase 1)
+2. ~~Template Method + `ms-interpreter`, `ms-codegen-c`, Rust/ARM MVP~~ (Fase 2)
+3. ~~`ms-parallel-coord` + workers socket~~ (Fase 3 — 🟡 validar E2E; ver auditoria)
+4. ~~Fractal Sierpinski (`13_sierpinski.minipar`)~~ (Fase 3 — 🟡 validar na UI + PDF)
 
 ## Entrega acadêmica
 

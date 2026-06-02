@@ -1,0 +1,51 @@
+flowchart TB
+  subgraph frontend [Frontend]
+    UI[AngularCompilerWorkspace]
+  end
+
+  subgraph gateway [Gateway]
+    GW[API_Gateway_NestJS]
+    PG[(PostgreSQL)]
+  end
+
+  subgraph analysis [AnaliseEstatica]
+    FE[ms_front_end_LexerParser]
+    SEM[ms_semantic]
+  end
+
+  subgraph backends [BackendsLPS]
+    INT[ms_interpreter]
+    CC[ms_codegen_c]
+    CR[ms_codegen_rust]
+    CA[ms_codegen_arm]
+  end
+
+  subgraph parallel [Paralelismo]
+    COORD[ms_parallel_coord]
+    W1[worker_quicksort]
+    W2[worker_matrix]
+    W3[worker_factorial]
+  end
+
+  subgraph core [PacoteCompartilhado]
+    CORE[minipar_core]
+  end
+
+  UI -->|REST| GW
+  GW --> FE
+  GW --> SEM
+  GW --> INT
+  GW --> CC
+  GW --> CR
+  GW --> CA
+  GW --> COORD
+  GW --> PG
+  COORD --> W1
+  COORD --> W2
+  COORD --> W3
+  FE --> CORE
+  SEM --> CORE
+  INT --> CORE
+  CC --> CORE
+  CR --> CORE
+  CA --> CORE

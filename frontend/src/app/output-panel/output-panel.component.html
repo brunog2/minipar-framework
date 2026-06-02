@@ -1,39 +1,96 @@
 <mat-card class="output" appearance="outlined">
-  <mat-card-header>
-    <mat-card-title>Saída</mat-card-title>
-  </mat-card-header>
+  <div class="output__header">
+    <div class="output__title-row">
+      <h2 class="output__title">Console</h2>
+      @if (status(); as s) {
+        <mat-chip-set aria-label="Status da execução">
+          <mat-chip [class]="'status-chip status-chip--' + s.tone">
+            <mat-icon aria-hidden="true">{{ s.icon }}</mat-icon>
+            {{ s.label }}
+          </mat-chip>
+        </mat-chip-set>
+      }
+    </div>
+  </div>
 
   <mat-card-content>
-    @if (errorMessage()) {
-      <pre class="error">{{ errorMessage() }}</pre>
-    }
-
-    @if (result(); as r) {
+    @if (displayError(); as err) {
+      <div class="output__error-panel" role="alert">
+        <mat-icon aria-hidden="true">report_problem</mat-icon>
+        <pre>{{ err }}</pre>
+      </div>
+    } @else if (result(); as r) {
       @if (r.success) {
-        <p class="success">Processamento concluído (history: {{ r.historyId }})</p>
-        @if (r.output) {
-          <h3>Mensagem</h3>
-          <pre>{{ r.output }}</pre>
-        }
-        @if (r.pipelineSteps?.length) {
-          <h3>Pipeline</h3>
-          <mat-list>
-            @for (step of r.pipelineSteps; track step) {
-              <mat-list-item>{{ step }}</mat-list-item>
+        <div class="output__results">
+          <mat-tab-group class="output__tabs">
+            <mat-tab>
+            <ng-template mat-tab-label>
+              <mat-icon class="tab-icon" aria-hidden="true">play_arrow</mat-icon>
+              Saída
+            </ng-template>
+            @if (r.output) {
+              <pre class="output__message">{{ r.output }}</pre>
+            } @else {
+              <p class="placeholder">Nenhuma mensagem de runtime.</p>
             }
-          </mat-list>
-        }
-        @if (r.generatedCode) {
-          <h3>Código gerado</h3>
-          <pre class="code">{{ r.generatedCode }}</pre>
-        }
-        <h3>AST (debug)</h3>
-        <pre class="json">{{ r.ast | json }}</pre>
-      } @else if (r.error) {
-        <pre class="error">{{ r.error }}</pre>
+            @if (r.distributedResults?.length) {
+              <h3 class="section-title">Paralelismo distribuído (3 máquinas)</h3>
+              <mat-list class="pipeline-list distributed-list">
+                @for (item of r.distributedResults; track item.role) {
+                  <mat-list-item>
+                    <span class="distributed-role">{{ item.machine || item.role }}</span>
+                    {{ item.data }}
+                  </mat-list-item>
+                }
+              </mat-list>
+            }
+            @if (r.pipelineSteps?.length) {
+              <h3 class="section-title">Pipeline</h3>
+              <mat-list class="pipeline-list">
+                @for (step of r.pipelineSteps; track step; let i = $index) {
+                  <mat-list-item>
+                    <span class="pipeline-step__index">{{ i + 1 }}</span>
+                    {{ step }}
+                  </mat-list-item>
+                }
+              </mat-list>
+            }
+            @if (r.generatedCode) {
+              <h3 class="section-title">Código gerado</h3>
+              <pre class="code">{{ r.generatedCode }}</pre>
+            }
+          </mat-tab>
+
+          <mat-tab>
+            <ng-template mat-tab-label>
+              <mat-icon class="tab-icon" aria-hidden="true">table_chart</mat-icon>
+              Símbolos
+            </ng-template>
+            @if (r.symbolTable) {
+              <pre class="json">{{ r.symbolTable | json }}</pre>
+            } @else {
+              <p class="placeholder">Tabela de símbolos indisponível.</p>
+            }
+          </mat-tab>
+
+          <mat-tab>
+            <ng-template mat-tab-label>
+              <mat-icon class="tab-icon" aria-hidden="true">account_tree</mat-icon>
+              AST
+            </ng-template>
+            @if (r.ast) {
+              <pre class="json">{{ r.ast | json }}</pre>
+            }
+          </mat-tab>
+        </mat-tab-group>
+        <p class="output__meta">history: {{ r.historyId }}</p>
+        </div>
       }
     } @else if (!errorMessage()) {
-      <p class="placeholder">Execute um programa para ver o resultado.</p>
+      <div class="output__empty">
+        <mat-icon aria-hidden="true">terminal</mat-icon>
+        <p>Pressione <kbd>Ctrl</kbd>+<kbd>Enter</kbd> ou clique em <strong>Executar</strong> para compilar.</p>
+      </div>
     }
   </mat-card-content>
 </mat-card>

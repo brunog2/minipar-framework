@@ -11,6 +11,12 @@ export interface PipelineResult {
   output: string;
   generatedCode?: string;
   pipelineSteps: string[];
+  distributedResults?: Array<{
+    role: string;
+    data: string;
+    machine?: string;
+    error?: string;
+  }>;
 }
 
 @Injectable()
@@ -30,6 +36,98 @@ export class PipelineService {
       return this.runMock(sourceCode, targetVariability, executionMode);
     }
     return this.runHttp(sourceCode, targetVariability, executionMode);
+  }
+
+  private formatErrors(errors: unknown[]): string {
+    return errors
+      .map((e) =>
+        typeof e === 'string'
+          ? e
+          : e && typeof e === 'object' && 'message' in e
+            ? String((e as { message: string }).message)
+            : String(e),
+      )
+      .join('; ');
+  }
+
+  private runMockBackend(
+    sourceCode: string,
+    targetVariability: TargetVariability,
+    executionMode: ExecutionMode,
+    steps: string[],
+  ): {
+    output: string;
+    generatedCode?: string;
+    distributedResults?: Array<{
+      role: string;
+      data: string;
+      machine?: string;
+    }>;
+  } {
+    let distributedResults:
+      | Array<{ role: string; data: string; machine?: string }>
+      | undefined;
+
+    if (executionMode === ExecutionMode.DISTRIBUTED_SOCKETS) {
+      steps.push('ms-parallel-coord: coordinate (mock)');
+      distributedResults = [
+        {
+          role: 'quicksort',
+          machine: 'PC1',
+          data: 'QuickSort: [64, 34, 25, 12, 22, 11, 90] -> [11, 12, 22, 25, 34, 64, 90]',
+        },
+        {
+          role: 'matrix',
+          machine: 'PC2',
+          data: 'Matriz 2x2: [[19, 22], [43, 50]]',
+        },
+        {
+          role: 'factorial',
+          machine: 'PC3',
+          data: 'Fatorial(10) = 3628800',
+        },
+      ];
+    }
+
+    let outputPrefix = '';
+    if (distributedResults?.length) {
+      outputPrefix =
+        '=== Menu Coordenador — Paralelismo Real (3 Máquinas) ===\n' +
+        distributedResults
+          .map((r) => `[${r.machine ?? r.role}] ${r.data}`)
+          .join('\n') +
+        '\n\n';
+    }
+
+    let output: string;
+    let generatedCode: string | undefined;
+
+    switch (targetVariability) {
+      case TargetVariability.INTERPRETER:
+        steps.push('ms-interpreter: execute (mock)');
+        output = `[Fase 1] Análise concluída. Interpretador pendente (Fase 2). ${sourceCode.split('\n').length} linha(s).`;
+        break;
+      case TargetVariability.C:
+      case TargetVariability.CPP:
+        steps.push(`ms-codegen-c: generate target=${targetVariability} (mock)`);
+        generatedCode = '/* Mock C/C++ — Fase 2 */\nint main(void) { return 0; }\n';
+        output = `[Fase 1] AST validada. Codegen ${targetVariability} pendente (Fase 2).`;
+        break;
+      case TargetVariability.RUST:
+        steps.push('ms-codegen-rust: generate (mock)');
+        generatedCode = 'fn main() {}\n';
+        output = '[Fase 1] AST validada. Codegen Rust pendente (Fase 2).';
+        break;
+      case TargetVariability.ASSEMBLY:
+        steps.push('ms-codegen-arm: generate (mock)');
+        generatedCode = '.text\n.global _start\n';
+        output = '[Fase 1] AST validada. Codegen ARM pendente (Fase 2).';
+        break;
+      default:
+        output = '[Fase 1] Processamento front-end concluído.';
+    }
+
+    return { output: outputPrefix + output, generatedCode, distributedResults };
   }
 
   private runMock(
@@ -60,45 +158,20 @@ export class PipelineService {
       'ms-semantic: analyze (mock)',
     ];
 
-    if (executionMode === ExecutionMode.DISTRIBUTED_SOCKETS) {
-      steps.push('ms-parallel-coord: coordinate (mock)');
-    }
-
-    let output: string;
-    let generatedCode: string | undefined;
-
-    switch (targetVariability) {
-      case TargetVariability.INTERPRETER:
-        steps.push('ms-interpreter: execute (mock)');
-        output = `[Mock] Interpretador executou ${sourceCode.split('\n').length} linha(s).`;
-        break;
-      case TargetVariability.C:
-      case TargetVariability.CPP:
-        steps.push(`ms-codegen-c: generate target=${targetVariability} (mock)`);
-        generatedCode =
-          '/* Mock C/C++ */\nint main(void) { return 0; }\n';
-        output = `[Mock] Código ${targetVariability} gerado (gcc -O2 pendente).`;
-        break;
-      case TargetVariability.RUST:
-        steps.push('ms-codegen-rust: generate (mock)');
-        generatedCode = 'fn main() {}\n';
-        output = '[Mock] Código Rust gerado.';
-        break;
-      case TargetVariability.ASSEMBLY:
-        steps.push('ms-codegen-arm: generate (mock)');
-        generatedCode = '.text\n.global _start\n';
-        output = '[Mock] Assembly ARMv7 gerado.';
-        break;
-      default:
-        output = '[Mock] Processamento concluído.';
-    }
+    const backend = this.runMockBackend(
+      sourceCode,
+      targetVariability,
+      executionMode,
+      steps,
+    );
 
     return {
       ast,
       symbolTable,
-      output,
-      generatedCode,
+      output: backend.output,
+      generatedCode: backend.generatedCode,
       pipelineSteps: steps,
+      distributedResults: backend.distributedResults,
     };
   }
 
@@ -113,14 +186,17 @@ export class PipelineService {
     const semanticUrl = this.config.getOrThrow<string>('MS_SEMANTIC_URL');
 
     const parseRes = await firstValueFrom(
-      this.http.post<{ ast: unknown; errors?: string[] }>(
+      this.http.post<{ ast: unknown; errors?: unknown[] }>(
         `${frontendUrl}/parse`,
         { sourceCode },
       ),
     );
     steps.push('ms-front-end: parse');
     if (parseRes.data.errors?.length) {
-      throw new Error(parseRes.data.errors.join('; '));
+      throw new Error(this.formatErrors(parseRes.data.errors));
+    }
+    if (!parseRes.data.ast) {
+      throw new Error('Parser returned empty AST');
     }
 
     const semanticRes = await firstValueFrom(
@@ -132,22 +208,61 @@ export class PipelineService {
     );
     steps.push('ms-semantic: analyze');
     if (semanticRes.data.errors?.length) {
-      throw new Error(semanticRes.data.errors.join('; '));
+      throw new Error(this.formatErrors(semanticRes.data.errors));
+    }
+
+    const backendMode = this.config.get<string>(
+      'PIPELINE_BACKEND_MODE',
+      'mock',
+    );
+
+    if (backendMode === 'mock') {
+      const backend = this.runMockBackend(
+        sourceCode,
+        targetVariability,
+        executionMode,
+        steps,
+      );
+      return {
+        ast: semanticRes.data.ast,
+        symbolTable: semanticRes.data.symbolTable,
+        output: backend.output,
+        generatedCode: backend.generatedCode,
+        pipelineSteps: steps,
+      };
     }
 
     let backendOutput = '';
     let generatedCode: string | undefined;
+    let distributedResults:
+      | Array<{
+          role: string;
+          data: string;
+          machine?: string;
+          error?: string;
+        }>
+      | undefined;
 
     if (executionMode === ExecutionMode.DISTRIBUTED_SOCKETS) {
       const coordUrl = this.config.getOrThrow<string>('MS_PARALLEL_COORD_URL');
-      await firstValueFrom(
-        this.http.post(`${coordUrl}/coordinate`, {
+      const coordRes = await firstValueFrom(
+        this.http.post<{
+          output: string;
+          results: Array<{
+            role: string;
+            data: string;
+            machine?: string;
+            error?: string;
+          }>;
+        }>(`${coordUrl}/coordinate`, {
           ast: semanticRes.data.ast,
           symbolTable: semanticRes.data.symbolTable,
           executionMode,
         }),
       );
       steps.push('ms-parallel-coord: coordinate');
+      distributedResults = coordRes.data.results;
+      backendOutput = coordRes.data.output + '\n';
     }
 
     const payload = {
@@ -164,7 +279,7 @@ export class PipelineService {
           this.http.post<{ output: string }>(`${url}/execute`, payload),
         );
         steps.push('ms-interpreter: execute');
-        backendOutput = res.data.output;
+        backendOutput += res.data.output;
         break;
       }
       case TargetVariability.C:
@@ -177,7 +292,7 @@ export class PipelineService {
           ),
         );
         steps.push(`ms-codegen-c: generate (${targetVariability})`);
-        backendOutput = res.data.output;
+        backendOutput += res.data.output;
         generatedCode = res.data.code;
         break;
       }
@@ -190,7 +305,7 @@ export class PipelineService {
           ),
         );
         steps.push('ms-codegen-rust: generate');
-        backendOutput = res.data.output;
+        backendOutput += res.data.output;
         generatedCode = res.data.code;
         break;
       }
@@ -203,7 +318,7 @@ export class PipelineService {
           ),
         );
         steps.push('ms-codegen-arm: generate');
-        backendOutput = res.data.output;
+        backendOutput += res.data.output;
         generatedCode = res.data.code;
         break;
       }
@@ -217,6 +332,7 @@ export class PipelineService {
       output: backendOutput,
       generatedCode,
       pipelineSteps: steps,
+      distributedResults,
     };
   }
 }

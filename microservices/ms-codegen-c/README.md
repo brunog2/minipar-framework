@@ -8,7 +8,7 @@ Converter AST JSON validada em **código C** (ou **C++** quando `target: CPP`) c
 
 | Método | Path | Descrição |
 |--------|------|-----------|
-| `POST` | `/generate` | Gera código e opcionalmente compila |
+| `POST` | `/generate` | Gera código e compila |
 | `GET` | `/health` | Health check |
 
 ## Contrato de entrada
@@ -22,15 +22,14 @@ Converter AST JSON validada em **código C** (ou **C++** quando `target: CPP`) c
 }
 ```
 
-`target` pode ser `C` ou `CPP` (variante LPS; mesmo MS, hotspot Template Method).
+`target` pode ser `C` ou `CPP` (variante LPS; hotspot Template Method).
 
 ## Contrato de saída
 
 ```json
 {
-  "output": "Compilação concluída",
-  "code": "/* C gerado */",
-  "executablePath": "/tmp/out.exe"
+  "output": "Compiled with gcc -O2\nok\n",
+  "code": "/* C gerado */"
 }
 ```
 
@@ -38,8 +37,9 @@ Converter AST JSON validada em **código C** (ou **C++** quando `target: CPP`) c
 
 | Componente | Referência |
 |------------|------------|
-| Gerador C | `code_references/projeto_compiladores/src/c_codegen.py` |
+| TAC + Gerador C | `code_references/projeto_compiladores/src/codegen.py`, `c_codegen.py` |
 | Compilação gcc -O2 | `code_references/projeto_compiladores/src/backend.py` |
+| Implementação | `packages/minipar-core/minipar_core/translation/c_backend.py` |
 
 ## Variabilidade LPS
 
@@ -49,4 +49,4 @@ Converter AST JSON validada em **código C** (ou **C++** quando `target: CPP`) c
 
 ## Status
 
-**Não implementado** nesta fase de setup.
+**Implementado** (Fase 2 — jun/2026). Docker inclui `gcc`/`g++`, porta **3004**.

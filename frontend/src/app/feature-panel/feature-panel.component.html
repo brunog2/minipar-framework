@@ -1,7 +1,8 @@
 <mat-card class="panel">
-  <mat-card-header>
-    <mat-card-title>Variabilidade (LPS)</mat-card-title>
-  </mat-card-header>
+  <div class="panel__header">
+    <h2 class="panel__title">Variabilidade (LPS)</h2>
+    <p class="panel__subtitle">Back-end e modo de execução</p>
+  </div>
 
   <mat-card-content>
     <section>
@@ -34,18 +35,11 @@
       </mat-radio-group>
     </section>
 
-    <button
-      mat-flat-button
-      color="primary"
-      type="button"
-      class="process-btn"
-      [disabled]="loading()"
-      (click)="processClick.emit()"
-    >
-      @if (loading()) {
-        <mat-spinner diameter="20" />
-      }
-      {{ loading() ? 'Processando…' : 'Processar' }}
-    </button>
+    <p class="panel__hint">
+      <mat-icon aria-hidden="true">info</mat-icon>
+      <span class="panel__hint-text">
+        Use <strong>Executar</strong> no editor ou <kbd>Ctrl</kbd>+<kbd>Enter</kbd>.
+      </span>
+    </p>
   </mat-card-content>
 </mat-card>
