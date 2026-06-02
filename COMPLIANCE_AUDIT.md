@@ -1,10 +1,12 @@
 # Auditoria de conformidade — MiniPar Framework 2026.1
 
-**Propósito:** registrar o alinhamento do projeto com os requisitos das disciplinas (Compiladores, Reuso de Software, LPS/Tópicos) e orientar **implementações futuras**, demos e fechamento acadêmico.
+**Propósito:** registrar o alinhamento do projeto com os requisitos das disciplinas (Compiladores, Reuso de Software, LPS/Tópicos) — o que está **conforme**, **parcial**, **não conforme** e **diferente do pedido** — para orientar implementações futuras, demo e entrega acadêmica.
 
-**Referências:** [PROJECT_REQUIREMENTS.md](./PROJECT_REQUIREMENTS.md) · [ROADMAP.md](./ROADMAP.md) · [report.tex](./report.tex)  
+**Referências:** [PROJECT_REQUIREMENTS.md](./PROJECT_REQUIREMENTS.md) · [ROADMAP.md](./ROADMAP.md) · [SCHEDULE.md](./SCHEDULE.md) · [ACTIVITIES.md](./ACTIVITIES.md) · [report.tex](./report.tex)  
 **Última revisão:** 2 de junho de 2026  
 **Entrega alvo:** 10 de junho de 2026
+
+**Metodologia desta auditoria:** análise do repositório (`minipar-framework`), código, `docker-compose.yml`, microsserviços e documentação. Prioriza **o que está no código** quando há divergência com textos antigos de `ROADMAP`/`README`.
 
 **Legenda:** ✅ conforme · 🟡 parcial / MVP / com ressalvas · ❌ não conforme · ➕ feito além ou diferente do pedido
 
@@ -12,16 +14,18 @@
 
 ## Resumo executivo
 
-| Dimensão | Situação |
-|----------|----------|
-| Compiladores (pipeline OO) | Boa conformidade: léxico → sintático → AST JSON → semântica (MVP) → back-ends |
-| Paralelismo “real” (requisito forte) | **Risco alto na banca:** `PAR` local ≠ sockets; teste 3 máquinas ≠ MiniPar nos workers |
-| Reuso + Template Method | Conforme no código e diagramas |
-| LPS / microsserviços | Conforme na arquitetura (sem FeatureIDE, por decisão) |
-| Testes obrigatórios (3 máq. + fractal) | Infra implementada; validação E2E e evidências no PDF pendentes |
-| Entrega acadêmica | Texto e `.mmd` avançados; screenshots, URLs finais e consistência docs pendentes |
+| Dimensão | Situação geral |
+|----------|----------------|
+| **Compiladores (pipeline OO)** | **Boa conformidade** — léxico → sintático → AST JSON → semântica (MVP) → back-ends |
+| **Paralelismo “real” (requisito forte)** | **Parcial / risco alto** na avaliação estrita do professor |
+| **Reuso + Template Method** | **Conforme** no núcleo e na documentação |
+| **LPS / microsserviços** | **Conforme** na arquitetura; sem FeatureIDE (decisão do projeto) |
+| **Testes obrigatórios (3 máq. + fractal)** | **Implementados com ressalvas** — validar E2E + evidências no PDF |
+| **Entrega acadêmica** | **Parcial** — texto e `.mmd` avançados; capturas e demo final ainda frágeis |
 
-**Veredito:** o framework atende bem LPS + pipeline + Template Method; **não está plenamente alinhado** com a leitura estrita de “`PAR` + processos independentes + sockets” nem com “programa/menu MiniPar nas três máquinas”. Priorizar **ensaio E2E** e **documentação honesta** na apresentação.
+**Veredito:** o projeto **cobre bem** o framework distribuído, OO no parse/execução e variabilidade LPS; **não está plenamente alinhado** com a leitura mais estrita de “`PAR` + processos independentes + sockets” e com “menu/programa MiniPar nas 3 máquinas”. Para a entrega de **10/jun**, o maior gap é **validação demonstrável** (E2E real + relatório com evidências), não só existência de código.
+
+**Toolchains nos microsserviços (não no host):** `gcc`/`g++` em `ms-codegen-c`; `rustc` em `ms-codegen-rust` (Dockerfile). O desenvolvedor **não** precisa instalar Rust no laptop se usar `docker compose`.
 
 ---
 
@@ -29,36 +33,37 @@
 
 ### ✅ Em conformidade
 
-| Requisito | Evidência no repositório |
-|-----------|-------------------------|
-| Gramática OO (`class`, `extends`, `new`, atributos, métodos) | `packages/minipar-core/minipar_core/parser.py`, `ast_nodes.py`, `sources/examples/01–09` |
-| Análise léxica | `lexer.py` — tokens OO e `par` / `seq` / `s_channel` / `c_channel` |
-| Parser descendente recursivo + AST | `parser.py` |
-| AST serializável (JSON) entre microsserviços | `ast_json.py`, `microservices/_AST_CONTRACT.md` |
-| Pipeline completo via HTTP | `api-gateway/src/pipeline/pipeline.service.ts` com `PIPELINE_MODE=http`, `PIPELINE_BACKEND_MODE=http` |
-| `gcc -O2` (C/C++) | `translation/c_backend.py`, `ms-codegen-c` |
-| Interpretador OO (MVP) | `translation/interpreter.py` — `new`, métodos, herança, `Main.run()`, `par`/`seq` locais |
-| Fractal recursivo (fonte) | `sources/examples/13_sierpinski.minipar` |
-| BNF e pseudocódigos (relatório) | `report.tex` § Fases do compilador |
+| Requisito | Evidência |
+|-----------|-----------|
+| **Gramática OO** (`class`, `extends`, `new`, atributos, métodos) | `parser.py`, `ast_nodes.py`, exemplos `01`–`09` |
+| **Lexer** | `lexer.py` — tokens OO e paralelismo (`par`, `seq`, `s_channel`, `c_channel`) |
+| **Parser descendente recursivo + AST** | `Parser` em `parser.py` |
+| **AST serializável (JSON)** | `ast_json.py`, `_AST_CONTRACT.md`, REST entre MS |
+| **Pipeline léxico → sintático → semântico → back-end** | `pipeline.service.ts`, `PIPELINE_MODE=http`, `PIPELINE_BACKEND_MODE=http` |
+| **Microsserviços por fase/variante** | `ms-front-end`, `ms-semantic`, `ms-interpreter`, `ms-codegen-*` |
+| **`gcc -O2` (C/C++)** | `c_backend.py`, `ms-codegen-c` |
+| **Interpretador OO MVP** | `interpreter.py` — `new`, métodos, herança, `Main.run()`, `par`/`seq` locais |
+| **Recursão (fractal)** | `13_sierpinski.minipar` com `this.isBlack(...)` recursivo |
+| **BNF e pseudocódigos no relatório** | `report.tex` |
 
 ### 🟡 Parcialmente em conformidade
 
-| Requisito | O que existe | Lacuna / ação futura |
-|-----------|--------------|----------------------|
-| Análise semântica + tabela de símbolos “completa” | `semantic.py` + `symbol_table.py` no pacote | **`ms-semantic` usa apenas `semantic_json.py` (MVP).** Migrar MS para `SemanticAnalyzer` + `analyze_program` quando fractal/OO avançado exigir tipos e escopo ricos |
-| Codegen OO em C/C++ | TAC + `METHOD_CALL` / `NEW` em `c_codegen.py` | Validar E2E `09_oo_new.minipar` com `targetVariability: C`; não prometer na demo sem teste |
-| Rust / ARM | `ms-codegen-rust`, `ms-codegen-arm` | MVP: emissão de código; `rustc`/toolchain ARM opcionais no container |
-| Executável `.exe` | Binário nativo no container | Em Linux gera `./program`; documentar como “executável nativo” |
-| Canais na linguagem | `channel_declaration()` no parser | **`SendStmt` / `ReceiveStmt` não implementados** (só no contrato AST) |
-| “Interpretador para verificação sintática” antes de compilar | Parser + semântica no pipeline | Abordagem correta; **diferente do texto do enunciado** — justificar no relatório |
+| Requisito | O que existe | Lacuna |
+|-----------|--------------|--------|
+| **Semântica + tabela de símbolos “completa”** | `semantic.py` + `symbol_table.py` | MS usa só **`semantic_json` MVP** (classes, `extends`, duplicatas) |
+| **Codegen OO C/C++ alta performance** | TAC + `METHOD_CALL`/`NEW` em `c_codegen.py` | Validar E2E `09_oo_new` com **C** antes da banca |
+| **Rust / ARM** | MS + backends MVP | Rust: `rustc` no container ✅; emissão ainda MVP (println). ARM: toolchain opcional |
+| **Executável `.exe`** | Binário no container | Linux: `./program` — aceitar “executável nativo” |
+| **Canais na linguagem** | Declaração `s_channel` / `c_channel` no parser | **`SendStmt` / `ReceiveStmt` não implementados** |
+| **Verificação antes de compilar** | Parser + semântica | Enunciado cita “interpretador para sintaxe”; projeto usa **parser** (correto; documentar) |
 
-### ❌ Não conforme (ou só conforme via demo alternativa)
+### ❌ Não conforme (ou conforme só na demo alternativa)
 
-| Requisito | Situação atual | Implementação futura sugerida |
-|-----------|----------------|------------------------------|
-| `PAR` com threads como **processos independentes**, **sem memória compartilhada**, comunicação **só por sockets** | `exec_par` usa `threading` no **mesmo processo** e compartilha `self.globals` | Opção mínima: documentar limitação. Opção forte: runtime que dispare subprocessos/workers por ramo `par` + protocolo socket |
-| Paralelismo ligado à **linguagem MiniPar** no teste 3 máquinas | Workers Python com algoritmos fixos (`microservices/parallel-workers/`) | Opcional: compilar/interpretar `quicksort.minipar` etc. em cada worker |
-| Menu coordenador como **programa MiniPar** | `14_distributed_menu.minipar` é placeholder; menu real = **UI Angular** | Opcional: programa MiniPar que use canais/sockets quando parser suportar |
+| Requisito | Situação no código |
+|-----------|-------------------|
+| **`PAR` = processos independentes, sem memória compartilhada, só sockets** | `exec_par` usa **`threading` no mesmo processo** e `self.globals` compartilhado |
+| **Paralelismo ligado à linguagem MiniPar no teste 3 máquinas** | Workers **Python** com algoritmos fixos (`parallel-workers/app/main.py`) |
+| **Menu coordenador como programa MiniPar** | `14_distributed_menu.minipar` é placeholder; menu = **UI** + `ms-parallel-coord` |
 
 ---
 
@@ -66,19 +71,20 @@
 
 ### ✅ Em conformidade
 
-- Componentes por fase/variante encapsulados em microsserviços FastAPI + núcleo `minipar-core`.
-- **Template Method:** `AbstractBackendTranslator` (`translation/base_translator.py`) — `validate → prepare → emit → finalize`.
-- Hotspots: `InterpreterBackend`, `CBackend`, `CppBackend`, `RustBackend`, `ARMBackend`.
-- Reuso 2025.1 documentado: `code_references/cl-minipar`, `code_references/projeto_compiladores` → `docs/diagrams/reuse-map.mmd`, `report.tex`.
+- Arquitetura por **componentes** (MS + `minipar-core`).
+- **Template Method:** `AbstractBackendTranslator` — `validate → prepare → emit → finalize`.
+- Variantes: `InterpreterBackend`, `CBackend`, `CppBackend`, `RustBackend`, `ARMBackend`.
+- Diagramas: `template-method.mmd`, `reuse-map.mmd`, `report.tex` (Gamma).
+- **Reuso evolutivo 2025.1:** `code_references/cl-minipar`, `projeto_compiladores`.
 
 ### 🟡 Parcial
 
-- Prova acadêmica no PDF: exportar diagramas `.mmd` para figuras no Overleaf (UML por componente).
+- PDF final com figuras UML/classes **por componente** (`.mmd` existem no repo).
 
-### ➕ Além do pedido
+### ➕ Feito a mais (positivo)
 
-- Módulo `translation/` unificado (TAC compartilhado C/ARM).
-- Modos `mock` no gateway para desenvolvimento sem stack completa.
+- `translation/` unificado (TAC C/ARM).
+- Modos `mock` no gateway para dev sem Docker.
 
 ---
 
@@ -88,25 +94,25 @@
 
 | Requisito | Implementação |
 |-----------|----------------|
-| Pontos de variação e variantes | UI: interpretador vs compilador; C/C++/Rust/ARM; LOCAL vs `DISTRIBUTED_SOCKETS` |
-| Microsserviços REST + JSON | `ms-front-end` … `ms-codegen-arm`, `ms-parallel-coord` |
-| API Gateway orquestrador | NestJS `POST /api/v1/process` |
-| PostgreSQL | `database/init.sql` → `compilation_history` |
-| Docker Compose | `docker-compose.yml` (inclui workers :9001–9003) |
-| Diagrama de features | `docs/diagrams/feature-tree.mmd` |
+| Pontos de variação e variantes | UI + gateway |
+| Microsserviços REST + JSON | 7 MS + 3 workers |
+| API Gateway | NestJS `POST /api/v1/process` |
+| PostgreSQL | `compilation_history` |
+| Docker Compose | Stack completa |
+| Feature tree | `docs/diagrams/feature-tree.mmd` |
 
-### ➕ Diferente do sugerido (documentar, não ocultar)
+### ➕ Diferente do solicitado (documentar no relatório)
 
-| Sugestão original | Escolha do projeto |
-|-------------------|-------------------|
-| API Gateway Spring Boot | **NestJS** (Node.js) |
-| FeatureIDE | Variabilidade **arquitetural** (MS + UI) |
+| Sugestão original | Implementação |
+|-------------------|---------------|
+| Gateway **Spring Boot** | **NestJS** (Node) |
+| **FeatureIDE** | LPS por **microsserviços + UI** |
 | Léxico e sintático em MS separados | **Unificados** em `ms-front-end` |
 
 ### 🟡 Pendente acadêmico
 
-- Binding formal variante → microsserviço no PDF final.
-- Demo Vercel: frontend sem stack completa — deixar claro que E2E pleno é **Docker local**.
+- Binding formal variante → MS no PDF.
+- Vercel = só frontend; E2E pleno = **Docker local**.
 
 ---
 
@@ -114,16 +120,16 @@
 
 ### Teste 3 máquinas (QuickSort, matriz, fatorial)
 
-| Aspecto | Status | Notas |
-|---------|--------|-------|
-| 3 processos + sockets TCP | ✅ | `ms-parallel-coord` + `worker-quicksort` / `worker-matrix` / `worker-factorial` |
-| Agregação na UI | ✅ | `DISTRIBUTED_SOCKETS` + `distributedResults` no gateway/UI |
-| 3 PCs físicos | 🟡 | 3 **containers** na rede Docker — aceitável se explicado na banca |
-| Algoritmos em MiniPar nos workers | ❌ | Lógica em Python nos workers |
-| Menu MiniPar no PC1 | ❌ | Menu na UI |
-| Disparo via `PAR` da linguagem | ❌ | Não conectado ao coordenador |
+| Aspecto | Status |
+|---------|--------|
+| 3 processos + sockets TCP | ✅ `ms-parallel-coord` + workers :9001–9003 |
+| Coordenador agrega e exibe na UI | ✅ `DISTRIBUTED_SOCKETS`, `distributedResults` |
+| 3 computadores físicos | 🟡 3 **containers** Docker |
+| Algoritmos em MiniPar nos workers | ❌ Python fixo |
+| Menu como programa MiniPar | ❌ Menu na UI |
+| Disparo via blocos `PAR` | ❌ |
 
-**Como testar:**
+**Classificação:** 🟡 **parcialmente conforme** (infra); ❌ se exigirem MiniPar + `PAR` nos workers.
 
 ```bash
 cd minipar-framework && docker compose up --build
@@ -133,54 +139,47 @@ curl -s -X POST http://localhost:3000/api/v1/process \
        "targetVariability":"INTERPRETER","executionMode":"DISTRIBUTED_SOCKETS"}'
 ```
 
-`pipelineSteps` esperado (com backend http): `ms-front-end: parse`, `ms-semantic: analyze`, `ms-parallel-coord: coordinate`, `ms-interpreter: execute`.
-
-Fixture: `sources/examples/14_distributed_menu.minipar`.
+Fixture: `14_distributed_menu.minipar`.
 
 ### Fractal (Tapete de Sierpinski)
 
-| Aspecto | Status | Notas |
-|---------|--------|-------|
-| Programa MiniPar OO recursivo | ✅ | `sources/examples/13_sierpinski.minipar` |
-| Matriz `.` / `*` no Console | 🟡 | Via `println` + interpretador; **confirmar E2E** |
-| Screenshots no relatório | ❌ | Incluir `\includegraphics` no `report.tex` após ensaio |
+| Aspecto | Status |
+|---------|--------|
+| Programa MiniPar OO recursivo | ✅ `13_sierpinski.minipar` |
+| Matriz `.` / `*` no Console/UI | 🟡 confirmar E2E |
+| Screenshot no relatório | ❌ |
+| Testes automatizados | ❌ sem `pytest` no monorepo |
 
-**Como testar:** UI → exemplo Sierpinski → **INTERPRETER** + **LOCAL** → Executar.
+**Classificação:** 🟡 **provavelmente conforme** após `docker compose` + exemplo 13; ❌ evidência PDF.
 
 ---
 
 ## 5. Requisitos acadêmicos
 
-### ✅ / 🟡
+### ✅ ou bem encaminhado
 
-| Item | Status |
-|------|--------|
-| Metodologia ágil (backlogs) | ✅ `report.tex` |
-| Pseudocódigos das fases | ✅ `report.tex` |
-| Referências (Pohl, Sommerville, Gamma, Maciel, Rego, spec 2026) | ✅ bibliografia |
-| Diagramas Mermaid | ✅ `docs/diagrams/` |
-| UML no PDF | 🟡 exportar `.mmd` → figuras |
-| Prints fractal + 3 máquinas | ❌ pendente |
-| URL GitHub / vídeo finais | ❌ placeholders em `report.tex` |
-| Consistência ROADMAP/README vs código | ❌ ver § 6 |
+- Metodologia ágil: backlogs em `report.tex` + [ACTIVITIES.md](./ACTIVITIES.md).
+- Pseudocódigos das fases e coordenador/worker.
+- Referências: Pohl, Sommerville, Gamma, Maciel, Rego, spec 2026.
+- Diagramas Mermaid versionados.
+- Estrutura do relatório integrando 3 disciplinas.
 
----
+### 🟡 / ❌ pendente
 
-## 6. Inconsistências internas (manter sincronizado)
+| Item | Situação |
+|------|----------|
+| UML no PDF | `.mmd` ok; exportar figuras ⬜ |
+| Prints fractal + 3 máq. | ❌ |
+| URL GitHub / vídeo | placeholders |
+| Apresentação com todos os testes | ensaio ⬜ |
 
-Ao alterar implementação, atualizar **este arquivo** e o [ROADMAP.md](./ROADMAP.md).
+### ➕ Feito a mais
 
-| Documento | Problema |
-|-----------|----------|
-| `ROADMAP.md` | Mapa ainda marca Fase 3 (paralelismo/fractal) como ⬜ em trechos; panorama diz ✅ |
-| `README.md` | Lista `ms-parallel-coord` como pendente; exemplos só até `12` |
-| `report.tex` | Afirma Fase 3 concluída; falta evidência visual |
-| `docs/diagrams/README.md` | Pode listar `ms-parallel-coord` como pendente |
-| `pipeline.service.ts` | Caminho `mock` com resultados hardcoded (ok para dev; Docker usa `http`) |
+- Vercel, histórico Postgres, fixtures `01`–`14`, templates UI.
 
 ---
 
-## 7. Matriz consolidada (checklist entrega)
+## 6. Matriz consolidada (checklist entrega 10/jun)
 
 | Critério | Status |
 |----------|--------|
@@ -188,77 +187,84 @@ Ao alterar implementação, atualizar **este arquivo** e o [ROADMAP.md](./ROADMA
 | Template Method (C/Rust/ARM/Interpretador) | ✅ |
 | Variabilidade na UI + gateway | ✅ |
 | `gcc -O2` para C/C++ | ✅ |
+| `rustc` no MS Rust (Docker) | ✅ |
 | Interpretador OO para demo | ✅ MVP |
 | Semântica “de compilador” no MS | 🟡 |
-| Teste 3 máquinas via sockets | 🟡 infra OK; sem MiniPar `PAR` |
-| Fractal OO matriz de caracteres | 🟡 código OK; validar + print PDF |
+| Teste 3 máquinas via sockets | 🟡 |
+| Fractal OO matriz de caracteres | 🟡 |
 | `PAR` = processos + sockets | ❌ |
 | Send/Receive na linguagem | ❌ |
-| Relatório Overleaf completo | 🟡 |
-| GitHub + apresentação ao vivo | 🟡 |
+| Relatório Overleaf + evidências | 🟡 |
+| GitHub + apresentação | 🟡 |
 
 ---
 
-## 8. Backlog para implementações futuras
+## 7. Pendências prioritárias (até 10/jun)
 
-Prioridade sugerida **após** fechar entrega 10/jun (ou se sobrar tempo antes):
-
-### P0 — Entrega / banca (não código)
-
-1. Ensaiar E2E Docker: exemplos `13`, `14`, `09` (C), `08`.
-2. Screenshots → `report.tex` (fractal + menu distribuído + pipeline steps).
-3. URLs finais GitHub e vídeo; alinhar `ROADMAP.md` e `README.md` com este documento.
-
-### P1 — Conformidade semântica
-
-4. `ms-semantic` passar a usar `semantic.py` / `analyze_program` (ou híbrido: MVP + erros do analisador completo).
-5. Testes automatizados mínimos (`pytest`) para parse, semântica e interpretador nos exemplos `01–14`.
-
-### P2 — Paralelismo (se professor exigir literalidade)
-
-6. Parser: `SendStmt` / `ReceiveStmt` (ver `_AST_CONTRACT.md` e `code_references/projeto_compiladores/examples/`).
-7. Runtime interpretador: canais TCP alinhados a `s_channel` / `c_channel`.
-8. Opcional: `exec_par` via subprocessos + sockets em vez de threads com memória compartilhada.
-9. Opcional: workers executando bytecode/AST MiniPar em vez de Python fixo.
-
-### P3 — Codegen OO
-
-10. Fechar OO no `gcc` (`new`, `d.bark()`, herança) com testes em `09_oo_new.minipar` + C.
-11. Despacho dinâmico / `super` no codegen C (hoje mais forte no interpretador).
-
-### P4 — Acadêmico / LPS
-
-12. Figuras UML e feature tree embutidas no PDF.
-13. Seção “decisões arquiteturais” (NestJS, parser vs interpretador para sintaxe, 3 containers vs 3 PCs).
+1. **Checklist E2E** — [ACTIVITIES.md](./ACTIVITIES.md#checklist-e2e-preencher-antes-da-banca).
+2. **Screenshots** → `report.tex` (fractal, 3 máquinas, pipeline steps).
+3. **Narrativa do paralelismo** na banca (3 containers = 3 PCs; workers Python).
+4. **Validar** `09_oo_new` com **C** + `gcc -O2`.
+5. **PDF:** UML/features exportados; URLs GitHub/vídeo finais.
+6. **Opcional pós-entrega:** `semantic.py` no MS; Send/Receive; `PAR` com sockets.
 
 ---
 
-## 9. Roteiro de demo recomendado (10/jun)
+## 8. Feito diferente do pedido (documentar, não ocultar)
 
-| # | Exemplo | Modo LPS | O que mostrar |
-|---|---------|----------|----------------|
-| 1 | `08_interpreter_ok.minipar` | INTERPRETER + LOCAL | Pipeline real, saída `ok` |
-| 2 | `09_oo_new.minipar` | INTERPRETER + LOCAL | `new` + método → `woof` |
-| 3 | `13_sierpinski.minipar` | INTERPRETER + LOCAL | Matriz 27×27 `.`/`*` |
-| 4 | `11_codegen_c.minipar` | C + LOCAL | `gcc -O2` + código gerado |
-| 5 | qualquer fonte válida | INTERPRETER + **DISTRIBUTED_SOCKETS** | PC1–PC3, `distributedResults`, steps com `ms-parallel-coord` |
-
-**Evitar prometer na fala (salvo implementar antes):** `PAR` com sockets entre processos; QuickSort em MiniPar nos workers.
+| Pedido / expectativa | Implementação |
+|----------------------|----------------|
+| Gateway Spring Boot | **NestJS** |
+| FeatureIDE | LPS por microsserviços + feature tree |
+| `PAR` → processos + sockets | `PAR` → **threads locais**; sockets no **teste dedicado** |
+| Menu/programa MiniPar no PC1 | **Menu na UI Angular** |
+| Workers executam MiniPar | Workers executam **Python fixo** |
+| Interpretador para “checar sintaxe” | **Parser + semântica** |
+| Três PCs físicos | **Três containers** |
+| Toolchain no host | Toolchain **dentro do MS** (gcc, rustc) |
+| Léxico e sintático em MS separados | **ms-front-end** unificado |
 
 ---
 
-## 10. Referência rápida de artefatos
+## 9. Documentação do projeto (sincronização)
+
+| Documento | Papel |
+|-----------|--------|
+| **COMPLIANCE_AUDIT.md** (este) | Conformidade ✅/🟡/❌ |
+| **SCHEDULE.md** | Datas e marcos |
+| **ACTIVITIES.md** | Responsáveis, sprints, checklist E2E |
+| **ROADMAP.md** | Entregas técnicas por fase |
+| **PROJECT_REQUIREMENTS.md** | Especificação do professor |
+
+Ao mudar código relevante, atualizar **este arquivo** e o checklist em **ACTIVITIES.md**.
+
+---
+
+## 10. Roteiro de demo (10/jun)
+
+| # | Exemplo | Modo LPS |
+|---|---------|----------|
+| 1 | `08_interpreter_ok.minipar` | INTERPRETER + LOCAL |
+| 2 | `09_oo_new.minipar` | INTERPRETER + LOCAL (`woof`) |
+| 3 | `13_sierpinski.minipar` | INTERPRETER + LOCAL |
+| 4 | `11_codegen_c.minipar` | C + LOCAL |
+| 5 | qualquer fonte válida | INTERPRETER + **DISTRIBUTED_SOCKETS** |
+
+**Não prometer:** `PAR` com sockets entre processos; QuickSort em MiniPar nos workers.
+
+---
+
+## 11. Referência rápida de artefatos
 
 | Artefato | Caminho |
 |----------|---------|
-| Especificação integrada | `PROJECT_REQUIREMENTS.md` |
-| Cronograma e fases | `ROADMAP.md`, `SCHEDULE.md` |
-| Relatório Overleaf | `report.tex` |
-| Contrato AST | `microservices/_AST_CONTRACT.md` |
-| Exemplos de validação | `sources/examples/README.md` |
-| Coordenador distribuído | `microservices/ms-parallel-coord/` |
-| Workers socket | `microservices/parallel-workers/` |
-| Template Method | `packages/minipar-core/minipar_core/translation/base_translator.py` |
+| Especificação | `PROJECT_REQUIREMENTS.md` |
+| Cronograma | `SCHEDULE.md` |
+| Atividades / E2E | `ACTIVITIES.md` |
+| Fases técnicas | `ROADMAP.md` |
+| Relatório | `report.tex` |
+| Exemplos | `sources/examples/README.md` |
+| Template Method | `packages/minipar-core/.../base_translator.py` |
 
 ---
 
@@ -266,4 +272,5 @@ Prioridade sugerida **após** fechar entrega 10/jun (ou se sobrar tempo antes):
 
 | Data | Alteração |
 |------|-----------|
-| 2026-06-02 | Criação inicial — auditoria integrada Compiladores + Reuso + LPS + acadêmico |
+| 2026-06-02 | Criação inicial — auditoria integrada |
+| 2026-06-02 | Revisão completa alinhada ao código; `rustc` no MS Rust; docs SCHEDULE/ACTIVITIES; matriz e §8 explícitos |

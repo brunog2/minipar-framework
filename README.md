@@ -140,7 +140,7 @@ Pacote compartilhado: [`packages/minipar-core/`](packages/minipar-core/) — inc
 
 Exemplos: [`sources/examples/`](sources/examples/) (01–14).
 
-**Conformidade e gaps:** [COMPLIANCE_AUDIT.md](./COMPLIANCE_AUDIT.md).
+**Gestão do projeto:** [COMPLIANCE_AUDIT.md](./COMPLIANCE_AUDIT.md) · [SCHEDULE.md](./SCHEDULE.md) · [ACTIVITIES.md](./ACTIVITIES.md) · [ROADMAP.md](./ROADMAP.md).
 
 ## Referências de reuso
 
@@ -170,8 +170,12 @@ docker exec minipar-postgres psql -U minipar -d minipar \
 
 ## Roadmap completo
 
-Panorama detalhado por fase, checklist de entrega, status de OO e plano até 10/jun: **[ROADMAP.md](./ROADMAP.md)**.  
-Auditoria de conformidade (requisitos do professor, parcial, pendente, demo): **[COMPLIANCE_AUDIT.md](./COMPLIANCE_AUDIT.md)**.
+| Documento | Conteúdo |
+|-----------|----------|
+| [ROADMAP.md](./ROADMAP.md) | Entregas técnicas por fase |
+| [SCHEDULE.md](./SCHEDULE.md) | Cronograma e datas |
+| [ACTIVITIES.md](./ACTIVITIES.md) | Sprints, donos, checklist E2E |
+| [COMPLIANCE_AUDIT.md](./COMPLIANCE_AUDIT.md) | O que está conforme / parcial / não conforme |
 
 ## Roadmap (resumo)
 

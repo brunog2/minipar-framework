@@ -1,6 +1,11 @@
 Este documento apresenta a especificação detalhada do seu projeto de conclusão para as disciplinas do professor Arturo Hernandez Dominguez, integrando os conceitos de **Compiladores**, **Reuso de Software** e **Linhas de Produto de Software (LPS/Tópicos)**.
 
-**Auditoria de conformidade (status real vs. requisitos, gaps e backlog futuro):** [COMPLIANCE_AUDIT.md](./COMPLIANCE_AUDIT.md)
+**Documentação de gestão do projeto:**
+
+- [COMPLIANCE_AUDIT.md](./COMPLIANCE_AUDIT.md) — conformidade ✅/🟡/❌ vs. requisitos do professor  
+- [SCHEDULE.md](./SCHEDULE.md) — cronograma por data  
+- [ACTIVITIES.md](./ACTIVITIES.md) — sprints, responsáveis, checklist E2E  
+- [ROADMAP.md](./ROADMAP.md) — entregas técnicas por fase
 
 ---
 

@@ -1,8 +1,8 @@
 # MiniPar Framework 2026.1 — Roadmap e status do projeto
 
-**Referências:** [PROJECT_REQUIREMENTS.md](./PROJECT_REQUIREMENTS.md) · [COMPLIANCE_AUDIT.md](./COMPLIANCE_AUDIT.md) · [SCHEDULE.md](./SCHEDULE.md) · [README.md](./README.md)  
+**Referências:** [PROJECT_REQUIREMENTS.md](./PROJECT_REQUIREMENTS.md) · [COMPLIANCE_AUDIT.md](./COMPLIANCE_AUDIT.md) · [SCHEDULE.md](./SCHEDULE.md) · [ACTIVITIES.md](./ACTIVITIES.md) · [README.md](./README.md)  
 **Entrega:** 10 de junho de 2026  
-**Última atualização:** 2 de junho de 2026 (auditoria de conformidade documentada)
+**Última atualização:** 2 de junho de 2026 (cronograma, atividades e auditoria sincronizados)
 
 Legenda: ✅ concluído · 🟡 parcial / MVP · ⬜ pendente
 
@@ -32,7 +32,7 @@ Legenda: ✅ concluído · 🟡 parcial / MVP · ⬜ pendente
 | `gcc -O2` para C/C++ | Fase 2 (`ms-codegen-c`) | ✅ |
 | **Template Method** + hotspots | Fase 2 (`minipar-core/translation/`) | ✅ |
 | Microsserviços REST + JSON + API Gateway | Fases 0–2 | ✅ (NestJS, não Spring) |
-| LPS documentada (variabilidade → MS) | Fase 4 (Maria) | 🟡 UI + gateway ok; diagrama features ⬜ |
+| LPS documentada (variabilidade → MS) | Fase 4 (Maria) | 🟡 UI + gateway ok; `feature-tree.mmd` ✅; PDF ⬜ |
 | **Paralelismo real** (`PAR` + threads + **sockets**) | Fase 3 | 🟡 infra socket ✅; `PAR` MiniPar ❌ — [auditoria](./COMPLIANCE_AUDIT.md#1-compiladores-minipar-20261-oo) |
 | **Teste 3 máquinas** (QuickSort, matrizes, fatorial) | Fase 3 | 🟡 workers socket ✅; MiniPar nos workers ❌ |
 | **Fractal Sierpinski** (matriz na UI) | Fase 3 | 🟡 fonte ✅; validar E2E + print PDF |
@@ -162,22 +162,22 @@ Legenda: ✅ concluído · 🟡 parcial / MVP · ⬜ pendente
 
 ---
 
-## Fase 3 — Requisitos “de prova” (5–7/jun) — ⬜
+## Fase 3 — Requisitos “de prova” (5–7/jun) — 🟡
 
 | # | Entrega | Responsável | Status | Notas |
 |---|---------|-------------|--------|-------|
-| 3.1 | **`ms-parallel-coord`** `:3006` | Alan | ⬜ | Spec em `microservices/ms-parallel-coord/README.md` |
-| 3.2 | Modo `DISTRIBUTED_SOCKETS` E2E | Alan + Bruno | ⬜ | UI já tem o toggle; gateway tem stub de rota |
-| 3.3 | Worker 1 — QuickSort | Alan | ⬜ | Container/processo + socket |
-| 3.4 | Worker 2 — multiplicação de matrizes | Alan | ⬜ | idem |
-| 3.5 | Worker 3 — fatorial | Alan | ⬜ | idem |
-| 3.6 | Menu coordenador + resultados na UI | Bruno | ⬜ | |
-| 3.7 | **Fractal Sierpinski** MiniPar OO | Karlisson | ⬜ | Ref. `../sources/Fractal-python.py` |
-| 3.8 | Saída matriz `.`/`*` no Console | Karlisson | ⬜ | Screenshot no relatório |
-| 3.9 | Diagrama sequência 3 máquinas | Alan | ⬜ | SCHEDULE |
-| 3.10 | Canais / `SendStmt` / `ReceiveStmt` (se necessário) | Equipe | ⬜ | Parser + runtime |
+| 3.1 | **`ms-parallel-coord`** `:3006` | Alan | ✅ | `POST /coordinate` |
+| 3.2 | Modo `DISTRIBUTED_SOCKETS` E2E | Alan + Bruno | ✅ | Gateway `http` chama coord após semântica |
+| 3.3 | Worker 1 — QuickSort | Alan | ✅ | `worker-quicksort` :9001 |
+| 3.4 | Worker 2 — multiplicação de matrizes | Alan | ✅ | `worker-matrix` :9002 |
+| 3.5 | Worker 3 — fatorial | Alan | ✅ | `worker-factorial` :9003 |
+| 3.6 | Menu coordenador + resultados na UI | Bruno | ✅ | Toggle UI + `distributedResults` |
+| 3.7 | **Fractal Sierpinski** MiniPar OO | Karlisson | ✅ | `13_sierpinski.minipar` |
+| 3.8 | Saída matriz `.`/`*` no Console | Karlisson | 🟡 | Validar E2E + screenshot PDF |
+| 3.9 | Diagrama sequência 3 máquinas | Alan | ✅ | `sequence-3-machines.mmd` |
+| 3.10 | Canais / `SendStmt` / `ReceiveStmt` | Equipe | ⬜ | Opcional; ver [COMPLIANCE_AUDIT.md](./COMPLIANCE_AUDIT.md) |
 
-**Mitigação:** 3 containers na mesma rede Docker = “3 computadores” para a demo.
+**Ressalvas (auditoria):** workers rodam **Python**, não MiniPar; `PAR` local ≠ sockets. **Mitigação:** 3 containers = “3 computadores” na demo.
 
 ---
 
@@ -185,8 +185,8 @@ Legenda: ✅ concluído · 🟡 parcial / MVP · ⬜ pendente
 
 | # | Entrega | Responsável | Status |
 |---|---------|-------------|--------|
-| 4.1 | Diagrama **features LPS** + binding → MS | Maria | ⬜ |
-| 4.2 | UML: casos de uso, componentes, classes | Maria | ⬜ |
+| 4.1 | Diagrama **features LPS** + binding → MS | Maria | 🟡 `.mmd` ✅; PDF ⬜ |
+| 4.2 | UML: casos de uso, componentes, classes | Maria | 🟡 `uml-*.mmd` ✅; PDF ⬜ |
 | 4.3 | BNF OO completa no relatório | Alan + Karlisson | ⬜ placeholder |
 | 4.4 | `report.tex` — Metodologia | Maria + Bruno | 🟡 |
 | 4.5 | `report.tex` — Resultados (prints fractal + 3 máq.) | Maria + Alan + Karlisson | ⬜ depende Fase 3 |
@@ -208,9 +208,9 @@ Legenda: ✅ concluído · 🟡 parcial / MVP · ⬜ pendente
 | `template-method.mmd` | ✅ |
 | `codegen-c-flow.mmd` | ✅ |
 | `reuse-map.mmd` | ✅ |
-| Feature tree LPS | ⬜ Maria |
-| Sequência 3 máquinas | ⬜ Alan |
-| UML casos de uso | ⬜ Maria |
+| `feature-tree.mmd` | ✅ |
+| `sequence-3-machines.mmd` | ✅ |
+| `uml-use-cases.mmd`, `uml-components.mmd`, `uml-classes-framework.mmd` | ✅ (exportar PDF ⬜) |
 
 ---
 
@@ -226,9 +226,9 @@ Legenda: ✅ concluído · 🟡 parcial / MVP · ⬜ pendente
 | 03–05/jun | `ms-interpreter` | ✅ |
 | 03–05/jun | `ms-codegen-c` | ✅ |
 | 04–05/jun | Rust + ARM MVP | ✅ |
-| 04–05/jun | LPS features (Maria) | ⬜ |
-| 05–07/jun | Paralelismo 3 máquinas | ⬜ |
-| 06–07/jun | Fractal + UI | ⬜ |
+| 04–05/jun | LPS features (Maria) | 🟡 `feature-tree.mmd` ✅ |
+| 05–07/jun | Paralelismo 3 máquinas | 🟡 código ✅; E2E + PDF |
+| 06–07/jun | Fractal + UI | 🟡 fonte ✅; E2E + print |
 | 06–07/jun | Docker Compose completo | ✅ |
 | 07–10/jun | Relatório, slides, entrega | 🟡 em andamento |
 
@@ -242,8 +242,9 @@ Legenda: ✅ concluído · 🟡 parcial / MVP · ⬜ pendente
 | ms-semantic | 3002 | 1 | ✅ | `POST /analyze` |
 | ms-interpreter | 3003 | 2 | ✅ | `POST /execute` |
 | ms-codegen-c | 3004 | 2 | ✅ | `POST /generate` (gcc -O2) |
-| ms-codegen-rust | 3005 | 2 | 🟡 MVP | `POST /generate` |
-| ms-parallel-coord | 3006 | 3 | ⬜ | `POST /coordinate` |
+| ms-codegen-rust | 3005 | 2 | 🟡 MVP + `rustc` no Docker | `POST /generate` |
+| ms-parallel-coord | 3006 | 3 | 🟡 | `POST /coordinate` |
+| worker-quicksort / matrix / factorial | 9001–9003 | 3 | ✅ | socket servers |
 | ms-codegen-arm | 3007 | 2 | 🟡 MVP | `POST /generate` |
 | api-gateway | 3000 | 0–2 | ✅ | `POST /api/v1/process` |
 | frontend | 4200 | 0–2 | ✅ | nginx → gateway |
@@ -260,8 +261,8 @@ Legenda: ✅ concluído · 🟡 parcial / MVP · ⬜ pendente
 | Compilador C com `gcc -O2` | ✅ (subset procedural + `Main.run`) |
 | Variabilidade LPS na UI (C, Rust, ARM, Interpretador) | ✅ |
 | API Gateway + microsserviços REST/JSON | ✅ |
-| **Teste paralelo 3 máquinas (sockets)** | ⬜ Fase 3 |
-| **Fractal Sierpinski na interface** | ⬜ Fase 3 |
+| **Teste paralelo 3 máquinas (sockets)** | 🟡 ver [COMPLIANCE_AUDIT.md](./COMPLIANCE_AUDIT.md) |
+| **Fractal Sierpinski na interface** | 🟡 validar E2E + PDF |
 | Relatório Overleaf completo | 🟡 |
 | GitHub + apresentação com demo ao vivo | 🟡 |
 
