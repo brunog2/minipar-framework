@@ -125,6 +125,26 @@ class Main {
     label: 'Fase 3 — Demonstrações',
     templates: [
       {
+        id: 'channels-par',
+        label: '15 — Canais Send/Receive (PAR)',
+        category: 'valid',
+        description:
+          'Declara um canal s_channel, dispara dois branches em paralelo: um envia 42, o outro recebe e armazena em result.',
+        expectedResult:
+          'Saída esperada: 42. Valida PAR com processos isolados e comunicação via canal.',
+        code: `class Main {
+  void run() {
+    s_channel ch();
+    par {
+      send(ch, 42);
+      receive(ch, result);
+    }
+    println(result);
+  }
+}
+`,
+      },
+      {
         id: 'distributed-menu',
         label: '14 — Menu coordenador (3 máquinas)',
         category: 'valid',

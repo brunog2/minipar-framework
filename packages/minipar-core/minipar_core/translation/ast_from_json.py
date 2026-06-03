@@ -204,4 +204,10 @@ def from_dict(data: dict | list | str | int | float | bool | None):
             end=from_dict(data.get("end")),
         )
 
+    if node_type == "SendStmt":
+        return n.SendStmt(channel=data["channel"], value=from_dict(data["value"]))
+
+    if node_type == "ReceiveStmt":
+        return n.ReceiveStmt(channel=data["channel"], target=data["target"])
+
     raise TypeError(f"Unknown AST node type: {node_type}")
