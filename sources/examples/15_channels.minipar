@@ -1,0 +1,10 @@
+class Main {
+  void run() {
+    s_channel ch();
+    par {
+      send(ch, 42);
+      receive(ch, result);
+    }
+    println(result);
+  }
+}

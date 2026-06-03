@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import io
-import threading
+import json
+import multiprocessing
+import pickle
+import socket as _socket
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional
 
@@ -82,6 +85,15 @@ class Interpreter:
         self.output = output or io.StringIO()
         self.this_instance: MiniInstance | None = None
         self.classes: Dict[str, MiniClass] = {}
+        self._print_hook: Optional[Callable[[str], None]] = None
+        # multiprocessing.Queue so channels work across both threads and forked processes
+        self._channels: Dict[str, Any] = {}
+
+    def _output(self, text: str) -> None:
+        if self._print_hook:
+            self._print_hook(text)
+        else:
+            self.output.write(text)
 
     def execute(self, program: n.Program) -> str:
         for decl in program.declarations:
@@ -141,6 +153,12 @@ class Interpreter:
             return self.exec_property_assign(node)
         if isinstance(node, n.SuperCall):
             return self.exec_super_call(node)
+        if isinstance(node, n.ChannelDecl):
+            return self.exec_channel_decl(node)
+        if isinstance(node, n.SendStmt):
+            return self.exec_send(node)
+        if isinstance(node, n.ReceiveStmt):
+            return self.exec_receive(node)
         return self.eval(node)
 
     def exec_class(self, node: n.ClassDecl) -> None:
@@ -178,29 +196,88 @@ class Interpreter:
             self.exec(stmt)
 
     def exec_par(self, statements: List) -> None:
-        errors: List[Exception] = []
-        lock = threading.Lock()
+        if not statements:
+            return
 
-        def run_stmt(stmt) -> None:
+        # Snapshot: only JSON-serializable primitives from current env chain
+        env_snapshot: Dict[str, Any] = {}
+        env = self.env
+        while env is not None:
+            for k, v in env.values.items():
+                if k not in env_snapshot and isinstance(v, (str, int, float, bool, type(None))):
+                    env_snapshot[k] = v
+            env = env.parent
+
+        shared_data = pickle.dumps({"classes": self.classes, "env": env_snapshot})
+        stmt_datas = [pickle.dumps(s) for s in statements]
+
+        server = _socket.socket(_socket.AF_INET, _socket.SOCK_STREAM)
+        server.setsockopt(_socket.SOL_SOCKET, _socket.SO_REUSEADDR, 1)
+        server.bind(("127.0.0.1", 0))
+        port = server.getsockname()[1]
+        server.listen(len(statements))
+        server.settimeout(30)
+
+        procs = [
+            multiprocessing.Process(
+                target=_par_worker,
+                args=(sd, shared_data, port, self._channels),
+                daemon=True,
+            )
+            for sd in stmt_datas
+        ]
+        for p in procs:
+            p.start()
+
+        results = []
+        for _ in statements:
             try:
-                child = Environment(self.globals)
-                old_env = self.env
-                self.env = child
-                try:
-                    self.exec(stmt)
-                finally:
-                    self.env = old_env
-            except Exception as exc:
-                with lock:
-                    errors.append(exc)
+                conn, _ = server.accept()
+                data = b""
+                while not data.endswith(b"\n"):
+                    chunk = conn.recv(4096)
+                    if not chunk:
+                        break
+                    data += chunk
+                conn.close()
+                results.append(json.loads(data.decode()))
+            except Exception:
+                results.append({"output": [], "env": {}})
 
-        threads = [threading.Thread(target=run_stmt, args=(s,)) for s in statements]
-        for t in threads:
-            t.start()
-        for t in threads:
-            t.join()
-        if errors:
-            raise errors[0]
+        for p in procs:
+            p.join(timeout=30)
+        server.close()
+
+        for r in results:
+            for line in r.get("output", []):
+                self._output(line)
+        # Propagate env updates (e.g. receive(ch, result)) back to parent env
+        for r in results:
+            for k, v in r.get("env", {}).items():
+                try:
+                    self.env.assign(k, v)
+                except RuntimeError:
+                    self.env.define(k, v)
+
+    def exec_channel_decl(self, node: n.ChannelDecl) -> None:
+        self._channels[node.name] = multiprocessing.Queue()
+
+    def exec_send(self, node: n.SendStmt) -> None:
+        value = self.eval(node.value)
+        ch = self._channels.get(node.channel)
+        if ch is None:
+            raise RuntimeError(f"Channel not declared: {node.channel}")
+        ch.put(value)
+
+    def exec_receive(self, node: n.ReceiveStmt) -> None:
+        ch = self._channels.get(node.channel)
+        if ch is None:
+            raise RuntimeError(f"Channel not declared: {node.channel}")
+        value = ch.get()
+        try:
+            self.env.assign(node.target, value)
+        except RuntimeError:
+            self.env.define(node.target, value)
 
     def exec_if(self, node: n.IfStmt) -> None:
         if self._truthy(self.eval(node.condition)):
@@ -234,9 +311,9 @@ class Interpreter:
         parts = [self._format_value(self.eval(arg)) for arg in node.arguments]
         text = " ".join(parts)
         if node.newline:
-            self.output.write(text + "\n")
+            self._output(text + "\n")
         else:
-            self.output.write(text)
+            self._output(text)
 
     def exec_assignment(self, node: n.Assignment) -> Any:
         value = self.eval(node.value)
@@ -306,6 +383,8 @@ class Interpreter:
         right = self.eval(node.right)
         op = node.operator
         if op == "+":
+            if isinstance(left, str) or isinstance(right, str):
+                return self._format_value(left) + self._format_value(right)
             return left + right
         if op == "-":
             return left - right
@@ -425,6 +504,48 @@ class Interpreter:
         if isinstance(value, float) and value == int(value):
             return str(int(value))
         return str(value)
+
+
+def _par_worker(stmt_data: bytes, shared_data: bytes, port: int, channels: Dict) -> None:
+    """Isolated process for exec_par — executes one statement, sends output+env via TCP."""
+    import json
+    import pickle
+    import socket
+
+    shared = pickle.loads(shared_data)
+    stmt = pickle.loads(stmt_data)
+
+    child = Interpreter()
+    child.classes = shared["classes"]
+    for name, klass in child.classes.items():
+        child.globals.define(name, klass)
+    for k, v in shared["env"].items():
+        child.globals.define(k, v)
+    child._channels = channels  # shared multiprocessing.Queue objects
+
+    output_lines: List[str] = []
+    child._print_hook = lambda txt: output_lines.append(txt)
+
+    # Track new env definitions (e.g. receive(ch, result) creates result)
+    env_updates: Dict[str, Any] = {}
+    _orig_define = child.env.define
+
+    def _tracking_define(name: str, value: Any) -> None:
+        if isinstance(value, (str, int, float, bool, type(None))):
+            env_updates[name] = value
+        _orig_define(name, value)
+
+    child.env.define = _tracking_define  # type: ignore[method-assign]
+
+    try:
+        child.exec(stmt)
+    except Exception:
+        pass
+
+    conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    conn.connect(("127.0.0.1", port))
+    conn.sendall(json.dumps({"output": output_lines, "env": env_updates}).encode() + b"\n")
+    conn.close()
 
 
 class InterpreterBackend(AbstractBackendTranslator):

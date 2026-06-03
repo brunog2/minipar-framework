@@ -23,8 +23,10 @@ class TokenType(Enum):
     PAR = auto()
     PRINT = auto()
     PRINTLN = auto()
+    RECEIVE = auto()
     RETURN = auto()
     S_CHANNEL = auto()
+    SEND = auto()
     SEQ = auto()
     SUPER = auto()
     THIS = auto()
@@ -97,8 +99,10 @@ class Lexer:
         "par": TokenType.PAR,
         "print": TokenType.PRINT,
         "println": TokenType.PRINTLN,
+        "receive": TokenType.RECEIVE,
         "return": TokenType.RETURN,
         "s_channel": TokenType.S_CHANNEL,
+        "send": TokenType.SEND,
         "seq": TokenType.SEQ,
         "super": TokenType.SUPER,
         "this": TokenType.THIS,

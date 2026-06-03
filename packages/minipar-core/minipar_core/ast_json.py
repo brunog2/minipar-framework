@@ -205,4 +205,10 @@ def to_dict(node) -> dict | list | str | int | float | bool | None:
             "end": to_dict(node.end),
         }
 
+    if isinstance(node, n.SendStmt):
+        return {"type": "SendStmt", "channel": node.channel, "value": to_dict(node.value)}
+
+    if isinstance(node, n.ReceiveStmt):
+        return {"type": "ReceiveStmt", "channel": node.channel, "target": node.target}
+
     raise TypeError(f"Unknown AST node: {type(node).__name__}")

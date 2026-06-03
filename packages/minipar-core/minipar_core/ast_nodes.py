@@ -228,3 +228,15 @@ class SliceAccess(ASTNode):
     object: ASTNode
     start: Optional[ASTNode] = None
     end: Optional[ASTNode] = None
+
+
+@dataclass
+class SendStmt(ASTNode):
+    channel: str
+    value: ASTNode
+
+
+@dataclass
+class ReceiveStmt(ASTNode):
+    channel: str
+    target: str

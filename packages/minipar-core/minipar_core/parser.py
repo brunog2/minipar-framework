@@ -211,17 +211,52 @@ class Parser:
         channel_type = "s_channel" if self.match(TokenType.S_CHANNEL) else "c_channel"
         self.advance()
         name = self.consume(TokenType.IDENTIFIER).value
-        self.consume(TokenType.LBRACE)
-        arguments = []
-        if not self.match(TokenType.RBRACE):
-            arguments.append(self.expression())
-            while self.match(TokenType.COMMA):
-                self.advance()
+        # Accept both `{}` and `()` as argument delimiters
+        if self.match(TokenType.LBRACE):
+            self.advance()
+            arguments = []
+            if not self.match(TokenType.RBRACE):
                 arguments.append(self.expression())
-        self.consume(TokenType.RBRACE)
+                while self.match(TokenType.COMMA):
+                    self.advance()
+                    arguments.append(self.expression())
+            self.consume(TokenType.RBRACE)
+        elif self.match(TokenType.LPAREN):
+            self.advance()
+            arguments = []
+            if not self.match(TokenType.RPAREN):
+                arguments.append(self.expression())
+                while self.match(TokenType.COMMA):
+                    self.advance()
+                    arguments.append(self.expression())
+            self.consume(TokenType.RPAREN)
+        else:
+            arguments = []
         if self.match(TokenType.SEMICOLON):
             self.advance()
         return ChannelDecl(channel_type=channel_type, name=name, arguments=arguments)
+
+    def send_statement(self) -> SendStmt:
+        self.consume(TokenType.SEND)
+        self.consume(TokenType.LPAREN)
+        channel = self.consume(TokenType.IDENTIFIER, "Expected channel name").value
+        self.consume(TokenType.COMMA)
+        value = self.expression()
+        self.consume(TokenType.RPAREN)
+        if self.match(TokenType.SEMICOLON):
+            self.advance()
+        return SendStmt(channel=channel, value=value)
+
+    def receive_statement(self) -> ReceiveStmt:
+        self.consume(TokenType.RECEIVE)
+        self.consume(TokenType.LPAREN)
+        channel = self.consume(TokenType.IDENTIFIER, "Expected channel name").value
+        self.consume(TokenType.COMMA)
+        target = self.consume(TokenType.IDENTIFIER, "Expected target variable").value
+        self.consume(TokenType.RPAREN)
+        if self.match(TokenType.SEMICOLON):
+            self.advance()
+        return ReceiveStmt(channel=channel, target=target)
 
     def type_specifier(self) -> str:
         if self.match(TokenType.NUMBER):
@@ -278,6 +313,12 @@ class Parser:
             return self.print_statement(newline=False)
         if self.match(TokenType.PRINTLN):
             return self.print_statement(newline=True)
+        if self.match(TokenType.SEND):
+            return self.send_statement()
+        if self.match(TokenType.RECEIVE):
+            return self.receive_statement()
+        if self.match(TokenType.S_CHANNEL, TokenType.C_CHANNEL):
+            return self.channel_declaration()
         if self.match(TokenType.LBRACE):
             return self.block()
         if self.match(TokenType.VAR):
