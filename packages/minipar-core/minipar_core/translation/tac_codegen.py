@@ -53,7 +53,7 @@ class TACGenerator:
         fn_name = f"{class_name}_{node.name}"
         self.emit("FUNC_BEGIN", fn_name)
         for param in node.parameters:
-            self.emit("PARAM", param.name)
+            self.emit("FUNC_PARAM", param.name)
         self.generate(node.body)
         self.emit("FUNC_END", fn_name)
 
@@ -65,7 +65,7 @@ class TACGenerator:
     def gen_FuncDecl(self, node: n.FuncDecl) -> None:
         self.emit("FUNC_BEGIN", node.name)
         for param in node.parameters:
-            self.emit("PARAM", param.name)
+            self.emit("FUNC_PARAM", param.name)
         self.generate(node.body)
         self.emit("FUNC_END", node.name)
 
