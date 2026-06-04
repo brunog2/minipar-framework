@@ -78,8 +78,9 @@ class Environment:
         raise RuntimeError(f"Undefined variable: {name}")
 
 
-class Interpreter:
+class Interpreter(AbstractBackendTranslator):
     def __init__(self, output: io.StringIO | None = None):
+        super().__init__()
         self.globals = Environment()
         self.env = self.globals
         self.output = output or io.StringIO()
@@ -88,6 +89,34 @@ class Interpreter:
         self._print_hook: Optional[Callable[[str], None]] = None
         # multiprocessing.Queue so channels work across both threads and forked processes
         self._channels: Dict[str, Any] = {}
+        self._exec_output: str = ""
+        self._runtime_errors: list[str] = []
+
+    # ------------------------------------------------------------------
+    # Hotspots do framework (AbstractBackendTranslator)
+    # ------------------------------------------------------------------
+
+    def emit(self, ast_dict: dict) -> None:
+        """Hotspot principal: converte AST dict → execução direta."""
+        program = from_dict(ast_dict)
+        if not isinstance(program, n.Program):
+            self._errors.append("Expected Program node")
+            return
+        try:
+            self._exec_output = self.execute(program)
+        except RuntimeError as exc:
+            self._runtime_errors.append(str(exc))
+            self._exec_output = ""
+
+    def finalize(self) -> TranslationResult:
+        """Hotspot de saída: monta TranslationResult com o output da execução."""
+        if self._runtime_errors:
+            return TranslationResult(
+                output="; ".join(self._runtime_errors),
+                exit_code=1,
+                errors=list(self._runtime_errors),
+            )
+        return TranslationResult(output=self._exec_output, exit_code=0)
 
     def _output(self, text: str) -> None:
         if self._print_hook:
@@ -548,30 +577,8 @@ def _par_worker(stmt_data: bytes, shared_data: bytes, port: int, channels: Dict)
     conn.close()
 
 
-class InterpreterBackend(AbstractBackendTranslator):
-    def __init__(self) -> None:
-        self._interpreter: Interpreter | None = None
-        self._output = ""
-        self._runtime_errors: list[str] = []
-
-    def emit(self, ast_dict: dict) -> None:
-        program = from_dict(ast_dict)
-        if not isinstance(program, n.Program):
-            raise TypeError("Expected Program")
-        interp = Interpreter()
-        try:
-            self._output = interp.execute(program)
-        except RuntimeError as exc:
-            self._runtime_errors.append(str(exc))
-
-    def finalize(self) -> TranslationResult:
-        if self._runtime_errors:
-            return TranslationResult(
-                output="; ".join(self._runtime_errors),
-                exit_code=1,
-                errors=list(self._runtime_errors),
-            )
-        return TranslationResult(output=self._output, exit_code=0)
+# Alias para compatibilidade — InterpreterBackend e Interpreter são a mesma classe
+InterpreterBackend = Interpreter
 
 
 def interpret_ast(ast_dict: dict) -> TranslationResult:
