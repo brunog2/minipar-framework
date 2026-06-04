@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import { ExecutionMode } from '../process/enums/execution-mode.enum';
 import { TargetVariability } from '../process/enums/target-variability.enum';
+import { BACKEND_REGISTRY } from './backend-registry';
 
 export interface PipelineResult {
   ast: unknown;
@@ -102,29 +103,18 @@ export class PipelineService {
     let output: string;
     let generatedCode: string | undefined;
 
-    switch (targetVariability) {
-      case TargetVariability.INTERPRETER:
-        steps.push('ms-interpreter: execute (mock)');
-        output = `[Fase 1] Análise concluída. Interpretador pendente (Fase 2). ${sourceCode.split('\n').length} linha(s).`;
-        break;
-      case TargetVariability.C:
-      case TargetVariability.CPP:
-        steps.push(`ms-codegen-c: generate target=${targetVariability} (mock)`);
-        generatedCode = '/* Mock C/C++ — Fase 2 */\nint main(void) { return 0; }\n';
-        output = `[Fase 1] AST validada. Codegen ${targetVariability} pendente (Fase 2).`;
-        break;
-      case TargetVariability.RUST:
-        steps.push('ms-codegen-rust: generate (mock)');
-        generatedCode = 'fn main() {}\n';
-        output = '[Fase 1] AST validada. Codegen Rust pendente (Fase 2).';
-        break;
-      case TargetVariability.ASSEMBLY:
-        steps.push('ms-codegen-arm: generate (mock)');
-        generatedCode = '.text\n.global _start\n';
-        output = '[Fase 1] AST validada. Codegen ARM pendente (Fase 2).';
-        break;
-      default:
-        output = '[Fase 1] Processamento front-end concluído.';
+    const descriptor = BACKEND_REGISTRY.find(
+      (b) => b.variability === targetVariability,
+    );
+    if (!descriptor) {
+      output = '[Fase 1] Processamento front-end concluído.';
+    } else {
+      steps.push(`${descriptor.envKey.replace('MS_', '').replace('_URL', '').toLowerCase()}: ${descriptor.endpoint.slice(1)} (mock)`);
+      generatedCode = descriptor.mockCode;
+      output =
+        descriptor.variability === 'INTERPRETER'
+          ? `[Fase 1] Análise concluída. ${descriptor.mockLabel} pendente (Fase 2). ${sourceCode.split('\n').length} linha(s).`
+          : `[Fase 1] AST validada. ${descriptor.mockLabel} pendente (Fase 2).`;
     }
 
     return { output: outputPrefix + output, generatedCode, distributedResults };
@@ -272,58 +262,22 @@ export class PipelineService {
       target: targetVariability,
     };
 
-    switch (targetVariability) {
-      case TargetVariability.INTERPRETER: {
-        const url = this.config.getOrThrow<string>('MS_INTERPRETER_URL');
-        const res = await firstValueFrom(
-          this.http.post<{ output: string }>(`${url}/execute`, payload),
-        );
-        steps.push('ms-interpreter: execute');
-        backendOutput += res.data.output;
-        break;
-      }
-      case TargetVariability.C:
-      case TargetVariability.CPP: {
-        const url = this.config.getOrThrow<string>('MS_CODEGEN_C_URL');
-        const res = await firstValueFrom(
-          this.http.post<{ output: string; code?: string }>(
-            `${url}/generate`,
-            { ...payload, target: targetVariability },
-          ),
-        );
-        steps.push(`ms-codegen-c: generate (${targetVariability})`);
-        backendOutput += res.data.output;
-        generatedCode = res.data.code;
-        break;
-      }
-      case TargetVariability.RUST: {
-        const url = this.config.getOrThrow<string>('MS_CODEGEN_RUST_URL');
-        const res = await firstValueFrom(
-          this.http.post<{ output: string; code?: string }>(
-            `${url}/generate`,
-            payload,
-          ),
-        );
-        steps.push('ms-codegen-rust: generate');
-        backendOutput += res.data.output;
-        generatedCode = res.data.code;
-        break;
-      }
-      case TargetVariability.ASSEMBLY: {
-        const url = this.config.getOrThrow<string>('MS_CODEGEN_ARM_URL');
-        const res = await firstValueFrom(
-          this.http.post<{ output: string; code?: string }>(
-            `${url}/generate`,
-            payload,
-          ),
-        );
-        steps.push('ms-codegen-arm: generate');
-        backendOutput += res.data.output;
-        generatedCode = res.data.code;
-        break;
-      }
-      default:
-        backendOutput = 'Backend não configurado.';
+    const descriptor = BACKEND_REGISTRY.find(
+      (b) => b.variability === targetVariability,
+    );
+    if (!descriptor) {
+      backendOutput = `Backend não registrado para variabilidade: ${targetVariability}`;
+    } else {
+      const backendUrl = this.config.getOrThrow<string>(descriptor.envKey);
+      const res = await firstValueFrom(
+        this.http.post<{ output: string; code?: string }>(
+          `${backendUrl}${descriptor.endpoint}`,
+          { ...payload, target: targetVariability },
+        ),
+      );
+      steps.push(`${descriptor.variability}: ${descriptor.endpoint.slice(1)}`);
+      backendOutput += res.data.output;
+      generatedCode = res.data.code;
     }
 
     return {
