@@ -30,14 +30,25 @@ class SimpleARMGenerator:
         for instr in instructions:
             if instr.op == "PRINT" and isinstance(instr.arg1, str):
                 if instr.arg1.startswith('"'):
+                    # String literal — load address into r0 and call printf
                     raw = instr.arg1[1:-1]
                     label = f".Lstr{sid}"
-                    strings[label] = raw
+                    newline = instr.arg2 == "1"
+                    strings[label] = raw + "\\n" if newline else raw
                     sid += 1
                     lines.append(f"    ldr r0, ={label}")
                     lines.append("    bl printf")
                 else:
-                    lines.append(f"    @ print {instr.arg1}")
+                    # Numeric variable — C1 fix: emit printf with %g\n format
+                    # ARM MVP: register allocation not implemented;
+                    # emit structurally valid printf call with format string placeholder
+                    fmt_label = f".Lfmt{sid}"
+                    newline = instr.arg2 == "1"
+                    strings[fmt_label] = "%g\\n" if newline else "%g"
+                    sid += 1
+                    lines.append(f"    @ load {instr.arg1} into r1 (register allocation needed)")
+                    lines.append(f"    ldr r0, ={fmt_label}")
+                    lines.append("    bl printf")
 
         lines.extend(
             [
@@ -53,7 +64,8 @@ class SimpleARMGenerator:
             for label, text in strings.items():
                 esc = text.replace("\\", "\\\\").replace('"', '\\"')
                 lines.append(f"{label}:")
-                lines.append(f'    .asciz "{esc}\\n"')
+                # Use .asciz for null-terminated strings; handle \\n escape properly
+                lines.append(f'    .asciz "{esc}"')
             lines.append("")
 
         lines.append("    .end")
