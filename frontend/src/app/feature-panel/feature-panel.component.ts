@@ -28,6 +28,7 @@ export class FeaturePanelComponent {
     { value: 'CPP', label: 'Compilador → C++' },
     { value: 'RUST', label: 'Compilador → Rust' },
     { value: 'ASSEMBLY', label: 'Compilador → ARMv7' },
+    { value: 'PYTHON', label: 'Compilador → Python (extensão)' },
   ];
 
   readonly executions: { value: ExecutionMode; label: string }[] = [

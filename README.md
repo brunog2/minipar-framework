@@ -2,12 +2,19 @@
 
 Framework para compiladores e interpretadores da linguagem **MiniPar 2026.1** (OO + paralelismo real), organizado como **Linha de Produto de Software (LPS)** com arquitetura de **microsserviços**.
 
+## Como estender o framework
+
+- **[CREATING_AN_APPLICATION.md](CREATING_AN_APPLICATION.md)** — passo a passo para criar nova instância (framework vs gerador, FAQ banca)
+- **[applications/](applications/)** — catálogo de instâncias de referência + extensão Python
+- **[packages/minipar-core/EXTENDING.md](packages/minipar-core/EXTENDING.md)** — contrato de hotspots (`emit`/`finalize`)
+- **[packages/minipar-core/minipar_core/translation/_template_backend.py](packages/minipar-core/minipar_core/translation/_template_backend.py)** — esqueleto vazio para copiar
+
 ## Pontos de variação (LPS)
 
 | Ponto de variação | Variantes |
 |-------------------|-----------|
 | Modo de execução | Interpretador, Compilador |
-| Back-end de compilação | C, C++, Rust, Assembly ARMv7 |
+| Back-end de compilação | C, C++, Rust, Assembly ARMv7, **Python (extensão demo)** |
 | Ambiente de execução | Local, Distribuído (sockets, 3 máquinas) |
 
 ## Pipeline de dados
@@ -36,6 +43,8 @@ Diagramas Mermaid em [`docs/diagrams/`](docs/diagrams/):
 
 ```
 minipar-framework/
+├── applications/             # Instâncias de referência + extensão Python
+├── CREATING_AN_APPLICATION.md
 ├── frontend/                 # Angular + nginx (:4200)
 ├── api-gateway/              # NestJS — orquestração (:3000)
 ├── packages/minipar-core/    # Lexer, parser, semântica, translation/
@@ -45,10 +54,11 @@ minipar-framework/
 │   ├── ms-interpreter/       # :3003 — execute
 │   ├── ms-codegen-c/         # :3004 — generate (gcc -O2)
 │   ├── ms-codegen-rust/      # :3005 — generate (MVP)
-│   └── ms-codegen-arm/       # :3007 — generate (MVP)
+│   ├── ms-codegen-arm/       # :3007 — generate (MVP)
+│   └── ms-codegen-python/    # :3008 — generate (extensão demo)
 ├── database/init.sql
 ├── docs/diagrams/            # Diagramas Mermaid
-├── sources/examples/         # Fixtures 01–14
+├── sources/examples/         # Fixtures 01–16
 ├── COMPLIANCE_AUDIT.md       # Conformidade vs. requisitos + backlog futuro
 └── docker-compose.yml
 ```
@@ -78,6 +88,7 @@ Serviços (Docker Compose):
 | ms-codegen-c | 3004 |
 | ms-codegen-rust | 3005 |
 | ms-codegen-arm | 3007 |
+| ms-codegen-python | 3008 |
 | postgres | rede interna |
 
 Variáveis no gateway: `PIPELINE_MODE=http`, `PIPELINE_BACKEND_MODE=http`.

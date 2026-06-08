@@ -1,3 +1,8 @@
+# INSTÂNCIA DE REFERÊNCIA: Compilador MiniPar → Rust
+# Framework: AbstractBackendTranslator (base_translator.py)
+# Hotspots implementados neste arquivo: emit(), finalize()
+# O dev desta aplicação escolheu: AST → Rust → rustc
+
 """Back-end Rust — emissao direta da AST via RustASTEmitter."""
 
 from __future__ import annotations

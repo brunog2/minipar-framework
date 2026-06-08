@@ -1,3 +1,8 @@
+# INSTÂNCIA DE REFERÊNCIA: Compilador MiniPar → ARMv7
+# Framework: AbstractBackendTranslator (base_translator.py)
+# Hotspots implementados neste arquivo: emit(), finalize()
+# O dev desta aplicação escolheu: TAC → Assembly ARMv7
+
 """Back-end ARMv7 — TAC → assembly mínimo."""
 
 from __future__ import annotations

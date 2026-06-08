@@ -113,6 +113,22 @@ services:
       retries: 5
       start_period: 15s
 
+  ms-codegen-python:
+    build:
+      context: .
+      dockerfile: microservices/ms-codegen-python/Dockerfile
+    container_name: minipar-ms-codegen-python
+    networks:
+      - minipar
+    ports:
+      - '3008:3008'
+    healthcheck:
+      test: ['CMD-SHELL', 'python -c "import urllib.request; urllib.request.urlopen(\"http://127.0.0.1:3008/health\")"']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
   worker-quicksort:
     build:
       context: .
@@ -197,6 +213,7 @@ services:
       MS_CODEGEN_RUST_URL: http://ms-codegen-rust:3005
       MS_PARALLEL_COORD_URL: http://ms-parallel-coord:3006
       MS_CODEGEN_ARM_URL: http://ms-codegen-arm:3007
+      MS_CODEGEN_PYTHON_URL: http://ms-codegen-python:3008
     depends_on:
       postgres:
         condition: service_healthy
@@ -211,6 +228,8 @@ services:
       ms-codegen-rust:
         condition: service_healthy
       ms-codegen-arm:
+        condition: service_healthy
+      ms-codegen-python:
         condition: service_healthy
       ms-parallel-coord:
         condition: service_healthy

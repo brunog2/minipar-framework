@@ -1,3 +1,8 @@
+# INSTÂNCIA DE REFERÊNCIA: Interpretador MiniPar
+# Framework: AbstractBackendTranslator (base_translator.py)
+# Hotspots implementados neste arquivo: emit(), finalize()
+# O dev desta aplicação escolheu: execução direta da AST (sem TAC)
+
 """Interpretador MiniPar — execução direta da AST (port cl-minipar MVP)."""
 
 from __future__ import annotations

@@ -2,6 +2,36 @@
 
 Este documento descreve o contrato de extensão do MiniPar para criação de novos backends de compilação/interpretação.
 
+**Processo completo de instanciação:** [`CREATING_AN_APPLICATION.md`](../../CREATING_AN_APPLICATION.md) (raiz do monorepo).
+
+**Instâncias de referência já no repositório:** [`applications/README.md`](../../applications/README.md).
+
+**Esqueleto vazio para copiar:** [`minipar_core/translation/_template_backend.py`](minipar_core/translation/_template_backend.py).
+
+---
+
+## O código do dev já está no repo
+
+Os backends existentes **são** instâncias criadas sobre o framework — hotspots preenchidos pela equipe:
+
+| Instância | Hotspot | Arquivo |
+|-----------|---------|---------|
+| Interpretador | `emit()` execução AST | [`interpreter.py`](minipar_core/translation/interpreter.py) |
+| Compilador C | `emit()` TAC→C, `finalize()` gcc | [`c_backend.py`](minipar_core/translation/c_backend.py) |
+| Compilador C++ | herda CBackend | [`c_backend.py`](minipar_core/translation/c_backend.py) (`CppBackend`) |
+| Rust | `emit()` AST→Rust | [`rust_backend.py`](minipar_core/translation/rust_backend.py) |
+| ARM | `emit()` TAC→asm | [`arm_backend.py`](minipar_core/translation/arm_backend.py) |
+| **Python (extensão demo)** | `emit()` TAC→Python | [`python_backend.py`](minipar_core/translation/python_backend.py) |
+
+### Frozen-spot vs hotspot (arquivos reais)
+
+| Tipo | Arquivo | Sobrescrever? |
+|------|---------|---------------|
+| Frozen-spot | `base_translator.py` → `translate()`, `validate()`, `prepare()` | **Não** |
+| Contrato | `emit()`, `finalize()` (abstractmethod) | Implementar |
+| Hotspot opcional | `hook_validate()`, `hook_prepare()` | Opcional |
+| Instância | `c_backend.py`, `python_backend.py`, … | Corpo dos hotspots |
+
 ---
 
 ## 1. Hierarquia de classes
@@ -93,6 +123,8 @@ def hook_prepare(self, ast_dict: dict) -> None:
 
 ## 3. Exemplo completo de novo backend (Python)
 
+Implementação real (extensão demo): [`python_backend.py`](minipar_core/translation/python_backend.py).
+
 ```python
 # minipar_core/translation/python_backend.py
 from minipar_core.translation.base_translator import AbstractBackendTranslator, TranslationResult
@@ -100,7 +132,7 @@ from minipar_core.translation.tac_codegen import TACGenerator
 
 
 class PythonBackend(AbstractBackendTranslator):
-    """Exemplo: backend que gera código Python a partir de MiniPar."""
+    """Backend que gera código Python a partir de MiniPar."""
 
     def emit(self, ast_dict: dict) -> None:
         tac = TACGenerator().lower(ast_dict)
@@ -131,7 +163,7 @@ O gateway usa `BACKEND_REGISTRY.find(b => b.variability === targetVariability)` 
 
 Adicionar também no `.env`:
 ```
-MS_CODEGEN_PYTHON_URL=http://ms-codegen-python:8000
+MS_CODEGEN_PYTHON_URL=http://ms-codegen-python:3008
 ```
 
 E criar o microserviço FastAPI expondo `POST /generate` que instancia `PythonBackend().translate(ast_dict)`.

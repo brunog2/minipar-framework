@@ -4,4 +4,5 @@ export enum TargetVariability {
   CPP = 'CPP',
   RUST = 'RUST',
   ASSEMBLY = 'ASSEMBLY',
+  PYTHON = 'PYTHON',
 }

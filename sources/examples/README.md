@@ -23,6 +23,7 @@ Requer `PIPELINE_BACKEND_MODE=http` no gateway (padrão no Docker Compose).
 | `10_par_seq.minipar` | INTERPRETER | Saída: `a`, `b`, `c` (seq + par) |
 | `11_codegen_c.minipar` | C | C gerado + `gcc -O2` + stdout |
 | `12_codegen_rust_stub.minipar` | RUST | Código Rust mínimo (+ rustc se disponível) |
+| `16_codegen_python.minipar` | PYTHON | Python gerado + `python3` + stdout |
 
 Testar na UI (http://localhost:4200) com **Executar** ou `Ctrl+Enter` / `F5`.
 

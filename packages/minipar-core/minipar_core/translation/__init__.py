@@ -6,6 +6,7 @@ from minipar_core.translation.interpreter import InterpreterBackend, interpret_a
 from minipar_core.translation.c_backend import CBackend, CppBackend, generate_c
 from minipar_core.translation.rust_backend import RustBackend, generate_rust
 from minipar_core.translation.arm_backend import ARMBackend, generate_arm
+from minipar_core.translation.python_backend import PythonBackend, generate_python
 
 __all__ = [
     "TranslationResult",
@@ -19,4 +20,6 @@ __all__ = [
     "generate_rust",
     "ARMBackend",
     "generate_arm",
+    "PythonBackend",
+    "generate_python",
 ]

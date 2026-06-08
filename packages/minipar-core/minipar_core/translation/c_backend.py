@@ -1,3 +1,8 @@
+# INSTÂNCIA DE REFERÊNCIA: Compilador MiniPar → C / C++
+# Framework: AbstractBackendTranslator (base_translator.py)
+# Hotspots implementados neste arquivo: emit(), finalize()
+# O dev desta aplicação escolheu: TAC → C/C++ → gcc/g++ -O2
+
 """Back-end C/C++ — TAC → C → gcc -O2."""
 
 from __future__ import annotations

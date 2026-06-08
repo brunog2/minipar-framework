@@ -3,7 +3,8 @@ export type TargetVariability =
   | 'C'
   | 'CPP'
   | 'RUST'
-  | 'ASSEMBLY';
+  | 'ASSEMBLY'
+  | 'PYTHON';
 
 export type ExecutionMode = 'LOCAL' | 'DISTRIBUTED_SOCKETS';
 

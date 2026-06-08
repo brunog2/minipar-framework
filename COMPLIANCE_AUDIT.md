@@ -3,7 +3,7 @@
 **Propósito:** registrar o alinhamento do projeto com os requisitos das disciplinas (Compiladores, Reuso de Software, LPS/Tópicos) — o que está **conforme**, **parcial**, **não conforme** e **diferente do pedido** — para orientar implementações futuras, demo e entrega acadêmica.
 
 **Referências:** [PROJECT_REQUIREMENTS.md](./PROJECT_REQUIREMENTS.md) · [ROADMAP.md](./ROADMAP.md) · [SCHEDULE.md](./SCHEDULE.md) · [ACTIVITIES.md](./ACTIVITIES.md) · [report.tex](./report.tex)  
-**Última revisão:** 2 de junho de 2026  
+**Última revisão:** 8 de junho de 2026  
 **Entrega alvo:** 10 de junho de 2026
 
 **Metodologia desta auditoria:** análise do repositório (`minipar-framework`), código, `docker-compose.yml`, microsserviços e documentação. Prioriza **o que está no código** quando há divergência com textos antigos de `ROADMAP`/`README`.
@@ -21,7 +21,7 @@
 | **Reuso + Template Method** | **Conforme** no núcleo e na documentação |
 | **LPS / microsserviços** | **Conforme** na arquitetura; sem FeatureIDE (decisão do projeto) |
 | **Testes obrigatórios (3 máq. + fractal)** | **Implementados com ressalvas** — validar E2E + evidências no PDF |
-| **Entrega acadêmica** | **Parcial** — texto e `.mmd` avançados; capturas e demo final ainda frágeis |
+| **Entrega acadêmica** | **Bem encaminhado** — `report.tex` (~1168 linhas), 12 figuras PNG, extensão Python E2E, docs instanciação/banca |
 
 **Veredito:** o projeto **cobre bem** o framework distribuído, OO no parse/execução e variabilidade LPS; **não está plenamente alinhado** com a leitura mais estrita de “`PAR` + processos independentes + sockets” e com “menu/programa MiniPar nas 3 máquinas”. Para a entrega de **10/jun**, o maior gap é **validação demonstrável** (E2E real + relatório com evidências), não só existência de código.
 
@@ -73,13 +73,15 @@
 
 - Arquitetura por **componentes** (MS + `minipar-core`).
 - **Template Method:** `AbstractBackendTranslator` — `validate → prepare → emit → finalize`.
-- Variantes: `InterpreterBackend`, `CBackend`, `CppBackend`, `RustBackend`, `ARMBackend`.
+- Variantes: `InterpreterBackend`, `CBackend`, `CppBackend`, `RustBackend`, `ARMBackend`, **`PythonBackend`** (extensão demo).
 - Diagramas: `template-method.mmd`, `reuse-map.mmd`, `report.tex` (Gamma).
 - **Reuso evolutivo 2025.1:** `code_references/cl-minipar`, `projeto_compiladores`.
 
-### 🟡 Parcial
+### ✅ Atualizado (jun/2026)
 
-- PDF final com figuras UML/classes **por componente** (`.mmd` existem no repo).
+- Figuras UML exportadas em `docs/figures/*.png` e referenciadas em `report.tex`.
+- Extensão `PythonBackend` + `ms-codegen-python` + exemplo `16` + evidência E2E.
+- Documentação de instanciação: `CREATING_AN_APPLICATION.md`, `applications/`, `BANCA_NARRATIVE.md`.
 
 ### ➕ Feito a mais (positivo)
 
@@ -168,14 +170,16 @@ Fixture: `14_distributed_menu.minipar`.
 
 | Item | Situação |
 |------|----------|
-| UML no PDF | `.mmd` ok; exportar figuras ⬜ |
-| Prints fractal + 3 máq. | ❌ |
+| UML no PDF | ✅ 12 figuras PNG em `docs/figures/` |
+| Prints fractal + 3 máq. | ✅ figuras UI + sequência no PDF (`docs/figures/ui/`) |
+| Extensão Python (demo framework) | ✅ `PythonBackend` + MS + registry + UI |
+| Docs instanciação / banca | ✅ `CREATING_AN_APPLICATION.md`, `BANCA_NARRATIVE.md` |
 | URL GitHub / vídeo | placeholders |
 | Apresentação com todos os testes | ensaio ⬜ |
 
 ### ➕ Feito a mais
 
-- Vercel, histórico Postgres, fixtures `01`–`14`, templates UI.
+- Vercel, histórico Postgres, fixtures `01`–`16`, templates UI, `_template_backend.py`.
 
 ---
 
@@ -184,8 +188,10 @@ Fixture: `14_distributed_menu.minipar`.
 | Critério | Status |
 |----------|--------|
 | Pipeline MiniPar OO em microsserviços | ✅ |
-| Template Method (C/Rust/ARM/Interpretador) | ✅ |
+| Template Method (C/Rust/ARM/Interpretador/Python) | ✅ |
 | Variabilidade na UI + gateway | ✅ |
+| Extensão Python (`PythonBackend` + MS :3008) | ✅ |
+| Figuras UML/LPS no relatório (`docs/figures/*.png`) | ✅ |
 | `gcc -O2` para C/C++ | ✅ |
 | `rustc` no MS Rust (Docker) | ✅ |
 | Interpretador OO para demo | ✅ MVP |
@@ -194,18 +200,18 @@ Fixture: `14_distributed_menu.minipar`.
 | Fractal OO matriz de caracteres | 🟡 |
 | `PAR` = processos + sockets | ❌ |
 | Send/Receive na linguagem | ❌ |
-| Relatório Overleaf + evidências | 🟡 |
+| Relatório Overleaf + evidências | ✅ (diagramas + capturas UI) |
 | GitHub + apresentação | 🟡 |
 
 ---
 
 ## 7. Pendências prioritárias (até 10/jun)
 
-1. **Checklist E2E** — [ACTIVITIES.md](./ACTIVITIES.md#checklist-e2e-preencher-antes-da-banca).
-2. **Screenshots** → `report.tex` (fractal, 3 máquinas, pipeline steps).
-3. **Narrativa do paralelismo** na banca (3 containers = 3 PCs; workers Python).
+1. **Checklist E2E** — [ACTIVITIES.md](./ACTIVITIES.md#checklist-e2e-preencher-antes-da-banca) (inclui fixture `16_codegen_python`).
+2. **Screenshots UI** opcionais → fractal e 3 máquinas (figuras de sequência já no PDF).
+3. **Narrativa do paralelismo** na banca (3 containers = 3 PCs; workers Python) — ver [BANCA_NARRATIVE.md](./docs/BANCA_NARRATIVE.md).
 4. **Validar** `09_oo_new` com **C** + `gcc -O2`.
-5. **PDF:** UML/features exportados; URLs GitHub/vídeo finais.
+5. **URLs** GitHub/vídeo finais no `report.tex`.
 6. **Opcional pós-entrega:** `semantic.py` no MS; Send/Receive; `PAR` com sockets.
 
 ---
@@ -274,3 +280,4 @@ Ao mudar código relevante, atualizar **este arquivo** e o checklist em **ACTIVI
 |------|-----------|
 | 2026-06-02 | Criação inicial — auditoria integrada |
 | 2026-06-02 | Revisão completa alinhada ao código; `rustc` no MS Rust; docs SCHEDULE/ACTIVITIES; matriz e §8 explícitos |
+| 2026-06-08 | Extensão Python E2E; 12 figuras PNG; `report.tex` (~1168 linhas) + apêndices; `applications/`; `GET /variants`; compliance sincronizado |

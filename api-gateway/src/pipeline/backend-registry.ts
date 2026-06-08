@@ -44,4 +44,11 @@ export const BACKEND_REGISTRY: BackendDescriptor[] = [
     mockLabel:   'Codegen ARM',
     mockCode:    '.text\n.global _start\n',
   },
+  {
+    variability: 'PYTHON',
+    envKey:      'MS_CODEGEN_PYTHON_URL',
+    endpoint:    '/generate',
+    mockLabel:   'Codegen Python',
+    mockCode:    '# Mock Python — extension demo\nprint("mock")\n',
+  },
 ];

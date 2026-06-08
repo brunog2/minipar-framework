@@ -1,0 +1,26 @@
+# E2E — exemplo 16_codegen_python.minipar (PYTHON + LOCAL)
+# Gerado em: 2026-06-08
+
+## Comando
+curl -s -X POST http://localhost:3000/api/v1/process \
+  -H "Content-Type: application/json" \
+  -d '{"sourceCode":"class Main { void run() { println(\"hello from Python backend\"); } }",
+       "targetVariability":"PYTHON","executionMode":"LOCAL"}'
+
+## Pipeline steps esperados
+- ms-front-end: parse
+- ms-semantic: analyze
+- ms-codegen-python: generate
+
+## Saída (teste local minipar-core)
+Executado com python3
+hello from Python backend
+
+## Código Python gerado
+"""Gerado pelo MiniPar PythonBackend (extensão demo)."""
+
+def Main_run():
+    print("hello from Python backend")
+
+if __name__ == "__main__":
+    Main_run()
