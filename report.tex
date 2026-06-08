@@ -107,27 +107,165 @@ O diagrama de classes do framework (Template Method, Lexer, Parser, back-ends) e
     \item \texttt{NewInstance}, \texttt{MethodCall}, \texttt{PrintStmt} --- instanciação, despacho de métodos e saída
 \end{itemize}
 
-\section{Fases do Compilador MiniPar 2026.1}
-\subsection{Gramática BNF}
-A gramática evolui a MiniPar 2025.1 \cite{maciel2025} com orientação a objetos e paralelismo. Produções principais:
+\section{Análise de Compiladores — Especificação da Linguagem MiniPar 2026.1}
+\subsection{Gramática BNF Completa com Suporte OO}
 
-\begin{lstlisting}[caption={BNF MiniPar 2026.1 OO (extrato)}]
-<programa>      ::= { <declaracao> }
-<declaracao>    ::= <classe> | <funcao> | <canal> | <stmt>
-<classe>        ::= "class" ID [ "extends" ID ] "{" { <membro> } "}"
-<membro>        ::= <atributo_oo> | <metodo>
-<atributo_oo>   ::= <tipo> ID [ "=" <expr> ] ";"
-<metodo>        ::= <tipo> ID "(" [ <param> { "," <param> } ] ")" <bloco>
-<stmt>          ::= <bloco> | <if> | <while> | <for> | <print> | <return>
-                  | "par" "{" { <stmt> } "}" | "seq" "{" { <stmt> } "}"
-<expr>          ::= <atrib> | <logico_or>
-<atrib>         ::= <logico_or> [ "=" <atrib> ]
-<instanciacao>  ::= "new" ID "(" [ <expr> { "," <expr> } ] ")"
-<chamada_met>   ::= <expr> "." ID "(" [ <expr> { "," <expr> } ] ")"
-<tipo>          ::= "void" | "number" | "string" | "bool" | ID
+A linguagem MiniPar 2026.1 estende a MiniPar 2025.1 \cite{maciel2025} com orientação a objetos completa, paralelismo estruturado e canais de comunicação. A gramática formal foi implementada em \texttt{packages/minipar-core/minipar\_core/parser.py} (parser descendente recursivo). A notação BNF modificada abaixo representa a sintaxe aceita:
+
+\begin{lstlisting}[caption={BNF MiniPar 2026.1 OO (gramática formal completa)}]
+<program>           ::= <declaration>*
+<declaration>       ::= <class_decl> | <func_decl> | <var_decl> 
+                      | <channel_decl> | <statement>
+
+/* === Declaracoes OO === */
+<class_decl>        ::= "class" IDENT [ "extends" IDENT ] 
+                        "{" <class_member>* "}"
+<class_member>      ::= <oo_var_decl> | <method_decl>
+<oo_var_decl>       ::= <type> IDENT [ "=" <expr> ] ";"
+<method_decl>       ::= <type> IDENT "(" [ <param_list> ] ")" <block>
+<param_list>        ::= <parameter> ("," <parameter>)*
+<parameter>         ::= <type> IDENT
+
+/* === Declaracoes procedurais === */
+<func_decl>         ::= "func" IDENT "(" [ <param_list> ] ")" "->" <type> <block>
+<var_decl>          ::= "var" IDENT ":" <type> [ "=" <expr> ] ";"
+<type>              ::= "void" | "number" | "string" | "bool" 
+                      | "list" | "dict" | "any" | IDENT
+
+/* === Canais === */
+<channel_decl>      ::= ( "s_channel" | "c_channel" ) IDENT 
+                        [ "{" <expr_list> "}" ] ";"
+
+/* === Statements === */
+<block>             ::= "{" <statement>* "}"
+<statement>         ::= <expr_stmt> | <block_stmt> | <if_stmt> 
+                      | <while_stmt> | <for_stmt> | <return_stmt>
+                      | <break_stmt> | <continue_stmt> | <print_stmt>
+                      | <var_decl> | <channel_decl> | <send_stmt> 
+                      | <receive_stmt> | <par_block> | <seq_block>
+
+<expr_stmt>         ::= <expr> ";"
+<block_stmt>        ::= <block>
+<if_stmt>           ::= "if" "(" <expr> ")" <statement> 
+                        [ "else" <statement> ]
+<while_stmt>        ::= "while" "(" <expr> ")" <statement>
+<for_stmt>          ::= "for" IDENT "in" <expr> <statement>
+<return_stmt>       ::= "return" [ <expr> ] ";"
+<break_stmt>        ::= "break" ";"
+<continue_stmt>     ::= "continue" ";"
+<print_stmt>        ::= "println" "(" <expr_list> ")" ";"
+
+<par_block>         ::= "par" "{" <statement>+ "}"
+<seq_block>         ::= "seq" "{" <statement>+ "}"
+<send_stmt>         ::= "send" "(" IDENT "," <expr> ")" ";"
+<receive_stmt>      ::= "receive" "(" IDENT "," IDENT ")" ";"
+
+/* === Expressoes (precedencia decrescente) === */
+<expr>              ::= <assignment>
+<assignment>        ::= <conditional> [ "=" <assignment> ]
+                      | <postfix> "=" <assignment>
+<conditional>       ::= <logical_or> [ "?" <expr> ":" <expr> ]
+<logical_or>        ::= <logical_and> ( "||" <logical_and> )*
+<logical_and>       ::= <equality> ( "&&" <equality> )*
+<equality>          ::= <relational> ( ("==" | "!=") <relational> )*
+<relational>        ::= <additive> 
+                        ( ("<" | "<=" | ">" | ">=") <additive> )*
+<additive>          ::= <multiplicative> 
+                        ( ("+" | "-") <multiplicative> )*
+<multiplicative>    ::= <unary> ( ("*" | "/" | "%") <unary> )*
+<unary>             ::= ( "!" | "-" | "+" ) <unary> | <postfix>
+
+/* === Acesso a membros e indexacao === */
+<postfix>           ::= <primary> ( <call> | <member_access> | <index> )*
+<primary>           ::= IDENT | NUMBER | STRING | BOOL | "true" | "false"
+                      | "(" <expr> ")" | <new_expr>
+<new_expr>          ::= "new" IDENT "(" [ <expr_list> ] ")"
+<call>              ::= "(" [ <expr_list> ] ")"
+<member_access>     ::= "." IDENT [ <call> ]
+<index>             ::= "[" <expr> "]" [ "=" <expr> ]
+
+<expr_list>         ::= <expr> ("," <expr>)*
 \end{lstlisting}
 
-Tokens de paralelismo: \texttt{par}, \texttt{seq}, \texttt{s\_channel}, \texttt{c\_channel}. Palavras reservadas OO: \texttt{class}, \texttt{extends}, \texttt{new}, \texttt{this}, \texttt{super}.
+\subsubsection{Palavras-chave e Tokens Principais}
+
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Categoria} & \textbf{Palavras-chave} & \textbf{Significado} \\
+\hline
+Tipos & \texttt{void}, \texttt{number}, \texttt{string}, \texttt{bool}, \texttt{list}, \texttt{dict}, \texttt{any} & Especificadores de tipo \\
+OO & \texttt{class}, \texttt{extends}, \texttt{new}, \texttt{this}, \texttt{super} & Orientação a objetos \\
+Controle & \texttt{if}, \texttt{else}, \texttt{while}, \texttt{for}, \texttt{break}, \texttt{continue}, \texttt{return} & Fluxo de controle \\
+Paralelismo & \texttt{par}, \texttt{seq} & Blocos paralelos/sequenciais \\
+Canais & \texttt{s\_channel}, \texttt{c\_channel}, \texttt{send}, \texttt{receive} & Comunicação inter-processos \\
+Procedural & \texttt{func}, \texttt{var} & Funções e variáveis procedurais \\
+E/S & \texttt{println}, \texttt{print} & Saída formatada \\
+Literais & \texttt{true}, \texttt{false}, NÚMERO, STRING & Valores constantes \\
+\hline
+\end{tabular}
+
+\subsubsection{Exemplos de Código Válido}
+
+\paragraph{Exemplo 1: Classe com Herança}
+\begin{lstlisting}[language=Java, caption={Herança OO em MiniPar 2026.1}]
+class Animal {
+    string name;
+}
+
+class Dog extends Animal {
+    void bark() {
+        println("woof");
+    }
+}
+
+class Main {
+    void run() {
+        Dog d = new Dog();
+        d.bark();
+    }
+}
+\end{lstlisting}
+
+\paragraph{Exemplo 2: Paralelismo Estruturado}
+\begin{lstlisting}[language=Java, caption={Blocos \texttt{par} e \texttt{seq}}]
+class Main {
+    void run() {
+        seq {
+            println("Task 1");
+        }
+        par {
+            println("Task 2a");
+            println("Task 2b");
+        }
+    }
+}
+\end{lstlisting}
+
+\paragraph{Exemplo 3: Recursão e Condicional}
+\begin{lstlisting}[language=Java, caption={Recursão (Fatorial)}]
+class Factorial {
+    number compute(number n) {
+        if (n <= 1) {
+            return 1;
+        } else {
+            return n * this.compute(n - 1);
+        }
+    }
+}
+\end{lstlisting}
+
+\subsubsection{Restrições Semânticas}
+
+A análise semântica (executada por \texttt{ms-semantic}) verifica:
+\begin{itemize}
+    \item Toda classe que estende outra deve referenciar uma superclasse existente.
+    \item Nenhuma declaração de classe ou função com nome duplicado é permitida.
+    \item Tipos em atribuições devem ser compatíveis (verificação básica; herança permite upcast).
+    \item Blocos \texttt{par} executam seus statements concorrentemente (threads no interpretador, sockets em distribuído).
+    \item Canais \texttt{s\_channel} são síncronos; \texttt{c\_channel} são assincronos (MVP; suporte completo em Fase 4+).
+\end{itemize}
+
+\section{Fases do Compilador MiniPar 2026.1}
 \subsection{Pseudocódigos dos Analisadores}
 \subsubsection{Analisador Léxico}
 O módulo \texttt{minipar\_core.lexer} implementa a classe \texttt{Lexer}, cujo método \texttt{tokenize()} percorre o código-fonte aplicando \texttt{skip\_whitespace()}, \texttt{skip\_comment()} e os leitores especializados abaixo.
