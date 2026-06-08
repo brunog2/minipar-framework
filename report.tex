@@ -13,7 +13,11 @@
 \usepackage{float}
 \usepackage{longtable}
 \usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
 \usepackage{enumitem}
+
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
 
 \geometry{a4paper, left=3cm, top=3cm, right=2cm, bottom=2cm}
 
@@ -245,9 +249,10 @@ As cinco variantes existentes (\texttt{INTERPRETER}, \texttt{C}, \texttt{CPP}, \
 
 \begin{table}[htbp]
 \centering
+\small
 \caption{Três instâncias acadêmicas sobre o mesmo framework}
 \label{tab:reference-instances}
-\begin{tabular}{|l|l|l|l|}
+\begin{tabularx}{\textwidth}{|Y|Y|Y|Y|}
 \hline
 \textbf{Instância} & \textbf{Microsserviço} & \textbf{Hotspot} & \textbf{Produto} \\
 \hline
@@ -255,7 +260,7 @@ App A --- Interpretador & \texttt{ms-interpreter} & \texttt{Interpreter.emit()} 
 App B --- Compilador C & \texttt{ms-codegen-c} & \texttt{CBackend.emit()} & C + \texttt{gcc -O2} \\
 App C --- Python (extensão demo) & \texttt{ms-codegen-python} & \texttt{PythonBackend.emit()} & Python + \texttt{python3} \\
 \hline
-\end{tabular}
+\end{tabularx}
 \end{table}
 
 \subsection{Extensão \texttt{PythonBackend} --- implementada}
@@ -831,9 +836,10 @@ A LPS MiniPar 2026.1 articula três eixos orthogonais (Figura~\ref{fig:feature-t
 
 \begin{table}[htbp]
 \centering
+\small
 \caption{Binding time das features LPS}
 \label{tab:binding-time}
-\begin{tabular}{|l|l|l|}
+\begin{tabularx}{\textwidth}{|l|Y|Y|}
 \hline
 \textbf{Momento} & \textbf{Mecanismo} & \textbf{Exemplo} \\
 \hline
@@ -842,16 +848,17 @@ Deploy time & \texttt{docker-compose.yml}, env \texttt{MS\_*} & Habilitar \textt
 Runtime / request time & \texttt{POST /api/v1/process} & \texttt{targetVariability: "C"} \\
 Runtime / request time & \texttt{feature-panel} (UI) & Modo \texttt{DISTRIBUTED\_SOCKETS} \\
 \hline
-\end{tabular}
+\end{tabularx}
 \end{table}
 
 \section{Matriz de configurações de produto}
 
 \begin{table}[htbp]
 \centering
+\small
 \caption{Configurações de produto válidas (exemplos)}
 \label{tab:product-config}
-\begin{tabular}{|l|l|l|l|}
+\begin{tabularx}{\textwidth}{|Y|l|l|Y|}
 \hline
 \textbf{Produto} & \texttt{targetVariability} & \texttt{executionMode} & \textbf{Microsserviços ativos} \\
 \hline
@@ -863,7 +870,7 @@ ARM MVP & ASSEMBLY & LOCAL & front-end, semantic, codegen-arm \\
 Interpretador distribuído & INTERPRETER & DISTRIBUTED\_SOCKETS & + parallel-coord + workers \\
 Python (extensão demo) & PYTHON & LOCAL & + codegen-python \\
 \hline
-\end{tabular}
+\end{tabularx}
 \end{table}
 
 \section{Microsserviços como assets reutilizáveis}
@@ -888,7 +895,12 @@ O repositório agrupa \texttt{frontend/} (Angular), \texttt{api-gateway/} (NestJ
 Front-end em Angular; gateway em NestJS; microsserviços de análise e código em FastAPI (Python~3.11); persistência de histórico de compilações em PostgreSQL; orquestração local via Docker Compose.
 
 \subsection{API Gateway e Microsserviços}
-\begin{tabular}{|l|l|l|l|}
+\begin{table}[htbp]
+\centering
+\small
+\caption{Microsserviços e rotas do pipeline}
+\label{tab:microservices}
+\begin{tabularx}{\textwidth}{|Y|l|c|c|}
 \hline
 \textbf{Serviço} & \textbf{Rota} & \textbf{Porta} & \textbf{Fase} \\
 \hline
@@ -905,7 +917,8 @@ worker-matrix & socket & 9002 & 3 \\
 worker-factorial & socket & 9003 & 3 \\
 api-gateway & POST /api/v1/process & 3000 & 1--3 \\
 \hline
-\end{tabular}
+\end{tabularx}
+\end{table}
 
 As variáveis de ambiente \texttt{PIPELINE\_MODE=http} e \texttt{PIPELINE\_BACKEND\_MODE=http}, definidas no Docker Compose da Fase~2, alternam o encaminhamento entre implementações embutidas e chamadas HTTP aos microsserviços.
 
@@ -934,7 +947,12 @@ Os \emph{fixtures} em \texttt{sources/examples/} cobrem erros sintáticos, semâ
 \label{fig:validation-cases}
 \end{figure}
 
-\begin{tabular}{|l|l|l|}
+\begin{table}[htbp]
+\centering
+\small
+\caption{Casos de validação manual (Fase 1)}
+\label{tab:validation-manual}
+\begin{tabularx}{\textwidth}{|Y|Y|Y|}
 \hline
 \textbf{Caso} & \textbf{Arquivo} & \textbf{Resultado} \\
 \hline
@@ -944,10 +962,16 @@ Classe com herança válida & \texttt{02\_class\_extends} & \texttt{success: tru
 \texttt{exts} (palavra-chave inválida) & \texttt{06\_parse\_invalid\_keyword} & \texttt{Expected LBRACE} \\
 Expressão solta \texttt{a} & \texttt{07\_expr\_only} & \texttt{ExprStmt} (análise OK) \\
 \hline
-\end{tabular}
+\end{tabularx}
+\end{table}
 
 \subsection{Casos de validação --- Fase 2 (back-ends)}
-\begin{tabular}{|l|l|l|l|}
+\begin{table}[htbp]
+\centering
+\small
+\caption{Casos de validação --- Fase 2 (back-ends)}
+\label{tab:fase2-backends}
+\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{2.6cm}|c|Y|>{\raggedright\arraybackslash}p{3.4cm}|}
 \hline
 \textbf{Arquivo} & \textbf{LPS} & \textbf{Resultado} & \textbf{Pipeline step} \\
 \hline
@@ -958,7 +982,8 @@ Expressão solta \texttt{a} & \texttt{07\_expr\_only} & \texttt{ExprStmt} (anál
 \texttt{12\_codegen\_rust\_stub} & RUST & Código Rust MVP & \texttt{ms-codegen-rust: generate} \\
 \texttt{16\_codegen\_python} & PYTHON & Saída \texttt{hello from Python backend} & \texttt{ms-codegen-python: generate} \\
 \hline
-\end{tabular}
+\end{tabularx}
+\end{table}
 
 Mensagens representativas registradas na Fase~1:
 \begin{itemize}
@@ -1060,7 +1085,12 @@ class Sierpinski {
 \end{figure}
 
 \subsection{Casos de validacao --- Fase 3}
-\begin{tabular}{|l|l|l|}
+\begin{table}[htbp]
+\centering
+\small
+\caption{Casos de validação --- Fase 3}
+\label{tab:fase3}
+\begin{tabularx}{\textwidth}{|Y|Y|Y|}
 \hline
 \textbf{Arquivo} & \textbf{Modo} & \textbf{Resultado} \\
 \hline
@@ -1068,7 +1098,8 @@ class Sierpinski {
 \texttt{14\_distributed\_menu} & INTERPRETER + DISTRIBUTED\_SOCKETS & Resultados PC1--PC3 \\
 \texttt{09\_oo\_new} & C + LOCAL & \texttt{gcc -O2} + saída \texttt{woof} (OO codegen) \\
 \hline
-\end{tabular}
+\end{tabularx}
+\end{table}
 
 \part{Conclusão e Trabalhos Futuros}
 
