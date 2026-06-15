@@ -3,6 +3,9 @@ Este documento apresenta a especificação detalhada do seu projeto de conclusã
 **Documentação de gestão do projeto:**
 
 - [COMPLIANCE_AUDIT.md](./COMPLIANCE_AUDIT.md) — conformidade ✅/🟡/❌ vs. requisitos do professor  
+- [docs/WHAT_REMAINS.md](./docs/WHAT_REMAINS.md) — o que ainda falta (framework Arturo + entrega)  
+- [CREATING_AN_APPLICATION.md](./CREATING_AN_APPLICATION.md) — como criar instância a partir do framework  
+- [report.tex](./report.tex) · [report.md](./report.md) — relatório integrado (PDF + Markdown)  
 - [SCHEDULE.md](./SCHEDULE.md) — cronograma por data  
 - [ACTIVITIES.md](./ACTIVITIES.md) — sprints, responsáveis, checklist E2E  
 - [ROADMAP.md](./ROADMAP.md) — entregas técnicas por fase
@@ -13,6 +16,8 @@ Este documento apresenta a especificação detalhada do seu projeto de conclusã
 
 ## 1. Visão Geral
 O projeto consiste no desenvolvimento de um **framework extensível** baseado em uma arquitetura de **microsserviços** para o processamento da linguagem **MiniPar 2026.1**. O framework deve ser capaz de atuar tanto como um **interpretador** (execução direta) quanto como um **compilador** (geração de código para múltiplas linguagens-alvo), gerenciando essas variações através de uma estrutura de Linha de Produto de Software (LPS).
+
+> **Distinção framework vs gerador (Prof. Arturo):** o desenvolvedor reutiliza o chassi (`minipar-core`, gateway, análise) e preenche **hotspots** (`emit`/`finalize`); não há geração de projeto independente. Ver [CREATING_AN_APPLICATION.md](./CREATING_AN_APPLICATION.md) e [applications/](./applications/).
 
 ## 2. Requisitos das Disciplinas (Integração)
 

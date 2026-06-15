@@ -1,0 +1,6 @@
+class Main {
+  void run() {
+    println("Fatorial PC3");
+    println(3628800);
+  }
+}

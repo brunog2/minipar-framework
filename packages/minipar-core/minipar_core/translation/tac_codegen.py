@@ -246,6 +246,13 @@ class TACGenerator:
         args = ",".join(str(self.generate(a)) for a in node.arguments)
         self.emit("CHANNEL_CREATE", node.channel_type, node.name, args)
 
+    def gen_SendStmt(self, node: n.SendStmt) -> None:
+        value = self.generate(node.value)
+        self.emit("CHANNEL_SEND", node.channel, value)
+
+    def gen_ReceiveStmt(self, node: n.ReceiveStmt) -> None:
+        self.emit("CHANNEL_RECV", node.channel, node.target)
+
     def gen_IndexAccess(self, node: n.IndexAccess) -> str:
         obj = self.generate(node.object)
         idx = self.generate(node.index)

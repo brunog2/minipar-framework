@@ -152,6 +152,7 @@ class SimpleCCodeGenerator:
             "#include <stdlib.h>",
             "#include <string.h>",
             "#include <math.h>",
+            '#include "minipar_rt.h"',
             "",
         ]
 
@@ -390,11 +391,46 @@ class SimpleCCodeGenerator:
         if op in (
             "SEQ_BEGIN",
             "SEQ_END",
-            "PAR_BEGIN",
-            "PAR_END",
-            "THREAD_START",
-            "THREAD_END",
         ):
+            return
+
+        if op == "PAR_BEGIN":
+            self._emit("minipar_par_begin();")
+            return
+
+        if op == "PAR_END":
+            self._emit("minipar_par_end(0);")
+            return
+
+        if op == "THREAD_START":
+            self._emit(f"minipar_thread_begin({instr.arg1});")
+            return
+
+        if op == "THREAD_END":
+            self._emit(f"minipar_thread_end({instr.arg1});")
+            return
+
+        if op == "CHANNEL_CREATE":
+            ch_type = str(instr.arg1)
+            ch_name = str(instr.arg2)
+            ch_args = str(instr.arg3 or "")
+            self._emit(
+                f'minipar_channel_create("{ch_type}", "{ch_name}", "{ch_args}");'
+            )
+            return
+
+        if op == "CHANNEL_SEND":
+            ch_name = str(instr.arg1)
+            value = str(instr.arg2)
+            self._emit(f'minipar_channel_send("{ch_name}", (double)({value}));')
+            return
+
+        if op == "CHANNEL_RECV":
+            ch_name = str(instr.arg1)
+            target = str(instr.result or instr.arg2)
+            self._emit(
+                f"double {target} = minipar_channel_recv(\"{ch_name}\");"
+            )
             return
 
         if op == "LIST_LEN":

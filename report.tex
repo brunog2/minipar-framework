@@ -2,7 +2,7 @@
 
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage[brazil]{babel}
+\usepackage[brazilian]{babel}
 \usepackage{graphicx}
 \graphicspath{{docs/figures/}{docs/figures/ui/}}
 \usepackage{geometry}
@@ -16,6 +16,7 @@
 \usepackage{tabularx}
 \usepackage{array}
 \usepackage{enumitem}
+\usepackage{amssymb}
 
 \newcolumntype{Y}{>{\raggedright\arraybackslash}X}
 
@@ -40,31 +41,40 @@
 
 \newcommand{\placeholder}[1]{\textit{[#1]}}
 
+\input{docs/report-cover-info.tex}
+
 \begin{document}
 
 \begin{titlepage}
     \begin{center}
         \IfFileExists{logo_ufal.png}{%
-            \includegraphics[width=0.2\textwidth]{logo_ufal.png}\\[0.5cm]
+            \includegraphics[width=0.18\textwidth]{logo_ufal.png}\\[0.4cm]
         }{%
-            \vspace*{1.5cm}
+            \vspace*{1cm}
         }
-        {\large \textbf{UNIVERSIDADE FEDERAL DE ALAGOAS}} \\
-        {\large \textbf{INSTITUTO DE COMPUTAÇÃO}} \\
-        {\large \textbf{CIÊNCIA DA COMPUTAÇÃO}} \\
+        {\normalsize Universidade Federal de Alagoas --- Instituto de Computação --- Ciência da Computação}\\[1.5cm]
+        {\LARGE \textbf{\CoverProjectTitle}}\\[1.2cm]
+        {\large \textbf{Relatório Técnico Final Integrado}}\\[2cm]
+        \begin{minipage}{0.85\textwidth}
+        \centering
+        \textbf{Integrantes da equipe}\\[0.4cm]
+        \CoverMemberBruno\\
+        \CoverMemberAlan\\
+        \CoverMemberKarlisson\\
+        \CoverMemberMaria
+        \end{minipage}
         \vfill
-        {\Large \textbf{RELATÓRIO TÉCNICO FINAL INTEGRADO}} \\
-        {\large \textbf{Framework para Compiladores e Interpretadores Usando Microsserviços}} \\
+        \textbf{Código-fonte (GitHub):}\\
+        \url{\CoverGitHubURL}\\[0.8cm]
+        \textbf{Vídeo da execução (opcional):}\\
+        \ifx\CoverVideoURL\PENDING
+            \CoverVideoPending
+        \else
+            \url{\CoverVideoURL}
+        \fi
         \vfill
-        \textbf{Equipe:}\\
-        Bruno (Responsável pelas 3 disciplinas) \\
-        Alan, Karlisson e Maria \\
-        \vfill
-        \textbf{Professor Orientador:}\\
-        Dr.\ Arturo Hernandez Dominguez \\
-        \vfill
-        Maceió, AL \\
-        2026
+        \textbf{Professor Orientador:} Dr.\ Arturo Hernandez Dominguez\\[0.5cm]
+        Maceió, AL --- Junho de 2026
     \end{center}
 \end{titlepage}
 
@@ -168,7 +178,7 @@ A terminologia de engenharia de domínio distingue três camadas complementares,
 
 O \emph{Hollywood Principle} (\emph{``don't call us, we'll call you''}) materializa-se no fluxo: o \texttt{api-gateway} orquestra o pipeline; o microsserviço invoca \texttt{Backend.translate()}; o esqueleto chama \texttt{emit()} no momento correto. O desenvolvedor do backend \textbf{não} invoca o gateway --- o framework invoca o código do dev.
 
-\begin{lstlisting}[language=TypeScript,caption={Roteamento OCP via \texttt{BACKEND\_REGISTRY} (pipeline.service.ts)}]
+\begin{lstlisting}[language=Java,caption={Roteamento OCP via \texttt{BACKEND\_REGISTRY} (pipeline.service.ts)}]
 const descriptor = BACKEND_REGISTRY.find(
   (b) => b.variability === targetVariability,
 );
@@ -296,7 +306,7 @@ Ao adicionar variante PYTHON, alteram-se apenas enums e o \texttt{feature-panel}
 
 O registro central evita \texttt{switch/case} no pipeline. Adicionar backend = nova entrada no array:
 
-\begin{lstlisting}[language=TypeScript,caption={BACKEND\_REGISTRY (backend-registry.ts)}]
+\begin{lstlisting}[language=Java,caption={BACKEND\_REGISTRY (backend-registry.ts)}]
 export const BACKEND_REGISTRY: BackendDescriptor[] = [
   { variability: 'INTERPRETER', envKey: 'MS_INTERPRETER_URL', endpoint: '/execute', ... },
   { variability: 'C', envKey: 'MS_CODEGEN_C_URL', endpoint: '/generate', ... },
@@ -459,7 +469,7 @@ A linguagem MiniPar 2026.1 estende a MiniPar 2025.1 \cite{maciel2025} com orient
 
 \subsubsection{Palavras-chave e Tabela de Tokens}
 
-O analisador léxico (\texttt{lexer.py}) define o enum \texttt{TokenType} com mais de 60 tipos. A Tabela~\ref{tab:tokens} resume categorias; operadores incluem \texttt{==}, \texttt{!=}, \texttt{<=}, \texttt{>=}, \texttt{&&}, \texttt{||}, delimitadores e \texttt{EOF}.
+O analisador léxico (\texttt{lexer.py}) define o enum \texttt{TokenType} com mais de 60 tipos. A Tabela~\ref{tab:tokens} resume categorias; operadores incluem \texttt{==}, \texttt{!=}, \texttt{<=}, \texttt{>=}, \texttt{\&\&}, \texttt{||}, delimitadores e \texttt{EOF}.
 
 \begin{table}[htbp]
 \centering
@@ -562,8 +572,8 @@ Regras adicionais documentadas:
 \begin{itemize}
     \item Toda classe com \texttt{extends} deve referenciar superclasse existente (verificado após registro de todas as classes).
     \item Membros (\texttt{VarDecl}, \texttt{MethodDecl}) não podem repetir nome na mesma classe.
-    \item Blocos \texttt{par} executam statements concorrentemente (threads no interpretador; sockets em modo distribuído).
-    \item Canais \texttt{s\_channel} síncronos; \texttt{c\_channel} assíncronos --- suporte completo planejado Fase 4+.
+    \item Blocos \texttt{par} executam statements concorrentemente (processos + broker TCP no interpretador; \texttt{c\_channel} em modo distribuído).
+    \item Canais \texttt{s\_channel}/\texttt{c\_channel} com \texttt{send}/\texttt{receive} via broker TCP (\texttt{socket\_channel.py}); fixture \texttt{15\_channels.minipar} $\rightarrow$ saída \texttt{42}.
     \item Tipagem: verificação básica; herança permite upcast implícito (MVP).
 \end{itemize}
 
@@ -622,27 +632,28 @@ def par_block(self) -> ParBlock:
 Serialização inter-serviços: \texttt{ast\_json.to\_dict(program)} conforme \texttt{\_AST\_CONTRACT.md}.
 
 \subsubsection{Coordenador de Paralelismo Distribuído}
-\begin{lstlisting}[caption={Pseudocodigo ms-parallel-coord /coordinate}]
+\begin{lstlisting}[caption={Pseudocodigo ms-parallel-coord /coordinate (modo legado)}]
 para cada host em [quicksort, matrix, factorial]:
-    disparar thread dispatch_worker(host, port)
-aguardar todas as threads
+    disparar dispatch_worker assincrono(host, port)
+aguardar todos os workers
 ordenar resultados por role
 montar output agregado com rotulos PC1, PC2, PC3
-retornar { output, results[] }
+retornar { output, results[] com ip, port }
 \end{lstlisting}
 
-\subsubsection{Worker socket (processo independente)}
-\begin{lstlisting}[caption={Pseudocodigo worker socket}]
+\subsubsection{Worker socket (processo independente --- MiniPar)}
+\begin{lstlisting}[caption={Worker: interpreta programa MiniPar (parallel-workers/app/main.py)}]
 servidor escuta na porta configurada (9001--9003)
 ao receber conexao:
     ler comando "RUN"
-    executar algoritmo (QuickSort | Matriz | Fatorial)
-    enviar JSON { role, machine, data } via socket
+    carregar worker_<role>.minipar
+    interpret_ast(programa) -> { role, machine, ip, port, data }
+    enviar JSON via socket
     fechar conexao
 \end{lstlisting}
 
 \subsubsection{Analisador Semântico e Tabela de Símbolos}
-A função \texttt{semantic\_json.analyze\_ast\_dict} percorre o dicionário da AST: registra declarações de classe, valida cláusulas \texttt{extends}, sinaliza membros duplicados e monta \texttt{symbolTable.scopes[]} para inspeção na UI e persistência opcional no PostgreSQL.
+O microsserviço \texttt{ms-semantic} invoca \texttt{semantic\_full.analyze\_ast\_full}: desserializa AST JSON via \texttt{from\_dict}, executa \texttt{SemanticAnalyzer} (\texttt{semantic.py}) e retorna \texttt{symbolTable.scopes[]} e erros. Regras: classes, \texttt{extends}, membros duplicados, canais, \texttt{send}/\texttt{receive}.
 
 \subsection{Representação Intermediária TAC}
 
@@ -690,7 +701,7 @@ Cada back-end implementa hotspots \texttt{emit}/\texttt{finalize} sem alterar \t
 \end{figure}
 
 \subsubsection{Interpretador (\texttt{Interpreter})}
-Executa AST diretamente via \texttt{from\_dict()} --- \textbf{sem} TAC. Suporta OO (\texttt{new}, herança, \texttt{this}), \texttt{par}/\texttt{seq} com threads e E/S via \texttt{StringIO}.
+Executa AST diretamente via \texttt{from\_dict()} --- \textbf{sem} TAC. Suporta OO (\texttt{new}, herança, \texttt{this}), \texttt{par}/\texttt{seq} com \textbf{processos} + broker TCP, \texttt{send}/\texttt{receive} e E/S via \texttt{StringIO}.
 
 \begin{lstlisting}[language=Python,caption={Hotspot emit() --- interpretador (interpreter.py)}]
 def emit(self, ast_dict: dict) -> None:
@@ -726,7 +737,7 @@ TAC $\rightarrow$ \texttt{SimpleARMGenerator} (ARMv7). Retorna assembly em \text
 
 \subsection{Paralelismo \texttt{par}/\texttt{seq}}
 
-Blocos \texttt{seq} executam statements em ordem; \texttt{par} dispara concorrência. No interpretador, threads Python; no modo \texttt{DISTRIBUTED\_SOCKETS}, o coordenador delega workers socket. Limitações honestas: modelo de threads simplificado; \texttt{send}/\texttt{receive} em MVP parcial (fixture \texttt{15\_channels.minipar}).
+Blocos \texttt{seq} executam statements em ordem; \texttt{par} dispara processos filhos com IPC via \texttt{ChannelBroker} (sockets locais). Modo \texttt{DISTRIBUTED\_SOCKETS}: programas com \texttt{c\_channel} (ex.\ \texttt{14\_distributed\_menu.minipar}) conectam workers que executam MiniPar; fontes sem \texttt{c\_channel} usam \texttt{ms-parallel-coord} legado. Codegen C liga \texttt{minipar\_rt.c} para \texttt{PAR\_*} e canais.
 
 \part{Reuso de Software}
 
@@ -979,7 +990,7 @@ Expressão solta \texttt{a} & \texttt{07\_expr\_only} & \texttt{ExprStmt} (anál
 \texttt{09\_oo\_new} & INTERPRETER & Saída \texttt{woof} & idem \\
 \texttt{10\_par\_seq} & INTERPRETER & Saída \texttt{a b c} & idem \\
 \texttt{11\_codegen\_c} & C & C + \texttt{gcc -O2} + stdout & \texttt{ms-codegen-c: generate} \\
-\texttt{12\_codegen\_rust\_stub} & RUST & Código Rust MVP & \texttt{ms-codegen-rust: generate} \\
+\texttt{12\_codegen\_rust\_stub} & RUST & \texttt{rustc -O} + stdout (E6) & \texttt{ms-codegen-rust: generate} \\
 \texttt{16\_codegen\_python} & PYTHON & Saída \texttt{hello from Python backend} & \texttt{ms-codegen-python: generate} \\
 \hline
 \end{tabularx}
@@ -1084,6 +1095,50 @@ class Sierpinski {
 \label{fig:ui-fractal}
 \end{figure}
 
+\subsection{Validação automatizada}
+\label{sec:validation-auto}
+
+\begin{lstlisting}[caption={Script validate-all.sh (8/jun/2026)}]
+docker compose up --build -d
+./scripts/validate-all.sh
+# -> docs/evidence/validation-results.json (15/15 PASS)
+\end{lstlisting}
+
+Guia completo: \texttt{docs/VALIDATION.md}. Casos: E1--E12, gateway health, \texttt{GET /variants}, \texttt{GET /recommendations}. Conformidade: \texttt{COMPLIANCE\_AUDIT.md}.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Checklist automatizado \texttt{validate-all.sh} (15/15 PASS, 8/jun/2026)}
+\label{tab:validation-e2e}
+\begin{tabularx}{\textwidth}{|l|Y|c|}
+\hline
+\textbf{ID} & \textbf{Caso} & \textbf{Status} \\
+\hline
+GW & Gateway health & PASS \\
+E1 & \texttt{08\_interpreter\_ok} & PASS \\
+E7 & \texttt{05\_parse\_extends\_missing} (erro parser) & PASS \\
+E2 & \texttt{09\_oo\_new} (interpretador) & PASS \\
+E6 & \texttt{12\_codegen\_rust\_stub} (\texttt{rustc}) & PASS \\
+E3 & \texttt{13\_sierpinski} (fractal) & PASS \\
+E4/E10 & Distribuído (legado + menu \texttt{14}) & PASS \\
+E8 & \texttt{04\_semantic\_extends\_unknown} & PASS \\
+E5/E12 & Codegen C (\texttt{11}, \texttt{09} OO) & PASS \\
+E9 & \texttt{16\_codegen\_python} & PASS \\
+E11 & \texttt{15\_channels} (broker socket) & PASS \\
+--- & \texttt{GET /variants}, \texttt{/recommendations} & PASS \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsection{Auditoria de conformidade}
+A matriz completa (\checkmark{} conforme, $\sim$ parcial, $\times$ não conforme) está em \texttt{COMPLIANCE\_AUDIT.md}. Resumo executivo:
+\begin{itemize}
+    \item[\checkmark] Pipeline OO, erros sintático/semântico, \texttt{gcc -O2}, \texttt{rustc}, fractal, paralelismo socket, workers MiniPar.
+    \item[$\sim$] Tipagem semântica MVP; ARM sem E2E no script; 3 containers Docker (não PCs físicos).
+    \item[$\times$] FeatureIDE (substituído por microsserviços); CI \texttt{pytest} automatizado.
+\end{itemize}
+
 \subsection{Casos de validacao --- Fase 3}
 \begin{table}[htbp]
 \centering
@@ -1095,7 +1150,8 @@ class Sierpinski {
 \textbf{Arquivo} & \textbf{Modo} & \textbf{Resultado} \\
 \hline
 \texttt{13\_sierpinski} & INTERPRETER + LOCAL & Matriz fractal no Console \\
-\texttt{14\_distributed\_menu} & INTERPRETER + DISTRIBUTED\_SOCKETS & Resultados PC1--PC3 \\
+\texttt{14\_distributed\_menu} & INTERPRETER + DISTRIBUTED\_SOCKETS & 3 linhas JSON (IP:porta dos workers) \\
+\texttt{15\_channels} & INTERPRETER + LOCAL & Saída \texttt{42} (broker socket) \\
 \texttt{09\_oo\_new} & C + LOCAL & \texttt{gcc -O2} + saída \texttt{woof} (OO codegen) \\
 \hline
 \end{tabularx}
@@ -1111,18 +1167,22 @@ Arquiteturalmente, o projeto \textbf{é um framework}: frozen-spots em \texttt{t
 
 \subsection{Limitações e trabalhos futuros}
 \begin{itemize}
-    \item \texttt{PAR} local via threads; sockets apenas no teste dedicado de 3 máquinas.
-    \item Workers executam Python fixo, não MiniPar compilado.
-    \item \texttt{Send}/\texttt{Receive} parseados mas não implementados no interpretador.
+    \item Topologia Docker (3 contêineres) em vez de 3 PCs físicos --- equivalente lógico para demonstração.
+    \item Codegen Rust/ARM sem runtime \texttt{minipar\_rt} completo.
     \item Formalizar hotspots de lexer/parser alternativos (autômatos, bottom-up).
-    \item UI dinâmica consumindo \texttt{GET /api/v1/variants} (endpoint já implementado).
 \end{itemize}
 
 \subsection{Link para o Repositorio (GitHub)}
-\url{https://github.com/brunom/compiladores} (monorepo \texttt{minipar-framework}; ajustar URL final na entrega).
+\url{\CoverGitHubURL}
 
 \subsection{Link para o Video de Apresentacao}
-\url{https://minipar-framework.vercel.app} (UI de demonstracao; inserir URL do video backup na entrega).
+\ifx\CoverVideoURL\PENDING
+\CoverVideoPending
+
+\noindent UI de demonstração (sem stack completa): \url{https://minipar-framework.vercel.app}
+\else
+\url{\CoverVideoURL}
+\fi
 
 \appendix
 
@@ -1150,7 +1210,7 @@ Representação JSON alinhada a \texttt{microservices/\_AST\_CONTRACT.md}. Raiz 
 \end{tabular}
 \end{table}
 
-Serialização: \texttt{ast\_json.to\_dict} em \texttt{minipar-core}; consumo: \texttt{semantic\_json.analyze\_ast\_dict}, \texttt{from\_dict} nos back-ends.
+Serialização: \texttt{ast\_json.to\_dict} em \texttt{minipar-core}; consumo: \texttt{semantic\_full.analyze\_ast\_full}, \texttt{from\_dict} nos back-ends.
 
 \section{Guia de instanciação --- \texttt{CREATING\_AN\_APPLICATION.md}}
 \label{app:creating-app}
@@ -1169,14 +1229,16 @@ Instâncias catalogadas em \texttt{applications/README.md}: interpretador, compi
 \section{Checklist E2E}
 \label{app:e2e}
 
-Checklist derivado de \texttt{ACTIVITIES.md}:
+Checklist derivado de \texttt{ACTIVITIES.md} e \texttt{docs/VALIDATION.md} (\textbf{15/15 PASS}, 8/jun/2026):
 \begin{itemize}
     \item[\checkmark] \texttt{docker compose up --build} --- stack completa;
+    \item[\checkmark] \texttt{./scripts/validate-all.sh} --- evidência JSON;
     \item[\checkmark] \texttt{POST /api/v1/process} --- INTERPRETER, C, RUST, ASSEMBLY, PYTHON;
-    \item[\checkmark] Fixtures \texttt{01}--\texttt{16} --- parse, semântica, codegen;
-    \item[\checkmark] Modo \texttt{DISTRIBUTED\_SOCKETS} --- workers PC1--PC3;
+    \item[\checkmark] Fixtures \texttt{01}--\texttt{16} --- parse, semântica, codegen, canais;
+    \item[\checkmark] Modo \texttt{DISTRIBUTED\_SOCKETS} --- workers MiniPar + menu \texttt{14};
     \item[\checkmark] Fractal Sierpinski (\texttt{13\_sierpinski.minipar});
-    \item[\checkmark] Extensão Python (\texttt{16\_codegen\_python}) --- TAC $\rightarrow$ Python + \texttt{python3}.
+    \item[\checkmark] Extensão Python (\texttt{16\_codegen\_python}) --- TAC $\rightarrow$ Python + \texttt{python3};
+    \item[\checkmark] \texttt{GET /api/v1/variants} e \texttt{/recommendations} na UI.
 \end{itemize}
 
 \section{Roteiro de banca --- \texttt{docs/BANCA\_NARRATIVE.md}}

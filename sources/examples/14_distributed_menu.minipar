@@ -1,5 +1,16 @@
 class Main {
   void run() {
-    println("Menu coordenador: selecione DISTRIBUTED_SOCKETS na UI e Executar.");
+    println("=== Menu Coordenador — Paralelismo Real (3 Máquinas) ===");
+    c_channel ch1("worker-quicksort", 9001);
+    c_channel ch2("worker-matrix", 9002);
+    c_channel ch3("worker-factorial", 9003);
+    par {
+      receive(ch1, r1);
+      receive(ch2, r2);
+      receive(ch3, r3);
+    }
+    println(r1);
+    println(r2);
+    println(r3);
   }
 }

@@ -28,6 +28,7 @@ import {
   TargetVariability,
 } from '../models/process.models';
 import { OutputPanelComponent } from '../output-panel/output-panel.component';
+import { ServiceStatusComponent } from '../service-status/service-status.component';
 import { CompilerApiService } from '../services/compiler-api.service';
 import { ThemeService } from '../services/theme.service';
 import { environment } from '../../environments/environment';
@@ -49,6 +50,7 @@ import { environment } from '../../environments/environment';
     CodeTemplatePickerComponent,
     FeaturePanelComponent,
     OutputPanelComponent,
+    ServiceStatusComponent,
   ],
   templateUrl: './compiler-workspace.component.html',
   styleUrl: './compiler-workspace.component.scss',

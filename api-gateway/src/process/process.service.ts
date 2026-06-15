@@ -10,6 +10,10 @@ export class ProcessService {
     private readonly history: HistoryService,
   ) {}
 
+  getRecommendations() {
+    return this.history.getRecommendations();
+  }
+
   async process(dto: ProcessRequestDto) {
     const record = await this.history.createRunning(
       dto.sourceCode,

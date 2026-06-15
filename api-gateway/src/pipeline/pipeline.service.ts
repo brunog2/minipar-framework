@@ -234,25 +234,33 @@ export class PipelineService {
       | undefined;
 
     if (executionMode === ExecutionMode.DISTRIBUTED_SOCKETS) {
-      const coordUrl = this.config.getOrThrow<string>('MS_PARALLEL_COORD_URL');
-      const coordRes = await firstValueFrom(
-        this.http.post<{
-          output: string;
-          results: Array<{
-            role: string;
-            data: string;
-            machine?: string;
-            error?: string;
-          }>;
-        }>(`${coordUrl}/coordinate`, {
-          ast: semanticRes.data.ast,
-          symbolTable: semanticRes.data.symbolTable,
-          executionMode,
-        }),
-      );
-      steps.push('ms-parallel-coord: coordinate');
-      distributedResults = coordRes.data.results;
-      backendOutput = coordRes.data.output + '\n';
+      const usesMiniparChannels =
+        targetVariability === TargetVariability.INTERPRETER &&
+        /c_channel\s+\w+\s*\(/.test(sourceCode);
+
+      if (!usesMiniparChannels) {
+        const coordUrl = this.config.getOrThrow<string>('MS_PARALLEL_COORD_URL');
+        const coordRes = await firstValueFrom(
+          this.http.post<{
+            output: string;
+            results: Array<{
+              role: string;
+              data: string;
+              machine?: string;
+              error?: string;
+            }>;
+          }>(`${coordUrl}/coordinate`, {
+            ast: semanticRes.data.ast,
+            symbolTable: semanticRes.data.symbolTable,
+            executionMode,
+          }),
+        );
+        steps.push('ms-parallel-coord: coordinate');
+        distributedResults = coordRes.data.results;
+        backendOutput = coordRes.data.output + '\n';
+      } else {
+        steps.push('ms-interpreter: distributed via c_channel (MiniPar)');
+      }
     }
 
     const payload = {

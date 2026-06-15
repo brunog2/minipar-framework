@@ -1,0 +1,6 @@
+class Main {
+  void run() {
+    println("Matriz 2x2 PC2");
+    println("A=[[1,2],[3,4]] x B=[[5,6],[7,8]] = [[19,22],[43,50]]");
+  }
+}

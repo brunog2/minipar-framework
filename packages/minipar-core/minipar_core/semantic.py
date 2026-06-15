@@ -36,6 +36,10 @@ class SemanticAnalyzer:
     def add_error(self, message: str, line: int = 0):
         self.errors.append(f"Semantic error at line {line}: {message}")
 
+    @staticmethod
+    def _line(node, default: int = 0) -> int:
+        return getattr(node, "line", default)
+
     def analyze(self, node: n.ASTNode) -> bool:
         self.errors = []
         self.visit(node)
@@ -68,7 +72,7 @@ class SemanticAnalyzer:
             self.add_error(f"Superclass '{node.extends}' not found for class '{node.name}'")
         self.known_classes[node.name] = node.extends
         self.symbol_table.add_symbol(
-            node.name, SymbolType.CLASS, node.name, line=node.line, parent_class=node.extends
+            node.name, SymbolType.CLASS, node.name, line=self._line(node), parent_class=node.extends
         )
         self.symbol_table.enter_scope(f"class_{node.name}")
         self.current_class = node.name
@@ -82,7 +86,7 @@ class SemanticAnalyzer:
                     member.name,
                     SymbolType.ATTRIBUTE,
                     member.var_type,
-                    line=member.line,
+                    line=self._line(member),
                     parent_class=node.name,
                 )
                 if member.initializer:
@@ -95,7 +99,7 @@ class SemanticAnalyzer:
                     member.name,
                     SymbolType.METHOD,
                     member.return_type,
-                    line=member.line,
+                    line=self._line(member),
                     parent_class=node.name,
                     param_types=[p.param_type for p in member.parameters],
                     return_type=member.return_type,
@@ -106,7 +110,7 @@ class SemanticAnalyzer:
                         param.name,
                         SymbolType.PARAMETER,
                         param.param_type,
-                        line=param.line,
+                        line=self._line(param),
                         parent_class=node.name,
                     )
                 old_ret = self.current_function_return_type
@@ -119,31 +123,31 @@ class SemanticAnalyzer:
 
     def visit_VarDecl(self, node: n.VarDecl):
         if self.symbol_table.lookup_local(node.name):
-            self.add_error(f"Variable '{node.name}' already declared in current scope", node.line)
+            self.add_error(f"Variable '{node.name}' already declared in current scope", self._line(node))
             return
         if node.initializer:
             self.visit(node.initializer)
         self.symbol_table.add_symbol(
-            node.name, SymbolType.VARIABLE, node.var_type, line=node.line, is_initialized=node.initializer is not None
+            node.name, SymbolType.VARIABLE, node.var_type, line=self._line(node), is_initialized=node.initializer is not None
         )
 
     def visit_FuncDecl(self, node: n.FuncDecl):
         if self.symbol_table.lookup_local(node.name):
-            self.add_error(f"Function '{node.name}' already declared", node.line)
+            self.add_error(f"Function '{node.name}' already declared", self._line(node))
             return
         param_types = [p.var_type for p in node.parameters]
         self.symbol_table.add_symbol(
             node.name,
             SymbolType.FUNCTION,
             node.return_type,
-            line=node.line,
+            line=self._line(node),
             param_types=param_types,
             return_type=node.return_type,
         )
         self.symbol_table.enter_scope(f"func_{node.name}")
         for param in node.parameters:
             self.symbol_table.add_symbol(
-                param.name, SymbolType.PARAMETER, param.var_type, line=param.line
+                param.name, SymbolType.PARAMETER, param.var_type, line=self._line(param)
             )
         old_ret = self.current_function_return_type
         self.current_function_return_type = node.return_type
@@ -153,13 +157,30 @@ class SemanticAnalyzer:
 
     def visit_ChannelDecl(self, node: n.ChannelDecl):
         if self.symbol_table.lookup_local(node.name):
-            self.add_error(f"Channel '{node.name}' already declared", node.line)
+            self.add_error(f"Channel '{node.name}' already declared", self._line(node))
             return
         self.symbol_table.add_symbol(
-            node.name, SymbolType.CHANNEL, node.channel_type, line=node.line, channel_type=node.channel_type
+            node.name, SymbolType.CHANNEL, node.channel_type, line=self._line(node), channel_type=node.channel_type
         )
         for arg in node.arguments:
             self.visit(arg)
+
+    def visit_SendStmt(self, node: n.SendStmt):
+        sym = self.symbol_table.lookup(node.channel)
+        if not sym or sym.symbol_type != SymbolType.CHANNEL:
+            self.add_error(f"Send on undeclared channel '{node.channel}'", self._line(node))
+        self.visit(node.value)
+
+    def visit_ReceiveStmt(self, node: n.ReceiveStmt):
+        sym = self.symbol_table.lookup(node.channel)
+        if not sym or sym.symbol_type != SymbolType.CHANNEL:
+            self.add_error(f"Receive on undeclared channel '{node.channel}'", self._line(node))
+        if self.symbol_table.lookup_local(node.target):
+            self.add_error(f"Variable '{node.target}' already declared", self._line(node))
+        else:
+            self.symbol_table.add_symbol(
+                node.target, SymbolType.VARIABLE, "any", line=self._line(node)
+            )
 
     def visit_Block(self, node: n.Block):
         self.symbol_table.enter_scope("block")
@@ -174,10 +195,9 @@ class SemanticAnalyzer:
         self.symbol_table.exit_scope()
 
     def visit_ParBlock(self, node: n.ParBlock):
-        self.symbol_table.enter_scope("par")
+        # Receive targets must remain visible after the par block.
         for stmt in node.statements:
             self.visit(stmt)
-        self.symbol_table.exit_scope()
 
     def visit_IfStmt(self, node: n.IfStmt):
         self.visit(node.condition)
@@ -194,7 +214,7 @@ class SemanticAnalyzer:
 
     def visit_ForStmt(self, node: n.ForStmt):
         self.symbol_table.enter_scope("for")
-        self.symbol_table.add_symbol(node.variable.name, SymbolType.VARIABLE, node.variable.var_type, line=node.line)
+        self.symbol_table.add_symbol(node.variable.name, SymbolType.VARIABLE, node.variable.var_type, line=self._line(node))
         self.visit(node.iterable)
         old = self.in_loop
         self.in_loop = True
@@ -204,18 +224,18 @@ class SemanticAnalyzer:
 
     def visit_ReturnStmt(self, node: n.ReturnStmt):
         if self.current_function_return_type is None:
-            self.add_error("Return statement outside function/method", node.line)
+            self.add_error("Return statement outside function/method", self._line(node))
             return
         if node.value:
             self.visit(node.value)
 
     def visit_BreakStmt(self, node: n.BreakStmt):
         if not self.in_loop:
-            self.add_error("Break outside loop", node.line)
+            self.add_error("Break outside loop", self._line(node))
 
     def visit_ContinueStmt(self, node: n.ContinueStmt):
         if not self.in_loop:
-            self.add_error("Continue outside loop", node.line)
+            self.add_error("Continue outside loop", self._line(node))
 
     def visit_PrintStmt(self, node: n.PrintStmt):
         for arg in node.arguments:
@@ -227,7 +247,7 @@ class SemanticAnalyzer:
     def visit_Assignment(self, node: n.Assignment):
         sym = self.symbol_table.lookup(node.name)
         if not sym:
-            self.add_error(f"Undefined variable '{node.name}'", node.line)
+            self.add_error(f"Undefined variable '{node.name}'", self._line(node))
         self.visit(node.value)
 
     def visit_PropertyAssign(self, node: n.PropertyAssign):
@@ -246,7 +266,7 @@ class SemanticAnalyzer:
     def visit_FuncCall(self, node: n.FuncCall):
         sym = self.symbol_table.lookup(node.name)
         if not sym:
-            self.add_error(f"Undefined function '{node.name}'", node.line)
+            self.add_error(f"Undefined function '{node.name}'", self._line(node))
         for arg in node.arguments:
             self.visit(arg)
         return sym.return_type if sym else "any"
@@ -264,7 +284,7 @@ class SemanticAnalyzer:
     def visit_Variable(self, node: n.Variable):
         sym = self.symbol_table.lookup(node.name)
         if not sym and node.name not in self.known_classes:
-            self.add_error(f"Undefined identifier '{node.name}'", node.line)
+            self.add_error(f"Undefined identifier '{node.name}'", self._line(node))
             return "any"
         if node.name in self.known_classes:
             return node.name
@@ -272,18 +292,18 @@ class SemanticAnalyzer:
 
     def visit_ThisExpr(self, node: n.ThisExpr):
         if not self.current_class:
-            self.add_error("'this' used outside class", node.line)
+            self.add_error("'this' used outside class", self._line(node))
         return self.current_class or "any"
 
     def visit_SuperCall(self, node: n.SuperCall):
         if not self.current_class:
-            self.add_error("'super' used outside class", node.line)
+            self.add_error("'super' used outside class", self._line(node))
         for arg in node.arguments:
             self.visit(arg)
 
     def visit_NewInstance(self, node: n.NewInstance):
         if node.class_name not in self.known_classes:
-            self.add_error(f"Unknown class '{node.class_name}'", node.line)
+            self.add_error(f"Unknown class '{node.class_name}'", self._line(node))
         for arg in node.arguments:
             self.visit(arg)
         return node.class_name

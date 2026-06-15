@@ -11,3 +11,7 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["minipar_core"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"minipar_core/runtime/minipar_rt.c" = "minipar_core/runtime/minipar_rt.c"
+"minipar_core/runtime/minipar_rt.h" = "minipar_core/runtime/minipar_rt.h"

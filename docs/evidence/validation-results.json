@@ -1,0 +1,111 @@
+{
+  "api": "http://localhost:3000",
+  "gateway": true,
+  "tests": [
+    {
+      "phase": "1-2",
+      "id": "E11",
+      "name": "15_channels socket broker",
+      "status": "PASS",
+      "detail": "42\n"
+    },
+    {
+      "phase": "2",
+      "id": "E2",
+      "name": "09_oo_new interpretador",
+      "status": "PASS",
+      "detail": "woof\n"
+    },
+    {
+      "phase": "5",
+      "id": "E12",
+      "name": "09_oo_new C gcc -O2",
+      "status": "PASS",
+      "detail": "Compiled with gcc -O2\nwoof\n"
+    },
+    {
+      "phase": "5",
+      "id": "E5",
+      "name": "11_codegen_c gcc -O2",
+      "status": "PASS",
+      "detail": "Compiled with gcc -O2\nhello from C backend\n"
+    },
+    {
+      "phase": "0",
+      "id": "GW",
+      "name": "gateway health",
+      "status": "PASS",
+      "detail": "http://localhost:3000"
+    },
+    {
+      "phase": "1",
+      "id": "E1",
+      "name": "08_interpreter_ok.minipar",
+      "status": "PASS",
+      "detail": "ok\n"
+    },
+    {
+      "phase": "1",
+      "id": "E7",
+      "name": "05_parse_extends_missing.minipar",
+      "status": "PASS",
+      "detail": "Parser error at 5:20: Expected superclass name"
+    },
+    {
+      "phase": "2",
+      "id": "E6",
+      "name": "12_codegen_rust_stub.minipar",
+      "status": "PASS",
+      "detail": "Compiled with rustc -O\nhello rust\n"
+    },
+    {
+      "phase": "3",
+      "id": "E3",
+      "name": "13_sierpinski.minipar",
+      "status": "PASS",
+      "detail": "Tapete de Sierpinski (ordem 3, matriz 27x27):\n***************************\n*.**.**.**.**.**.**.**.**.*\n***************************\n***...******...******...***\n*.*...*.**.*...*.**.*...*.*\n***...******...******...***\n***************************\n*.**.**.**.**.**.**.**.**.*\n***************************\n*********.........*********\n*.**.**.*.........*.**.**.*\n*********.........*********\n***...***........."
+    },
+    {
+      "phase": "3",
+      "id": "E4",
+      "name": "08_interpreter_ok.minipar",
+      "status": "PASS",
+      "detail": "=== Menu Coordenador — Paralelismo Real (3 Máquinas) ===\nThreads como processos independentes · comunicação via sockets TCP\n\n[PC1 — QuickSort (114a8d683536:9001)] QuickSort PC1\n[64,34,25,12,22,11,90] -> [11,12,22,25,34,64,90]\n[PC2 — Multiplicação de Matrizes (b56d8ebf6034:9002)] Matriz 2x2 PC2\nA=[[1,2],[3,4]] x B=[[5,6],[7,8]] = [[19,22],[43,50]]\n[PC3 — Fatorial (d589e4c08d81:9003)] Fatorial PC3\n3"
+    },
+    {
+      "phase": "3",
+      "id": "E10",
+      "name": "14_distributed_menu.minipar",
+      "status": "PASS",
+      "detail": "=== Menu Coordenador — Paralelismo Real (3 Máquinas) ===\n[PC1 114a8d683536:9001 quicksort] QuickSort PC1\n[64,34,25,12,22,11,90] -> [11,12,22,25,34,64,90]\n[PC2 b56d8ebf6034:9002 matrix] Matriz 2x2 PC2\nA=[[1,2],[3,4]] x B=[[5,6],[7,8]] = [[19,22],[43,50]]\n[PC3 d589e4c08d81:9003 factorial] Fatorial PC3\n3628800\n"
+    },
+    {
+      "phase": "4",
+      "id": "E8",
+      "name": "04_semantic_extends_unknown.minipar",
+      "status": "PASS",
+      "detail": "Semantic error at line 0: Superclass 'Arvore' not found for class 'Dog'"
+    },
+    {
+      "phase": "6",
+      "id": "E9",
+      "name": "16_codegen_python.minipar",
+      "status": "PASS",
+      "detail": "Executado com python3\nhello from Python backend\n"
+    },
+    {
+      "phase": "6",
+      "id": "GET variants",
+      "name": "GET variants",
+      "status": "PASS",
+      "detail": "[{'variability': 'INTERPRETER', 'label': 'Interpretador', 'endpoint': '/execute'}, {'variability': 'C', 'label': 'Codegen C', 'endpoint': '/generate'}, {'variability': 'CPP', 'label': 'Codegen C++', '"
+    },
+    {
+      "phase": "6",
+      "id": "GET recommendations",
+      "name": "GET recommendations",
+      "status": "PASS",
+      "detail": "{'suggestedVariability': 'INTERPRETER', 'suggestedMode': 'LOCAL', 'reason': 'Com base em 100 execuções recentes, INTERPRETER + LOCAL teve melhor taxa de sucesso.', 'totalRuns': 100, 'errorRate': 0.32}"
+    }
+  ]
+}

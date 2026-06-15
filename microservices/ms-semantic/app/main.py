@@ -1,9 +1,9 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-from minipar_core import analyze_ast_dict
+from minipar_core.semantic_full import analyze_ast_full
 
-app = FastAPI(title="ms-semantic", version="0.1.0")
+app = FastAPI(title="ms-semantic", version="0.3.0")
 
 
 class AnalyzeRequest(BaseModel):
@@ -23,5 +23,5 @@ def health():
 
 @app.post("/analyze", response_model=AnalyzeResponse)
 def analyze(body: AnalyzeRequest):
-    ast, symbol_table, errors = analyze_ast_dict(body.ast)
+    ast, symbol_table, errors = analyze_ast_full(body.ast)
     return AnalyzeResponse(ast=ast, symbolTable=symbol_table, errors=errors)

@@ -49,6 +49,7 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+*~
 
 # Angular
 .angular/
@@ -57,7 +58,7 @@ Thumbs.db
 *.override.yml
 postgres_data/
 
-# LaTeX
+# LaTeX / relatório (gerar com ./scripts/build-pdf.sh)
 *.aux
 *.fls
 *.fdb_latexmk
@@ -70,6 +71,8 @@ postgres_data/
 *.snm
 *.vrb
 report.pdf
+report-md.pdf
+overleaf-report.zip
 
 # Project-specific
 tasks/

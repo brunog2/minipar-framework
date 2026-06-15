@@ -5,6 +5,8 @@ Framework para compiladores e interpretadores da linguagem **MiniPar 2026.1** (O
 ## Como estender o framework
 
 - **[CREATING_AN_APPLICATION.md](CREATING_AN_APPLICATION.md)** — passo a passo para criar nova instância (framework vs gerador, FAQ banca)
+- **[docs/WHAT_REMAINS.md](docs/WHAT_REMAINS.md)** — o que ainda falta vs. requisitos do Arturo
+- **[report.md](report.md)** · **[report.tex](report.tex)** — relatório integrado (Markdown + PDF/Overleaf)
 - **[applications/](applications/)** — catálogo de instâncias de referência + extensão Python
 - **[packages/minipar-core/EXTENDING.md](packages/minipar-core/EXTENDING.md)** — contrato de hotspots (`emit`/`finalize`)
 - **[packages/minipar-core/minipar_core/translation/_template_backend.py](packages/minipar-core/minipar_core/translation/_template_backend.py)** — esqueleto vazio para copiar
@@ -57,7 +59,15 @@ minipar-framework/
 │   ├── ms-codegen-arm/       # :3007 — generate (MVP)
 │   └── ms-codegen-python/    # :3008 — generate (extensão demo)
 ├── database/init.sql
-├── docs/diagrams/            # Diagramas Mermaid
+├── docs/
+│   ├── diagrams/             # Fontes Mermaid (.mmd)
+│   ├── figures/              # PNG para relatório (diagramas + ui/)
+│   ├── WHAT_REMAINS.md       # Gaps vs. Arturo + entrega
+│   └── BANCA_NARRATIVE.md
+├── report.tex                # Relatório PDF (Overleaf)
+├── report.md                 # Relatório Markdown (GitHub)
+├── overleaf-report.zip       # Gerado por ./scripts/package-overleaf.sh (não versionar)
+├── scripts/package-overleaf.sh
 ├── sources/examples/         # Fixtures 01–16
 ├── COMPLIANCE_AUDIT.md       # Conformidade vs. requisitos + backlog futuro
 └── docker-compose.yml
@@ -149,7 +159,7 @@ Configure `src/environments/environment.ts` se o gateway não estiver em `http:/
 
 Pacote compartilhado: [`packages/minipar-core/`](packages/minipar-core/) — inclui `translation/` (Template Method).
 
-Exemplos: [`sources/examples/`](sources/examples/) (01–14).
+Exemplos: [`sources/examples/`](sources/examples/) (01–16).
 
 **Gestão do projeto:** [COMPLIANCE_AUDIT.md](./COMPLIANCE_AUDIT.md) · [SCHEDULE.md](./SCHEDULE.md) · [ACTIVITIES.md](./ACTIVITIES.md) · [ROADMAP.md](./ROADMAP.md).
 
@@ -197,4 +207,12 @@ docker exec minipar-postgres psql -U minipar -d minipar \
 
 ## Entrega acadêmica
 
-Ver [PROJECT_REQUIREMENTS.md](../PROJECT_REQUIREMENTS.md) — entrega **10 de junho**.
+| Artefato | Caminho |
+|----------|---------|
+| Relatório PDF | [report.tex](report.tex) → Overleaf via `./scripts/package-overleaf.sh` |
+| Relatório Markdown | [report.md](report.md) |
+| Conformidade | [COMPLIANCE_AUDIT.md](COMPLIANCE_AUDIT.md) |
+| Pendências | [docs/WHAT_REMAINS.md](docs/WHAT_REMAINS.md) |
+| Roteiro banca | [docs/BANCA_NARRATIVE.md](docs/BANCA_NARRATIVE.md) |
+
+Ver [PROJECT_REQUIREMENTS.md](PROJECT_REQUIREMENTS.md) — entrega **10 de junho**.

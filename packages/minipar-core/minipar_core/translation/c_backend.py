@@ -24,6 +24,12 @@ from minipar_core.translation.tac_codegen import TACGenerator
 class CBackend(AbstractBackendTranslator):
     compiler = "gcc"
     std_flag = "-std=c11"
+    RUNTIME_C = (
+        Path(__file__).resolve().parent.parent / "runtime" / "minipar_rt.c"
+    )
+    RUNTIME_H = (
+        Path(__file__).resolve().parent.parent / "runtime" / "minipar_rt.h"
+    )
 
     def __init__(self) -> None:
         self._code = ""
@@ -52,15 +58,25 @@ class CBackend(AbstractBackendTranslator):
 
         try:
             c_file.write_text(c_code, encoding="utf-8")
+            runtime_h = work / "minipar_rt.h"
+            runtime_c = work / "minipar_rt.c"
+            if self.RUNTIME_H.exists():
+                runtime_h.write_text(
+                    self.RUNTIME_H.read_text(encoding="utf-8"), encoding="utf-8"
+                )
+            if self.RUNTIME_C.exists():
+                runtime_c.write_text(
+                    self.RUNTIME_C.read_text(encoding="utf-8"), encoding="utf-8"
+                )
             compile_cmd = [
                 self.compiler,
                 f"-O2",
                 self.std_flag,
                 str(c_file),
-                "-o",
-                str(exe_file),
-                "-lm",
             ]
+            if runtime_c.exists():
+                compile_cmd.append(str(runtime_c))
+            compile_cmd.extend(["-I", str(work), "-o", str(exe_file), "-lm"])
             comp = subprocess.run(
                 compile_cmd, capture_output=True, text=True, check=False
             )

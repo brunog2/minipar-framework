@@ -41,6 +41,8 @@ class WorkerResult(BaseModel):
     role: str
     data: str
     machine: str | None = None
+    ip: str | None = None
+    port: int | None = None
     error: str | None = None
 
 
@@ -64,6 +66,8 @@ def dispatch_worker(host: str, port: int, role: str, timeout: float = 15.0) -> W
                 role=payload.get("role", role),
                 data=str(payload.get("data", "")),
                 machine=payload.get("machine"),
+                ip=payload.get("ip"),
+                port=payload.get("port"),
             )
     except Exception as exc:
         return WorkerResult(role=role, data=f"Erro ao contactar {host}:{port}", error=str(exc))
@@ -103,6 +107,9 @@ def coordinate(body: CoordinateRequest):
         if item.error:
             lines.append(f"[{label}] ERRO: {item.error}")
         else:
-            lines.append(f"[{label}] {item.data}")
+            endpoint = ""
+            if item.ip and item.port:
+                endpoint = f" ({item.ip}:{item.port})"
+            lines.append(f"[{label}{endpoint}] {item.data}")
 
     return CoordinateResponse(output="\n".join(lines), results=results)

@@ -16,6 +16,11 @@ from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional
 
 from minipar_core import ast_nodes as n
+from minipar_core.channels.socket_channel import (
+    RemoteWorkerChannel,
+    SocketChannelClient,
+    get_or_start_broker,
+)
 from minipar_core.translation.ast_from_json import from_dict
 from minipar_core.translation.base_translator import (
     AbstractBackendTranslator,
@@ -92,8 +97,10 @@ class Interpreter(AbstractBackendTranslator):
         self.this_instance: MiniInstance | None = None
         self.classes: Dict[str, MiniClass] = {}
         self._print_hook: Optional[Callable[[str], None]] = None
-        # multiprocessing.Queue so channels work across both threads and forked processes
+        # Canais via broker TCP (sem multiprocessing.Queue)
         self._channels: Dict[str, Any] = {}
+        self._channel_broker_host: str = "127.0.0.1"
+        self._channel_broker_port: int = 0
         self._exec_output: str = ""
         self._runtime_errors: list[str] = []
 
@@ -242,7 +249,15 @@ class Interpreter(AbstractBackendTranslator):
                     env_snapshot[k] = v
             env = env.parent
 
-        shared_data = pickle.dumps({"classes": self.classes, "env": env_snapshot})
+        shared_data = pickle.dumps(
+            {
+                "classes": self.classes,
+                "env": env_snapshot,
+                "channel_broker_host": self._channel_broker_host,
+                "channel_broker_port": self._channel_broker_port,
+                "channel_registry": self._serialize_channel_registry(),
+            }
+        )
         stmt_datas = [pickle.dumps(s) for s in statements]
 
         server = _socket.socket(_socket.AF_INET, _socket.SOCK_STREAM)
@@ -255,7 +270,7 @@ class Interpreter(AbstractBackendTranslator):
         procs = [
             multiprocessing.Process(
                 target=_par_worker,
-                args=(sd, shared_data, port, self._channels),
+                args=(sd, shared_data, port),
                 daemon=True,
             )
             for sd in stmt_datas
@@ -293,21 +308,70 @@ class Interpreter(AbstractBackendTranslator):
                 except RuntimeError:
                     self.env.define(k, v)
 
+    def _ensure_broker(self) -> None:
+        broker = get_or_start_broker()
+        self._channel_broker_host, self._channel_broker_port = broker.host, broker.port
+
+    def _serialize_channel_registry(self) -> Dict[str, dict]:
+        registry: Dict[str, dict] = {}
+        for name, ch in self._channels.items():
+            if isinstance(ch, SocketChannelClient):
+                registry[name] = {
+                    "kind": "local",
+                    "channel_name": ch.channel_name,
+                }
+            elif isinstance(ch, RemoteWorkerChannel):
+                registry[name] = {
+                    "kind": "remote",
+                    "host": ch.host,
+                    "port": ch.port,
+                    "role": ch.role,
+                }
+        return registry
+
+    @staticmethod
+    def _restore_channels(
+        registry: Dict[str, dict], broker_host: str, broker_port: int
+    ) -> Dict[str, Any]:
+        channels: Dict[str, Any] = {}
+        for name, meta in registry.items():
+            if meta.get("kind") == "remote":
+                channels[name] = RemoteWorkerChannel(
+                    meta["host"], meta["port"], meta.get("role", "worker")
+                )
+            else:
+                channels[name] = SocketChannelClient(
+                    broker_host, broker_port, meta.get("channel_name", name)
+                )
+        return channels
+
     def exec_channel_decl(self, node: n.ChannelDecl) -> None:
-        self._channels[node.name] = multiprocessing.Queue()
+        self._ensure_broker()
+        broker = get_or_start_broker()
+        if node.channel_type == "c_channel" and len(node.arguments) >= 2:
+            host = self.eval(node.arguments[0])
+            port = self.eval(node.arguments[1])
+            if not isinstance(host, str):
+                raise RuntimeError("c_channel host must be a string")
+            self._channels[node.name] = RemoteWorkerChannel(host, port, node.name)
+            return
+        broker.register(node.name, node.channel_type)
+        self._channels[node.name] = SocketChannelClient(
+            self._channel_broker_host, self._channel_broker_port, node.name
+        )
 
     def exec_send(self, node: n.SendStmt) -> None:
         value = self.eval(node.value)
         ch = self._channels.get(node.channel)
         if ch is None:
             raise RuntimeError(f"Channel not declared: {node.channel}")
-        ch.put(value)
+        ch.send(value)
 
     def exec_receive(self, node: n.ReceiveStmt) -> None:
         ch = self._channels.get(node.channel)
         if ch is None:
             raise RuntimeError(f"Channel not declared: {node.channel}")
-        value = ch.get()
+        value = ch.receive()
         try:
             self.env.assign(node.target, value)
         except RuntimeError:
@@ -540,8 +604,8 @@ class Interpreter(AbstractBackendTranslator):
         return str(value)
 
 
-def _par_worker(stmt_data: bytes, shared_data: bytes, port: int, channels: Dict) -> None:
-    """Isolated process for exec_par — executes one statement, sends output+env via TCP."""
+def _par_worker(stmt_data: bytes, shared_data: bytes, port: int) -> None:
+    """Processo isolado para exec_par — IPC via socket (broker + resultado TCP)."""
     import json
     import pickle
     import socket
@@ -555,7 +619,13 @@ def _par_worker(stmt_data: bytes, shared_data: bytes, port: int, channels: Dict)
         child.globals.define(name, klass)
     for k, v in shared["env"].items():
         child.globals.define(k, v)
-    child._channels = channels  # shared multiprocessing.Queue objects
+    child._channel_broker_host = shared["channel_broker_host"]
+    child._channel_broker_port = shared["channel_broker_port"]
+    child._channels = Interpreter._restore_channels(
+        shared.get("channel_registry", {}),
+        child._channel_broker_host,
+        child._channel_broker_port,
+    )
 
     output_lines: List[str] = []
     child._print_hook = lambda txt: output_lines.append(txt)

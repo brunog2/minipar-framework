@@ -16,6 +16,11 @@ export class ProcessController {
     }));
   }
 
+  @Get('recommendations')
+  recommendations() {
+    return this.processService.getRecommendations();
+  }
+
   @Post('process')
   process(@Body() dto: ProcessRequestDto) {
     return this.processService.process(dto);

@@ -28,6 +28,26 @@ export interface ProcessResponse {
   error?: string;
 }
 
+export interface VariantOption {
+  variability: string;
+  label: string;
+  endpoint: string;
+}
+
+export interface RecommendationResponse {
+  suggestedVariability: string;
+  suggestedMode: string;
+  reason: string;
+  totalRuns: number;
+  errorRate: number;
+}
+
+export interface ServiceHealth {
+  name: string;
+  port: number;
+  status: string;
+}
+
 export interface DistributedWorkerResult {
   role: string;
   data: string;

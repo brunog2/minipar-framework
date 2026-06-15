@@ -12,7 +12,7 @@
         [value]="targetVariability()"
         (change)="onTargetChange($event.value)"
       >
-        @for (t of targets; track t.value) {
+        @for (t of targets(); track t.value) {
           <mat-radio-button class="option" [value]="t.value">
             {{ t.label }}
           </mat-radio-button>
