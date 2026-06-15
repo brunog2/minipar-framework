@@ -93,11 +93,23 @@ if gateway_ok:
         except Exception as e:
             record(phase, tid, fname, False, e)
 
-    for path, name in [("/api/v1/variants", "GET variants"), ("/api/v1/recommendations", "GET recommendations")]:
+    for path, name in [
+        ("/api/v1/variants", "GET variants"),
+        ("/api/v1/recommendations", "GET recommendations"),
+        ("/api/v1/services/health", "GET services health"),
+    ]:
         try:
-            with urllib.request.urlopen(f"{api}{path}", timeout=10) as resp:
+            with urllib.request.urlopen(f"{api}{path}", timeout=15) as resp:
                 data = json.loads(resp.read().decode())
-            record("6", name, name, bool(data), str(data)[:200])
+            if path.endswith("services/health"):
+                ok = (
+                    isinstance(data, list)
+                    and len(data) >= 9
+                    and all(item.get("status") == "ok" for item in data)
+                )
+                record("6", name, name, ok, str(data)[:200])
+            else:
+                record("6", name, name, bool(data), str(data)[:200])
         except Exception as e:
             record("6", name, name, False, e)
 

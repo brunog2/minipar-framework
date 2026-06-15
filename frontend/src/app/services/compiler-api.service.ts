@@ -6,6 +6,7 @@ import {
   ProcessRequest,
   ProcessResponse,
   RecommendationResponse,
+  ServiceHealth,
   VariantOption,
 } from '../models/process.models';
 
@@ -28,6 +29,12 @@ export class CompilerApiService {
   getRecommendations(): Observable<RecommendationResponse> {
     return this.http.get<RecommendationResponse>(
       `${this.baseUrl}/api/v1/recommendations`,
+    );
+  }
+
+  getServicesHealth(): Observable<ServiceHealth[]> {
+    return this.http.get<ServiceHealth[]>(
+      `${this.baseUrl}/api/v1/services/health`,
     );
   }
 }

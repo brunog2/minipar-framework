@@ -17,8 +17,22 @@
 \usepackage{array}
 \usepackage{enumitem}
 \usepackage{amssymb}
+\usepackage{adjustbox}
+\usepackage{needspace}
 
 \newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+\newcommand{\includefigure}[1]{%
+  \adjustbox{max width=\textwidth,max height=0.68\textheight,keepaspectratio}{%
+    \includegraphics{#1}%
+  }%
+}
+
+\newcommand{\includeuiscreenshot}[1]{%
+  \adjustbox{max width=\textwidth,max height=0.48\textheight,keepaspectratio}{%
+    \includegraphics{#1}%
+  }%
+}
 
 \geometry{a4paper, left=3cm, top=3cm, right=2cm, bottom=2cm}
 
@@ -30,13 +44,23 @@
 }
 
 \lstset{
-    basicstyle=\ttfamily\small,
+    basicstyle=\ttfamily\footnotesize,
     keywordstyle=\color{blue},
     stringstyle=\color{red},
     commentstyle=\color{green!60!black},
     breaklines=true,
-    frame=single,
-    captionpos=b
+    breakatwhitespace=true,
+    columns=flexible,
+    keepspaces=true,
+    frame=tb,
+    captionpos=b,
+    extendedchars=true,
+    inputencoding=utf8,
+    literate=
+        {á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+        {ã}{{\~a}}1 {õ}{{\~o}}1 {ç}{{\c{c}}}1 {ê}{{\^e}}1 {â}{{\^a}}1
+        {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+        {Ã}{{\~A}}1 {Õ}{{\~O}}1 {Ç}{{\c{C}}}1 {Ê}{{\^E}}1 {Â}{{\^A}}1
 }
 
 \newcommand{\placeholder}[1]{\textit{[#1]}}
@@ -87,7 +111,7 @@
 \subsection{Enunciado do Projeto}
 Este relatório consolida o trabalho desenvolvido como requisito parcial integrado das disciplinas ministradas pelo Prof.\ Arturo Hernandez Dominguez no Instituto de Computação da UFAL, abrangendo Compiladores, Reuso de Software e Linhas de Produto de Software (LPS). O artefato central é o \emph{MiniPar Framework 2026.1}: uma linha de produto de software organizada em microsserviços, destinada ao processamento da linguagem MiniPar com orientação a objetos, construções de paralelismo \texttt{par}/\texttt{seq} e múltiplos back-ends (interpretador, C/C++, Rust, ARM e extensão Python).
 
-A especificação acadêmica do framework \cite{minipar2026} deriva a evolução da MiniPar 2025.1 documentada por Maciel \cite{maciel2025} e pelos geradores procedimentais de Rego \cite{rego2025}. O repositório mantém documentação de gestão alinhada ao código: \texttt{COMPLIANCE\_AUDIT.md} (conformidade e gaps), \texttt{SCHEDULE.md} (cronograma), \texttt{ACTIVITIES.md} (sprints e checklist E2E) e \texttt{ROADMAP.md} (entregas por fase). Em vez de concentrar todas as fases de compilação em um único binário monolítico, adotou-se arquitetura distribuída em que cada etapa ou variante de saída corresponde a um serviço autônomo, comunicando-se por REST e JSON. Essa decisão articula, de um lado, a engenharia de domínio aplicada ao domínio ``compiladores MiniPar'' e, de outro, o desacoplamento típico de sistemas baseados em microsserviços.
+A especificação acadêmica do framework \cite{minipar2026} deriva a evolução da MiniPar 2025.1 documentada por Maciel \cite{maciel2025} e pelos geradores procedimentais de Rego \cite{rego2025}. Em vez de concentrar todas as fases de compilação em um único binário monolítico, adotou-se arquitetura distribuída em que cada etapa ou variante de saída corresponde a um serviço autônomo, comunicando-se por REST e JSON. Essa decisão articula, de um lado, a engenharia de domínio aplicada ao domínio de compiladores MiniPar e, de outro, o desacoplamento típico de sistemas baseados em microsserviços.
 
 \subsection{Objetivos}
 Objetiva-se (i)~completar o suporte orientado a objetos na gramática e na AST da MiniPar 2026.1; (ii)~expor análise léxica, sintática e semântica como serviços HTTP consumíveis por um front-end e por um API Gateway; (iii)~materializar os back-ends da LPS (interpretador, geração para C/C++, Rust e ARM) como microsserviços que reutilizam um núcleo comum (\texttt{minipar-core}); e (iv)~registrar, na documentação e nos diagramas do repositório, os pontos de variação e as variantes que caracterizam a linha de produto.
@@ -117,14 +141,14 @@ O repositório \textbf{não} possui scaffolding tipo \texttt{createProject}; em 
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.95\textwidth]{architecture.png}
+\includefigure{architecture.png}
 \caption{Arquitetura de microsserviços e pontos de variação LPS (Fases 1--3).}
 \label{fig:architecture}
 \end{figure}
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.85\textwidth]{uml-use-cases.png}
+\includefigure{uml-use-cases.png}
 \caption{Casos de uso principais da interface e do pipeline.}
 \label{fig:use-cases}
 \end{figure}
@@ -134,23 +158,18 @@ O repositório \textbf{não} possui scaffolding tipo \texttt{createProject}; em 
 O cronograma seguiu desenvolvimento incremental por sprints, com entrega prevista para 10 de junho de 2026. Na \textbf{Fase~1} (2--4/jun), priorizou-se o desbloqueio do pipeline real até a análise semântica: lexer, parser descendente recursivo, serialização da AST e verificação de classes e herança. Na \textbf{Fase~2} (3--5/jun), incorporou-se o padrão \emph{Template Method} no pacote \texttt{translation/}, os microsserviços de interpretação e de geração de código, e a orquestração do gateway com \texttt{PIPELINE\_BACKEND\_MODE=http}. Na \textbf{Fase~3} (5--7/jun), implementou-se o coordenador \texttt{ms-parallel-coord}, os \emph{workers} socket, o fractal de Sierpinski em MiniPar OO e a integração E2E do modo \texttt{DISTRIBUTED\_SOCKETS}.
 
 \subsection{Backlogs}
-\begin{itemize}
-    \item \textbf{Product Backlog:} gestão da variabilidade LPS (modo interpretador \emph{versus} compilador, back-end alvo, ambiente local ou distribuído); casos de teste de paralelismo; demonstração do fractal.
-    \item \textbf{Sprint Backlog Fase 1:} pacote \texttt{minipar-core}; microsserviços \texttt{ms-front-end} e \texttt{ms-semantic}; Docker Compose com \texttt{PIPELINE\_MODE=http}.
-    \item \textbf{Sprint Backlog Fase 2:} módulo \texttt{translation/} (\emph{Template Method}); \texttt{ms-interpreter}; \texttt{ms-codegen-c}, \texttt{ms-codegen-rust}, \texttt{ms-codegen-arm}; variável \texttt{PIPELINE\_BACKEND\_MODE=http}.
-    \item \textbf{Sprint Backlog Fase 3:} \texttt{ms-parallel-coord}; workers socket; fractal Sierpinski (\texttt{13\_sierpinski.minipar}); integração \texttt{DISTRIBUTED\_SOCKETS} E2E.
-\end{itemize}
+O \emph{Product Backlog} contemplou a gestão da variabilidade da linha de produto de software, abrangendo modo interpretador ou compilador, back-end de destino e ambiente local ou distribuído, além dos casos de teste de paralelismo e da demonstração do fractal de Sierpinski. O \emph{Sprint Backlog} da Fase~1 concentrou o pacote \texttt{minipar-core}, os microsserviços \texttt{ms-front-end} e \texttt{ms-semantic}, e a composição Docker com \texttt{PIPELINE\_MODE=http}. Na Fase~2, priorizou-se o módulo \texttt{translation/} com o padrão \emph{Template Method}, os serviços \texttt{ms-interpreter}, \texttt{ms-codegen-c}, \texttt{ms-codegen-rust} e \texttt{ms-codegen-arm}, e a variável \texttt{PIPELINE\_BACKEND\_MODE=http}. A Fase~3 encerrou com \texttt{ms-parallel-coord}, os \emph{workers} por soquete, o programa \texttt{13\_sierpinski.minipar} e a integração de ponta a ponta do modo \texttt{DISTRIBUTED\_SOCKETS}.
 \subsection{Arquitetura de Microsserviços}
 O ponto de entrada único é o \texttt{api-gateway} (porta~3000), que expõe \texttt{POST /api/v1/process} e encaminha o fluxo conforme a variabilidade informada pelo cliente. O serviço \texttt{ms-front-end} (:3001) realiza a análise léxica e sintática, devolvendo a AST em JSON; o \texttt{ms-semantic} (:3002) consome essa AST e produz a tabela de símbolos e eventuais diagnósticos semânticos. Os back-ends da LPS (:3003--3007) recebem a AST já validada e executam ou geram código conforme o valor de \texttt{targetVariability} selecionado na interface.
 
-Do ponto de vista de engenharia de domínio, o domínio ``pipeline MiniPar'' foi particionado em subsistemas com contratos estáveis (\texttt{\_AST\_CONTRACT.md}), de modo que novas variantes de back-end possam ser acopladas sem alterar o lexer ou o analisador semântico. A Figura~\ref{fig:architecture} e a Figura~\ref{fig:pipeline-sequence} consolidam a visão arquitetural.
+Do ponto de vista de engenharia de domínio, o domínio do pipeline MiniPar foi particionado em subsistemas com contratos estáveis de serialização JSON, conforme detalhado no Apêndice~\ref{app:ast-contract}, de modo que novas variantes de back-end possam ser acopladas sem alterar o analisador léxico ou o analisador semântico. A Figura~\ref{fig:architecture} e a Figura~\ref{fig:pipeline-sequence} consolidam a visão arquitetural.
 
-\subsection{Gestão da Variabilidade (LPS) --- visão geral}
+\subsection{Gestão da variabilidade na linha de produto de software}
 Identificam-se três pontos de variação principais \cite{pohl2010}: (1)~modo de execução (interpretador ou compilador); (2)~back-end de código (C, C++, Rust, ARM); (3)~ambiente de execução (local ou distribuído via \texttt{ms-parallel-coord}). A análise detalhada de features, binding time e matriz de configurações encontra-se na Parte~V. A Figura~\ref{fig:feature-tree} antecipa a árvore de features.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{feature-tree.png}
+\includefigure{feature-tree.png}
 \caption{Árvore de features LPS (modo, back-end, ambiente).}
 \label{fig:feature-tree}
 \end{figure}
@@ -159,24 +178,24 @@ Identificam-se três pontos de variação principais \cite{pohl2010}: (1)~modo d
 
 \section{Conceitos: frozen-spot, hotspot e método abstrato}
 
-A terminologia de engenharia de domínio distingue três camadas complementares, frequentemente confundidas na banca:
+A terminologia de engenharia de domínio distingue três camadas complementares no projeto:
 
 \begin{description}[style=nextline]
     \item[Frozen-spot] Código \textbf{invariante} do framework, que o desenvolvedor da aplicação \textbf{nunca sobrescreve}. Exemplos: \texttt{AbstractBackendTranslator.translate()}, \texttt{validate()}, \texttt{prepare()}, pipeline do gateway, lexer/parser default.
     \item[Método abstrato] \textbf{Contrato} imposto pela classe base: assinatura fixa, sem implementação. Exemplos: \texttt{emit()}, \texttt{finalize()}.
-    \item[Hotspot] \textbf{Corpo} que o desenvolvedor escreve \textbf{dentro} do método abstrato (ou hooks opcionais). Exemplo: \texttt{CBackend.emit()} escolhe TAC$\rightarrow$C$\rightarrow$\texttt{gcc -O2}; \texttt{Interpreter.emit()} executa a AST diretamente.
+    \item[Hotspot] \textbf{Corpo} que o desenvolvedor escreve \textbf{dentro} do método abstrato (ou \emph{hooks} opcionais). Exemplo: \texttt{CBackend.emit} produz representação intermediária, código C e invoca \texttt{gcc -O2}; \texttt{Interpreter.emit} executa a árvore sintática abstrata diretamente.
 \end{description}
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.95\textwidth]{template-method.png}
+\includefigure{template-method.png}
 \caption{Padrão Template Method: frozen-spots (\texttt{translate}, \texttt{validate}, \texttt{prepare}) e hotspots (\texttt{emit}, \texttt{finalize}).}
 \label{fig:template-method}
 \end{figure}
 
 \section{Princípio Hollywood e inversão de controle}
 
-O \emph{Hollywood Principle} (\emph{``don't call us, we'll call you''}) materializa-se no fluxo: o \texttt{api-gateway} orquestra o pipeline; o microsserviço invoca \texttt{Backend.translate()}; o esqueleto chama \texttt{emit()} no momento correto. O desenvolvedor do backend \textbf{não} invoca o gateway --- o framework invoca o código do dev.
+O princípio de Hollywood materializa-se no fluxo em que o \texttt{api-gateway} orquestra o pipeline, o microsserviço invoca \texttt{Backend.translate}, e o esqueleto chama \texttt{emit} no momento adequado. O desenvolvedor do back-end não invoca o gateway; o framework invoca o código da instância.
 
 \begin{lstlisting}[language=Java,caption={Roteamento OCP via \texttt{BACKEND\_REGISTRY} (pipeline.service.ts)}]
 const descriptor = BACKEND_REGISTRY.find(
@@ -190,8 +209,8 @@ const res = await firstValueFrom(
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.95\textwidth]{pipeline-sequence.png}
-\caption{Sequência \texttt{POST /api/v1/process}: gateway $\rightarrow$ MS análise $\rightarrow$ MS back-end $\rightarrow$ \texttt{translate()}.}
+\includefigure{pipeline-sequence.png}
+\caption{Sequência \texttt{POST /api/v1/process}: gateway, microsserviços de análise, back-end e método \texttt{translate}.}
 \label{fig:pipeline-sequence}
 \end{figure}
 
@@ -210,7 +229,7 @@ def translate(self, ast_dict: dict) -> TranslationResult:
     return self.finalize()
 \end{lstlisting}
 
-Hooks opcionais \texttt{hook\_validate()} e \texttt{hook\_prepare()} permitem validações e pré-processamento sem violar frozen-spots. O guia completo de extensão encontra-se em \texttt{packages/minipar-core/EXTENDING.md} e no Apêndice~B.
+Hooks opcionais \texttt{hook\_validate} e \texttt{hook\_prepare} permitem validações e pré-processamento sem violar trechos invariantes. O Apêndice~\ref{app:creating-app} descreve o processo completo de instanciação de novas variantes.
 
 \section{Framework \emph{versus} código de instância}
 
@@ -223,9 +242,9 @@ Hooks opcionais \texttt{hook\_validate()} e \texttt{hook\_prepare()} permitem va
 \textbf{Camada} & \textbf{Frozen-spot (framework)} & \textbf{Hotspot (dev da instância)} \\
 \hline
 \texttt{minipar-core} lexer/parser & \texttt{Lexer.tokenize()}, \texttt{Parser.parse()} & Futuro: lexer com autômatos \\
-Semântica & \texttt{semantic\_json.analyze\_ast\_dict} & --- \\
+Semântica & \texttt{semantic\_full.analyze\_ast\_full} & não aplicável \\
 Tradução & \texttt{translate()}, \texttt{validate()}, \texttt{prepare()} & \texttt{emit()}, \texttt{finalize()} \\
-Gateway & \texttt{PipelineService} pipeline fixo & --- \\
+Gateway & \texttt{PipelineService} pipeline fixo & não aplicável \\
 Registry & Estrutura \texttt{BACKEND\_REGISTRY} & Nova entrada por variante \\
 Microsserviço MS & Contrato REST \texttt{/generate} & Implementação thin wrapper \\
 Frontend Angular & Editor, painel, console & Entrada LPS no \texttt{feature-panel} \\
@@ -235,23 +254,14 @@ Frontend Angular & Editor, painel, console & Entrada LPS no \texttt{feature-pane
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.95\textwidth]{uml-classes-framework.png}
+\includefigure{uml-classes-framework.png}
 \caption{Diagrama de classes: \texttt{AbstractBackendTranslator} e back-ends concretos.}
 \label{fig:uml-classes}
 \end{figure}
 
-\section{Processo de criação de nova aplicação (6 passos)}
+\section{Processo de criação de nova aplicação}
 
-Para instanciar uma nova aplicação (ex.: compilador MiniPar $\rightarrow$ Go ou Python), o desenvolvedor segue seis passos documentados em \texttt{CREATING\_AN\_APPLICATION.md} (Apêndice~B):
-
-\begin{enumerate}
-    \item \textbf{Reusar o chassi:} \texttt{minipar-core}, \texttt{api-gateway}, \texttt{ms-front-end}, \texttt{ms-semantic}, Docker Compose base.
-    \item \textbf{Criar classe de backend:} \texttt{GoBackend(AbstractBackendTranslator)} (ou \texttt{PythonBackend}) em \texttt{minipar\_core/translation/}.
-    \item \textbf{Implementar hotspots:} \texttt{emit()} transforma AST/TAC em artefato; \texttt{finalize()} compila/executa e monta \texttt{TranslationResult}.
-    \item \textbf{Criar microsserviço:} FastAPI com \texttt{POST /generate} espelhando \texttt{ms-codegen-c} ($\sim$30 linhas).
-    \item \textbf{Registrar variante:} uma linha em \texttt{backend-registry.ts} + variável \texttt{MS\_CODEGEN\_*} no \texttt{.env} + serviço no Compose.
-    \item \textbf{Expor na UI:} enum \texttt{TargetVariability}, type TS e opção no \texttt{feature-panel} (configuração LPS, não algoritmo).
-\end{enumerate}
+A instanciação de uma nova configuração de produto, como um compilador MiniPar com saída em linguagem Go ou Python, exige a reutilização do núcleo compartilhado já descrito, seguida da implementação de uma classe derivada de \texttt{AbstractBackendTranslator} no pacote \texttt{minipar\_core/translation}. Nessa classe, o desenvolvedor materializa os pontos de adaptação \texttt{emit}, responsável por transformar a árvore sintática abstrata ou a representação intermediária de três endereços no artefato alvo, e \texttt{finalize}, encarregado de invocar o compilador ou interpretador externo e montar a estrutura \texttt{TranslationResult}. O encapsulamento em microsserviço autônomo com endpoint \texttt{POST /generate}, no mesmo padrão do serviço de geração de código C, permite o desacoplamento exigido pela arquitetura. O registro da variante no vetor central de back-ends, a definição da variável de ambiente com a URL do serviço e a inclusão do contêiner no arquivo de composição completam a configuração em tempo de implantação. Por fim, a interface de seleção de variabilidade deve expor o novo valor de \texttt{targetVariability}, permitindo ao usuário final escolher a variante em tempo de execução sem alteração do algoritmo de orquestração do gateway.
 
 \section{Instâncias de referência e extensão Python}
 
@@ -262,22 +272,22 @@ As cinco variantes existentes (\texttt{INTERPRETER}, \texttt{C}, \texttt{CPP}, \
 \small
 \caption{Três instâncias acadêmicas sobre o mesmo framework}
 \label{tab:reference-instances}
-\begin{tabularx}{\textwidth}{|Y|Y|Y|Y|}
+\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{2.8cm}|>{\raggedright\arraybackslash}p{2.6cm}|X|>{\raggedright\arraybackslash}p{3.2cm}|}
 \hline
-\textbf{Instância} & \textbf{Microsserviço} & \textbf{Hotspot} & \textbf{Produto} \\
+\textbf{Instância} & \textbf{Microsserviço} & \textbf{Ponto de adaptação} & \textbf{Produto} \\
 \hline
-App A --- Interpretador & \texttt{ms-interpreter} & \texttt{Interpreter.emit()} & Execução direta AST \\
-App B --- Compilador C & \texttt{ms-codegen-c} & \texttt{CBackend.emit()} & C + \texttt{gcc -O2} \\
-App C --- Python (extensão demo) & \texttt{ms-codegen-python} & \texttt{PythonBackend.emit()} & Python + \texttt{python3} \\
+Interpretador & \texttt{ms-interpreter} & \texttt{Interpreter.emit} & Execução direta da árvore sintática abstrata \\
+Compilador C & \texttt{ms-codegen-c} & \texttt{CBackend.emit} & Código C compilado com \texttt{gcc -O2} \\
+Extensão Python & \texttt{ms-codegen-python} & \texttt{PythonBackend.emit} & Código Python executado com \texttt{python3} \\
 \hline
 \end{tabularx}
 \end{table}
 
-\subsection{Extensão \texttt{PythonBackend} --- implementada}
+\subsection{Extensão \texttt{PythonBackend} implementada}
 
-A extensão \texttt{PythonBackend} demonstra que um desenvolvedor adiciona back-end \textbf{sem alterar frozen-spots}. Implementação em \texttt{python\_backend.py}; catálogo em \texttt{applications/extension-python/}:
+A extensão \texttt{PythonBackend} demonstra que um desenvolvedor adiciona variante de tradução sem alterar trechos invariantes do framework. A implementação reside em \texttt{python\_backend.py}, no pacote de tradução do núcleo compartilhado.
 
-\begin{lstlisting}[language=Python,caption={Hotspot emit() --- PythonBackend (python\_backend.py)}]
+\begin{lstlisting}[language=Python,caption={Ponto de adaptação \texttt{emit} no \texttt{PythonBackend} (\texttt{python\_backend.py})}]
 def emit(self, ast_dict: dict) -> None:
     tac = TACGenerator().lower(ast_dict)
     self._code = SimplePythonCodeGenerator().generate(tac)
@@ -287,11 +297,11 @@ def finalize(self) -> TranslationResult:
     return TranslationResult(output=result["output"], code=self._code, ...)
 \end{lstlisting}
 
-Registro: \texttt{\{ variability: 'PYTHON', envKey: 'MS\_CODEGEN\_PYTHON\_URL', endpoint: '/generate' \}}. Fixture: \texttt{16\_codegen\_python.minipar}. Evidência: \texttt{docs/evidence/16\_codegen\_python\_output.txt}.
+O registro da variante no vetor central associa o identificador \texttt{PYTHON} à variável de ambiente \texttt{MS\_CODEGEN\_PYTHON\_URL} e ao endpoint \texttt{/generate}. A validação utiliza o programa de exemplo \texttt{16\_codegen\_python.minipar}, cuja execução produz a saída textual \texttt{hello from Python backend}.
 
 \section{Frontend como cliente LPS}
 
-O frontend Angular (\texttt{frontend/}) é \textbf{casca LPS de produto} (frozen-spot de infraestrutura), não hotspot de compilação. Componentes \texttt{code-editor}, \texttt{feature-panel} e \texttt{output-panel} disparam \texttt{POST /api/v1/process} com \texttt{targetVariability} --- seleção de variante LPS em \emph{binding time} de execução, não implementação de \texttt{emit()}.
+O \emph{frontend} Angular constitui a camada de configuração da linha de produto de software, e não um ponto de adaptação de compilação. Os componentes \texttt{code-editor}, \texttt{feature-panel} e \texttt{output-panel} enviam requisições \texttt{POST /api/v1/process} com o parâmetro \texttt{targetVariability}, permitindo a seleção da variante em tempo de execução sem alteração do método \texttt{emit}.
 
 Qualquer cliente HTTP (CLI \texttt{curl}, extensão IDE, script Python) pode substituir o Angular respeitando o contrato:
 
@@ -317,7 +327,7 @@ export const BACKEND_REGISTRY: BackendDescriptor[] = [
 ];
 \end{lstlisting}
 
-Nenhum outro arquivo do gateway precisa ser alterado para rotear uma nova variante --- apenas registry, env e microsserviço correspondente. O endpoint \texttt{GET /api/v1/variants} expõe variantes dinamicamente para evolução OCP na UI.
+Nenhum outro módulo do gateway requer alteração para rotear uma nova variante; bastam o registro central, as variáveis de ambiente e o microsserviço correspondente. O endpoint \texttt{GET /api/v1/variants} expõe as variantes disponíveis de forma dinâmica, em conformidade com o princípio aberto-fechado na interface de seleção.
 
 \part{Modelagem e Compiladores}
 
@@ -330,7 +340,7 @@ Na modelagem por componentes, Léxico, Parser, Analisador Semântico e Geradores
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{uml-components.png}
+\includefigure{uml-components.png}
 \caption{Diagrama UML de componentes e contratos REST.}
 \label{fig:uml-components}
 \end{figure}
@@ -364,9 +374,9 @@ A Figura~\ref{fig:uml-classes} apresenta a hierarquia de tradução. A AST orien
 \end{tabular}
 \end{table}
 
-Exemplo JSON mínimo (contrato \texttt{\_AST\_CONTRACT.md}):
+Exemplo de documento JSON mínimo para uma classe com herança:
 
-\begin{lstlisting}[caption={AST JSON --- classe com herança}]
+\begin{lstlisting}[caption={Documento JSON de árvore sintática abstrata com herança}]
 {
   "type": "Program",
   "declarations": [{
@@ -378,13 +388,13 @@ Exemplo JSON mínimo (contrato \texttt{\_AST\_CONTRACT.md}):
 
 \section{Análise de Compiladores — Especificação da Linguagem MiniPar 2026.1}
 
-\subsection{Evolução 2025.1 $\rightarrow$ 2026.1}
-A MiniPar 2025.1 \cite{maciel2025} oferecia interpretador OO em Java (\texttt{cl-minipar}). A versão 2026.1 integra paralelismo \texttt{par}/\texttt{seq}, canais, funções procedurais e cinco back-ends de tradução, reutilizando algoritmos de Rego \cite{rego2025} via TAC e \texttt{gcc}. A Figura~\ref{fig:frontend-semantic} ilustra o fluxo de análise estática.
+\subsection{Evolução de 2025.1 para 2026.1}
+A MiniPar 2025.1 \cite{maciel2025} oferecia interpretador orientado a objetos em Java (\texttt{cl-minipar}). A versão 2026.1 integra paralelismo \texttt{par} e \texttt{seq}, canais de comunicação, funções procedimentais e cinco back-ends de tradução, reutilizando algoritmos de Rego \cite{rego2025} por meio da representação intermediária de três endereços e do compilador \texttt{gcc}. A Figura~\ref{fig:frontend-semantic} ilustra o fluxo de análise estática.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.95\textwidth]{frontend-semantic-flow.png}
-\caption{Pipeline léxico $\rightarrow$ sintático $\rightarrow$ semântico (Fase 1).}
+\includefigure{frontend-semantic-flow.png}
+\caption{Pipeline léxico, sintático e semântico (Fase 1).}
 \label{fig:frontend-semantic}
 \end{figure}
 
@@ -504,6 +514,7 @@ KEYWORDS = {
 
 \subsubsection{Exemplos de Código Válido}
 
+\Needspace{14\baselineskip}
 \paragraph{Exemplo 1: Classe com Herança}
 \begin{lstlisting}[language=Java, caption={Herança OO em MiniPar 2026.1}]
 class Animal {
@@ -568,14 +579,7 @@ if extends and extends not in known_classes:
     errors.append(f"Semantic error: Superclass '{extends}' not found for class '{name}'")
 \end{lstlisting}
 
-Regras adicionais documentadas:
-\begin{itemize}
-    \item Toda classe com \texttt{extends} deve referenciar superclasse existente (verificado após registro de todas as classes).
-    \item Membros (\texttt{VarDecl}, \texttt{MethodDecl}) não podem repetir nome na mesma classe.
-    \item Blocos \texttt{par} executam statements concorrentemente (processos + broker TCP no interpretador; \texttt{c\_channel} em modo distribuído).
-    \item Canais \texttt{s\_channel}/\texttt{c\_channel} com \texttt{send}/\texttt{receive} via broker TCP (\texttt{socket\_channel.py}); fixture \texttt{15\_channels.minipar} $\rightarrow$ saída \texttt{42}.
-    \item Tipagem: verificação básica; herança permite upcast implícito (MVP).
-\end{itemize}
+Regras adicionais implementadas no analisador semântico incluem a obrigatoriedade de que toda classe com cláusula \texttt{extends} referencie superclasse previamente declarada, verificada após o registro de todas as classes; a proibição de membros duplicados (\texttt{VarDecl} ou \texttt{MethodDecl}) no mesmo escopo de classe; a execução concorrente dos comandos em blocos \texttt{par} mediante processos e \emph{broker} TCP no interpretador, com uso de \texttt{c\_channel} no modo distribuído; e a comunicação por canais \texttt{s\_channel} e \texttt{c\_channel} com operações \texttt{send} e \texttt{receive} via \texttt{socket\_channel.py}, validada pelo programa \texttt{15\_channels.minipar}, cuja saída esperada é o valor \texttt{42}. A verificação de tipos permanece em nível mínimo viável, admitindo \emph{upcast} implícito em herança.
 
 \section{Fases do Compilador MiniPar 2026.1}
 \subsection{Pseudocódigos e Implementação dos Analisadores}
@@ -629,7 +633,7 @@ def par_block(self) -> ParBlock:
     return ParBlock(statements=statements)
 \end{lstlisting}
 
-Serialização inter-serviços: \texttt{ast\_json.to\_dict(program)} conforme \texttt{\_AST\_CONTRACT.md}.
+Serialização inter-serviços: \texttt{ast\_json.to\_dict(program)}, conforme o contrato do Apêndice~\ref{app:ast-contract}.
 
 \subsubsection{Coordenador de Paralelismo Distribuído}
 \begin{lstlisting}[caption={Pseudocodigo ms-parallel-coord /coordinate (modo legado)}]
@@ -657,7 +661,7 @@ O microsserviço \texttt{ms-semantic} invoca \texttt{semantic\_full.analyze\_ast
 
 \subsection{Representação Intermediária TAC}
 
-O \texttt{TACGenerator} (\texttt{tac\_codegen.py}) realiza \emph{lowering} AST $\rightarrow$ lista de instruções de três endereços (\texttt{TAC}). Operadores suportados incluem:
+O \texttt{TACGenerator} (\texttt{tac\_codegen.py}) realiza o \emph{lowering} da árvore sintática abstrata para uma lista de instruções de três endereços (\texttt{TAC}). Operadores suportados incluem:
 
 \begin{table}[htbp]
 \centering
@@ -695,15 +699,15 @@ Cada back-end implementa hotspots \texttt{emit}/\texttt{finalize} sem alterar \t
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{codegen-c-flow.png}
-\caption{Fluxo AST $\rightarrow$ TAC $\rightarrow$ C $\rightarrow$ \texttt{gcc -O2}.}
+\includefigure{codegen-c-flow.png}
+\caption{Fluxo da árvore sintática abstrata à representação intermediária, geração de código C e compilação com \texttt{gcc -O2}.}
 \label{fig:codegen-c-flow}
 \end{figure}
 
 \subsubsection{Interpretador (\texttt{Interpreter})}
-Executa AST diretamente via \texttt{from\_dict()} --- \textbf{sem} TAC. Suporta OO (\texttt{new}, herança, \texttt{this}), \texttt{par}/\texttt{seq} com \textbf{processos} + broker TCP, \texttt{send}/\texttt{receive} e E/S via \texttt{StringIO}.
+O interpretador executa a árvore sintática abstrata diretamente por meio de \texttt{from\_dict}, sem passagem pela representação intermediária. Suporta orientação a objetos (\texttt{new}, herança, \texttt{this}), blocos \texttt{par} e \texttt{seq} com processos e \emph{broker} TCP, operações \texttt{send} e \texttt{receive}, e entrada e saída via \texttt{StringIO}.
 
-\begin{lstlisting}[language=Python,caption={Hotspot emit() --- interpretador (interpreter.py)}]
+\begin{lstlisting}[language=Python,caption={Ponto de adaptação \texttt{emit} no interpretador (\texttt{interpreter.py})}]
 def emit(self, ast_dict: dict) -> None:
     program = from_dict(ast_dict)
     try:
@@ -713,7 +717,7 @@ def emit(self, ast_dict: dict) -> None:
 \end{lstlisting}
 
 \subsubsection{Back-end C (\texttt{CBackend})}
-Pipeline TAC $\rightarrow$ \texttt{SimpleCCodeGenerator} $\rightarrow$ arquivo temporário $\rightarrow$ \texttt{gcc -O2 -lm}.
+O back-end em linguagem C percorre a representação intermediária, invoca o \texttt{SimpleCCodeGenerator}, grava o artefato em arquivo temporário e compila com \texttt{gcc -O2 -lm}.
 
 \begin{lstlisting}[language=Python,caption={Hotspot emit() e compilação (c\_backend.py)}]
 def emit(self, ast_dict: dict) -> None:
@@ -727,41 +731,53 @@ def _compile_and_run(self, c_code: str) -> dict:
 \end{lstlisting}
 
 \subsubsection{Back-end C++ (\texttt{CppBackend})}
-Herda \texttt{CBackend}; altera apenas \texttt{compiler = "g++"} e \texttt{std\_flag = "-std=c++17"} --- reuso por herança (Gamma).
+A classe \texttt{CppBackend} herda de \texttt{CBackend}, alterando apenas o compilador para \texttt{g++} e o sinalizador de padrão para \texttt{-std=c++17}, exemplificando reuso por herança \cite{gamma1995}.
 
 \subsubsection{Back-end Rust (\texttt{RustBackend})}
-Emissão direta AST $\rightarrow$ Rust via \texttt{RustASTEmitter} (sem TAC no MVP). Invoca \texttt{rustc} quando disponível no contêiner.
+O back-end Rust emite código diretamente a partir da árvore sintática abstrata por meio do \texttt{RustASTEmitter}, sem representação intermediária no protótipo mínimo viável, e invoca \texttt{rustc} quando disponível no contêiner.
 
 \subsubsection{Back-end ARM (\texttt{ARMBackend})}
-TAC $\rightarrow$ \texttt{SimpleARMGenerator} (ARMv7). Retorna assembly em \texttt{TranslationResult.code}; mensagem explícita se toolchain \texttt{arm-linux-gnueabihf-gcc} ausente.
+O back-end ARM converte a representação intermediária em código assembly ARMv7 por meio do \texttt{SimpleARMGenerator}, retornando o texto em \texttt{TranslationResult.code} e emitindo mensagem explícita na ausência da \emph{toolchain} \texttt{arm-linux-gnueabihf-gcc}.
 
-\subsection{Paralelismo \texttt{par}/\texttt{seq}}
+\subsection{Paralelismo \texttt{par}/\texttt{seq} e comunicação por soquetes}
 
-Blocos \texttt{seq} executam statements em ordem; \texttt{par} dispara processos filhos com IPC via \texttt{ChannelBroker} (sockets locais). Modo \texttt{DISTRIBUTED\_SOCKETS}: programas com \texttt{c\_channel} (ex.\ \texttt{14\_distributed\_menu.minipar}) conectam workers que executam MiniPar; fontes sem \texttt{c\_channel} usam \texttt{ms-parallel-coord} legado. Codegen C liga \texttt{minipar\_rt.c} para \texttt{PAR\_*} e canais.
+Blocos \texttt{seq} executam comandos em ordem sequencial; blocos \texttt{par} disparam processos filhos com comunicação interprocessos mediada por soquetes TCP locais, sem memória compartilhada. O módulo \texttt{socket\_channel.py} implementa um \emph{broker} para canais \texttt{s\_channel} e \texttt{c\_channel}: em um bloco \texttt{par}, um processo executa \texttt{send} e outro \texttt{receive}, trocando valores por meio desse \emph{broker}. O programa \texttt{15\_channels.minipar} valida esse mecanismo com a passagem do inteiro 42 e impressão do mesmo valor na saída padrão, conforme a Listagem~\ref{lst:evidence-channels}.
+
+No modo de execução distribuída, a coordenação entre processos independentes ocorre em outro nível. Quando \texttt{DISTRIBUTED\_SOCKETS} é selecionado, o serviço \texttt{ms-parallel-coord} estabelece conexões TCP paralelas aos três \emph{workers} nas portas 9001 a 9003; cada \emph{worker} recebe o comando \texttt{RUN}, executa um programa MiniPar fixo e devolve documento JSON com endereço IP, porta e resultado computado. O programa \texttt{14\_distributed\_menu.minipar} aciona esse menu central; a Listagem~\ref{lst:evidence-distributed} reproduz a saída obtida na validação de quinze de junho de 2026. Programas que declaram \texttt{c\_channel} podem estabelecer comunicação direta entre processos distribuídos; demais fontes utilizam o coordenador legado. No gerador de código C, o arquivo \texttt{runtime/minipar\_rt.c} materializa primitivas de paralelismo e canais no artefato compilado.
+
+\begin{lstlisting}[caption={Saída do teste distribuído (\texttt{14\_distributed\_menu.minipar}, 15/jun/2026)},label={lst:evidence-distributed}]
+=== Menu Coordenador - Paralelismo Real (3 Maquinas) ===
+[PC1 c41305948de1:9001 quicksort] QuickSort PC1
+[64,34,25,12,22,11,90] para [11,12,22,25,34,64,90]
+[PC2 f7bc0d4810b7:9002 matrix] Matriz 2x2 PC2
+A=[[1,2],[3,4]] x B=[[5,6],[7,8]] = [[19,22],[43,50]]
+[PC3 167c730aac65:9003 factorial] Fatorial PC3
+3628800
+\end{lstlisting}
+
+\begin{lstlisting}[caption={Saída do teste de canais (\texttt{15\_channels.minipar}, 15/jun/2026)},label={lst:evidence-channels}]
+42
+\end{lstlisting}
 
 \part{Reuso de Software}
 
 \section{Técnicas de Reuso}
 \subsection{Engenharia de domínio aplicada a compiladores}
-O domínio ``pipeline MiniPar'' foi decomposto em subsistemas com contratos REST estáveis. Artefatos reutilizáveis incluem lexer, parser, semântica, TAC e esqueleto de tradução; variabilidade concentra-se nos hotspots de \texttt{emit}/\texttt{finalize} e na configuração LPS.
+O domínio do pipeline MiniPar foi decomposto em subsistemas com contratos REST estáveis. Artefatos reutilizáveis incluem analisador léxico, analisador sintático, análise semântica, representação intermediária de três endereços e esqueleto de tradução; a variabilidade concentra-se nos pontos de adaptação \texttt{emit} e \texttt{finalize} e na configuração da linha de produto de software.
+
+O reuso manifesta-se em três dimensões. Na engenharia de domínio, o pacote \texttt{minipar-core} integra componentes das implementações de 2025.1, conforme a Tabela~\ref{tab:reuse-map}. Na engenharia de aplicação, cada variante de tradução reutiliza integralmente esse núcleo e implementa apenas os pontos de adaptação, registrando-se no vetor \texttt{BACKEND\_REGISTRY} e no arquivo de composição de contêineres. No nível de padrões de projeto, o \emph{Template Method} fixa o esqueleto algorítmico; o \emph{Registry} e a \emph{Strategy} selecionam o back-end; a \emph{Facade} em \texttt{PipelineService} oculta os microsserviços; o \emph{Adapter} \texttt{ast\_from\_json.from\_dict} converte a árvore serializada em objetos tipados.
 
 \subsection{Padrão Template Method --- análise profunda}
 A variabilidade entre back-ends não usa ramificações dispersas no gateway, e sim o padrão \emph{Template Method} \cite{gamma1995}. Frozen-spots (\texttt{translate}, \texttt{validate}, \texttt{prepare}) garantem ordem e tratamento uniforme de erros; hotspots (\texttt{emit}, \texttt{finalize}, hooks) encapsulam algoritmos específicos.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{reuse-map.png}
-\caption{Mapa de reuso: repositórios 2025.1 $\rightarrow$ \texttt{minipar-core}.}
+\includefigure{reuse-map.png}
+\caption{Mapa de reuso: repositórios de 2025.1 integrados ao pacote \texttt{minipar-core}.}
 \label{fig:reuse-map}
 \end{figure}
 
-Variantes concretas:
-\begin{itemize}
-    \item \texttt{Interpreter} --- semântica dinâmica de \texttt{cl-minipar} \cite{maciel2025};
-    \item \texttt{CBackend} / \texttt{CppBackend} --- TAC + \texttt{gcc}/\texttt{g++} \cite{rego2025};
-    \item \texttt{RustBackend} --- emissão AST $\rightarrow$ Rust;
-    \item \texttt{ARMBackend} --- lowering TAC $\rightarrow$ ARMv7.
-\end{itemize}
+As variantes concretas compreendem o interpretador com semântica dinâmica derivada de \texttt{cl-minipar} \cite{maciel2025}; os back-ends \texttt{CBackend} e \texttt{CppBackend}, baseados na representação intermediária e nos compiladores \texttt{gcc} e \texttt{g++} \cite{rego2025}; o \texttt{RustBackend}, com emissão direta para linguagem Rust; e o \texttt{ARMBackend}, com \emph{lowering} da representação intermediária para ARMv7.
 
 A Figura~\ref{fig:template-method} e a listagem abaixo consolidam o contrato:
 
@@ -775,41 +791,37 @@ def translate(self, ast_dict):
     return self.finalize()
 \end{lstlisting}
 
-\subsection{Mapa de reuso 2025.1 $\rightarrow$ 2026.1}
+\subsection{Mapa de reuso de 2025.1 para 2026.1}
 
 \begin{table}[htbp]
 \centering
+\small
 \caption{Componentes reutilizados e destino no framework}
 \label{tab:reuse-map}
-\begin{tabular}{|l|l|l|}
+\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{2.4cm}|X|>{\raggedright\arraybackslash}p{4.2cm}|}
 \hline
-\textbf{Origem (2025.1)} & \textbf{Artefato} & \textbf{Destino 2026.1} \\
+\textbf{Origem (2025.1)} & \textbf{Artefato reutilizado} & \textbf{Destino no framework 2026.1} \\
 \hline
-Maciel \cite{maciel2025} & Lexer, Parser, AST OO, Interpreter & \texttt{lexer.py}, \texttt{parser.py}, \texttt{interpreter.py} \\
-Rego \cite{rego2025} & TAC, gerador C, ARM, integração gcc & \texttt{tac\_codegen.py}, \texttt{c\_backend.py}, \texttt{arm\_backend.py} \\
-Rego / procedural & Análise semântica base & \texttt{semantic.py}, \texttt{semantic\_json.py} \\
-Equipe 2026.1 & Gateway, Docker, MS REST & \texttt{api-gateway/}, \texttt{microservices/} \\
+Maciel \cite{maciel2025} & Analisador léxico, analisador sintático, árvore sintática abstrata orientada a objetos, interpretador & \texttt{lexer.py}, \texttt{parser.py}, \texttt{interpreter.py} \\
+Rego \cite{rego2025} & Representação intermediária de três endereços, gerador C, gerador ARM, integração com \texttt{gcc} & \texttt{tac\_codegen.py}, \texttt{c\_backend.py}, \texttt{arm\_backend.py} \\
+Rego e base procedural & Análise semântica & \texttt{semantic.py}, \texttt{semantic\_full.py} \\
+Equipe 2026.1 & Gateway, orquestração por contêineres, microsserviços REST & \texttt{api-gateway}, diretório \texttt{microservices} \\
 \hline
-\end{tabular}
+\end{tabularx}
 \end{table}
 
 \subsection{Componentes, acoplamento e contratos}
-Microsserviços comunicam-se exclusivamente via JSON (\texttt{\_AST\_CONTRACT.md}). Acoplamento reduzido: \texttt{ms-semantic} não conhece back-end alvo; \texttt{ms-codegen-c} não reimplementa parser. Contrato \texttt{TranslationResult} unifica saída (\texttt{output}, \texttt{code}, \texttt{exit\_code}).
+
+Os microsserviços limitam-se a mensagens JSON cuja estrutura para a árvore sintática abstrata e para o resultado de tradução encontra-se especificada no Apêndice~\ref{app:ast-contract}. O analisador semântico permanece independente do back-end de destino, e os geradores de código não reimplementam a análise léxica ou sintática.
 
 \subsection{Registry (OCP) e Strategy implícita}
-\texttt{BACKEND\_REGISTRY} implementa Registry + Strategy: o pipeline seleciona implementação por \texttt{targetVariability} sem modificar código de orquestração. Adicionar variante = nova entrada + MS --- alinhado ao Open-Closed Principle.
+O vetor \texttt{BACKEND\_REGISTRY} materializa os padrões \emph{Registry} e \emph{Strategy}: o pipeline seleciona a implementação conforme \texttt{targetVariability} sem modificar o código de orquestração. A inclusão de nova variante restringe-se a uma entrada adicional no registro e ao microsserviço correspondente, em conformidade com o princípio aberto-fechado.
 
-\subsection{Padrões adicionais identificados}
-\begin{itemize}
-    \item \textbf{Template Method} --- tradução (\texttt{AbstractBackendTranslator});
-    \item \textbf{Registry} --- \texttt{backend-registry.ts};
-    \item \textbf{Strategy} --- back-ends intercambiáveis via mesma interface;
-    \item \textbf{Facade} --- \texttt{PipelineService} oculta detalhes dos MS;
-    \item \textbf{Adapter} --- \texttt{ast\_from\_json.from\_dict} para AST dict $\rightarrow$ objetos.
-\end{itemize}
+Além do \emph{Template Method} na tradução (\texttt{AbstractBackendTranslator}), identificam-se o \emph{Registry} em \texttt{backend-registry.ts}, a \emph{Strategy} nos back-ends intercambiáveis sob a mesma interface, a \emph{Facade} em \texttt{PipelineService}, que oculta os detalhes dos microsserviços, e o \emph{Adapter} \texttt{ast\_from\_json.from\_dict}, que converte o dicionário serializado da árvore sintática abstrata em objetos tipados.
 
-\subsection{Métricas narrativas de reuso}
-Estimativa qualitativa do monorepo: $\sim$70\% do código de análise (lexer, parser, semântica, AST, TAC) é compartilhado entre todas as instâncias; $\sim$15\% corresponde a hotspots por back-end (\texttt{emit}/\texttt{finalize}); $\sim$15\% a infraestrutura MS/gateway/frontend. Seis variantes (cinco de referência + extensão Python) reutilizam o mesmo núcleo sem duplicação de parser.
+\subsection{Distribuição qualitativa do reúso no monorepo}
+
+A análise qualitativa do repositório indica que a maior parte do código de análise, compreendendo analisador léxico, analisador sintático, análise semântica, definição da árvore sintática abstrata e representação intermediária de três endereços, permanece compartilhada entre todas as configurações de produto. Os pontos de adaptação específicos de cada back-end de tradução concentram parcela menor do código, assim como a infraestrutura de microsserviços, gateway e interface de seleção de variabilidade. As seis variantes implementadas, cinco de referência e uma extensão em linguagem Python, reutilizam o mesmo núcleo analítico sem duplicação do analisador sintático.
 
 \subsection{Hooks opcionais (\texttt{hook\_validate}, \texttt{hook\_prepare})}
 Além dos métodos abstratos \texttt{emit()}/\texttt{finalize()}, a classe base expõe \textbf{hooks opcionais} invocados dentro dos frozen-spots \texttt{validate()} e \texttt{prepare()}. O desenvolvedor pode sobrescrevê-los para validações ou pré-processamento específicos \textbf{sem} alterar a ordem de \texttt{translate()}. Se não sobrescritos, comportam-se como no-op.
@@ -885,16 +897,16 @@ Python (extensão demo) & PYTHON & LOCAL & + codegen-python \\
 \end{table}
 
 \section{Microsserviços como assets reutilizáveis}
-Cada MS é um asset LPS: \texttt{ms-front-end} e \texttt{ms-semantic} compõem \emph{todos} os produtos; back-ends são plugáveis. Novo produto = subset do Compose + registry --- não fork do repositório.
+Cada microsserviço constitui um ativo reutilizável da linha de produto: \texttt{ms-front-end} e \texttt{ms-semantic} compõem todas as configurações de produto, enquanto os back-ends permanecem acopláveis. Uma nova configuração corresponde a um subconjunto do arquivo de composição de contêineres e do registro central, sem bifurcação do repositório.
 
 \section{Docker Compose como configuração de produto}
-O arquivo \texttt{docker-compose.yml} materializa variabilidade em deploy time: serviços, portas 3000--3008 e 9001--9003, \texttt{PIPELINE\_MODE=http}, \texttt{PIPELINE\_BACKEND\_MODE=http}. Alterar produto ativo equivale a habilitar/desabilitar serviços e env vars --- padrão FeatureIDE em infraestrutura.
+O arquivo \texttt{docker-compose.yml} materializa a variabilidade em tempo de implantação, definindo serviços, portas de 3000 a 3008 e de 9001 a 9003, além das variáveis \texttt{PIPELINE\_MODE=http} e \texttt{PIPELINE\_BACKEND\_MODE=http}. Alterar a configuração de produto ativa equivale a habilitar ou desabilitar serviços e variáveis de ambiente, reproduzindo em infraestrutura o modelo conceitual de seleção de \emph{features}.
 
-\section{Decisão LPS: microsserviços \emph{versus} FeatureIDE}
-Optou-se por LPS \textbf{implementada em código + infraestrutura} em vez de FeatureIDE puro porque: (i)~demonstração E2E real com Docker; (ii)~contratos REST alinhados à disciplina de microsserviços; (iii)~binding runtime via API; (iv)~FeatureIDE permanece documentado na árvore de features (Figura~\ref{fig:feature-tree}) como modelo conceitual.
+\section{Decisão LPS: microsserviços em lugar de FeatureIDE}
+Optou-se por uma linha de produto de software materializada em código e infraestrutura, em detrimento de ferramentas puramente generativas como o FeatureIDE, porque a demonstração de ponta a ponta com contêineres Docker exige contratos executáveis, os serviços REST atendem ao requisito de arquitetura distribuída da disciplina, e a vinculação de variantes em tempo de execução via API preserva flexibilidade acadêmica. A árvore de \emph{features} da Figura~\ref{fig:feature-tree} permanece como modelo conceitual de referência.
 
 \section{Decisão arquitetural: NestJS \emph{versus} Spring Boot}
-O gateway usa \textbf{NestJS} (TypeScript) por alinhamento com frontend Angular, tipagem compartilhada de enums (\texttt{TargetVariability}), ecossistema leve para MVP acadêmico e hot-reload em desenvolvimento. Spring Boot permaneceria válido para LPS enterprise, porém adicionaria camada JVM separada do núcleo Python --- decisão registrada em \texttt{ROADMAP.md}.
+O gateway utiliza \textbf{NestJS} (TypeScript) por alinhamento com o \emph{frontend} Angular, tipagem compartilhada de enumerações (\texttt{TargetVariability}), ecossistema adequado ao protótipo acadêmico e recarga automática em desenvolvimento. A opção Spring Boot permaneceria válida para linhas de produto de maior escala, porém introduziria camada adicional na máquina virtual Java, separada do núcleo em Python.
 
 \part{Implementação e Infraestrutura}
 
@@ -933,6 +945,13 @@ api-gateway & POST /api/v1/process & 3000 & 1--3 \\
 
 As variáveis de ambiente \texttt{PIPELINE\_MODE=http} e \texttt{PIPELINE\_BACKEND\_MODE=http}, definidas no Docker Compose da Fase~2, alternam o encaminhamento entre implementações embutidas e chamadas HTTP aos microsserviços.
 
+\subsection{Especificação detalhada das interfaces REST}
+\label{sec:rest-api}
+
+A especificação completa dos contratos de entrada e saída de cada microsserviço, incluindo exemplos de documentos JSON, encontra-se a seguir de forma autossuficiente, dispensando consulta a documentação externa ao relatório.
+
+\input{docs/report-embedded-api.tex}
+
 \part{Testes e Resultados}
 
 \section{Testes e Resultados}
@@ -953,7 +972,7 @@ Os \emph{fixtures} em \texttt{sources/examples/} cobrem erros sintáticos, semâ
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.85\textwidth]{validation-cases.png}
+\includefigure{validation-cases.png}
 \caption{Casos de validação manual --- Fases 1--3.}
 \label{fig:validation-cases}
 \end{figure}
@@ -989,19 +1008,14 @@ Expressão solta \texttt{a} & \texttt{07\_expr\_only} & \texttt{ExprStmt} (anál
 \texttt{08\_interpreter\_ok} & INTERPRETER & Saída \texttt{ok} & \texttt{ms-interpreter: execute} \\
 \texttt{09\_oo\_new} & INTERPRETER & Saída \texttt{woof} & idem \\
 \texttt{10\_par\_seq} & INTERPRETER & Saída \texttt{a b c} & idem \\
-\texttt{11\_codegen\_c} & C & C + \texttt{gcc -O2} + stdout & \texttt{ms-codegen-c: generate} \\
+\texttt{11\_codegen\_c} & C & Código C compilado com \texttt{gcc -O2} e saída padrão & \texttt{ms-codegen-c: generate} \\
 \texttt{12\_codegen\_rust\_stub} & RUST & \texttt{rustc -O} + stdout (E6) & \texttt{ms-codegen-rust: generate} \\
 \texttt{16\_codegen\_python} & PYTHON & Saída \texttt{hello from Python backend} & \texttt{ms-codegen-python: generate} \\
 \hline
 \end{tabularx}
 \end{table}
 
-Mensagens representativas registradas na Fase~1:
-\begin{itemize}
-    \item \texttt{Semantic error: Superclass 'Arvore' not found for class 'Dog'}
-    \item \texttt{Parser error at 5:20: Expected superclass name}
-    \item \texttt{Parser error at 5:11: Expected LBRACE}
-\end{itemize}
+Mensagens representativas registradas na Fase~1 incluem \texttt{Semantic error: Superclass 'Arvore' not found for class 'Dog'}, \texttt{Parser error at 5:20: Expected superclass name} e \texttt{Parser error at 5:11: Expected LBRACE}.
 
 Erros de análise aparecem no painel \textbf{Console} da UI (chip de status e mensagem destacada); execuções bem-sucedidas habilitam as abas Saída, Símbolos e AST.
 
@@ -1032,21 +1046,21 @@ Capturas de tela da UI Angular (\texttt{frontend/}), obtidas com \texttt{scripts
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.95\textwidth]{01-pipeline-codegen-c.png}
+\includefigure{01-pipeline-codegen-c.png}
 \caption{Pipeline E2E --- variante C: passos \texttt{parse}, \texttt{analyze}, \texttt{generate} e saída \texttt{gcc -O2}.}
 \label{fig:ui-pipeline-c}
 \end{figure}
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.95\textwidth]{03-python-extension.png}
+\includefigure{03-python-extension.png}
 \caption{Extensão \texttt{PythonBackend} --- fixture \texttt{16\_codegen\_python.minipar}, código Python gerado e execução com \texttt{python3}.}
 \label{fig:ui-python}
 \end{figure}
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.85\textwidth]{04-lps-feature-panel.png}
+\includefigure{04-lps-feature-panel.png}
 \caption{Painel de variabilidade LPS --- seleção de back-end (incluindo Python) e modo de execução.}
 \label{fig:ui-lps-panel}
 \end{figure}
@@ -1066,7 +1080,7 @@ curl -X POST http://localhost:3000/api/v1/process \
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{sequence-3-machines.png}
+\includefigure{sequence-3-machines.png}
 \caption{Sequência do teste de 3 máquinas (coordenador + workers socket).}
 \label{fig:sequence-3-machines}
 \end{figure}
@@ -1090,7 +1104,7 @@ class Sierpinski {
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.95\textwidth]{02-fractal-sierpinski.png}
+\includefigure{02-fractal-sierpinski.png}
 \caption{Tapete de Sierpinski (ordem~3) --- matriz $27 \times 27$ de \texttt{*} e \texttt{.} no Console da UI via interpretador.}
 \label{fig:ui-fractal}
 \end{figure}
@@ -1098,18 +1112,18 @@ class Sierpinski {
 \subsection{Validação automatizada}
 \label{sec:validation-auto}
 
-\begin{lstlisting}[caption={Script validate-all.sh (8/jun/2026)}]
+\begin{lstlisting}[caption={Execução do protocolo automatizado de validação (15 de junho de 2026)}]
 docker compose up --build -d
 ./scripts/validate-all.sh
-# -> docs/evidence/validation-results.json (15/15 PASS)
+# Resultado: dezesseis verificações aprovadas (validation-results.json)
 \end{lstlisting}
 
-Guia completo: \texttt{docs/VALIDATION.md}. Casos: E1--E12, gateway health, \texttt{GET /variants}, \texttt{GET /recommendations}. Conformidade: \texttt{COMPLIANCE\_AUDIT.md}.
+A validação automatizada contemplou dezesseis verificações, incluindo os casos E1 a E12, a saúde do gateway, os endpoints de variantes e de saúde agregada dos microsserviços. O protocolo completo encontra-se no Apêndice~\ref{app:e2e}.
 
 \begin{table}[htbp]
 \centering
 \small
-\caption{Checklist automatizado \texttt{validate-all.sh} (15/15 PASS, 8/jun/2026)}
+\caption{Protocolo automatizado \texttt{validate-all.sh} (dezesseis verificações aprovadas, 15 de junho de 2026)}
 \label{tab:validation-e2e}
 \begin{tabularx}{\textwidth}{|l|Y|c|}
 \hline
@@ -1126,18 +1140,13 @@ E8 & \texttt{04\_semantic\_extends\_unknown} & PASS \\
 E5/E12 & Codegen C (\texttt{11}, \texttt{09} OO) & PASS \\
 E9 & \texttt{16\_codegen\_python} & PASS \\
 E11 & \texttt{15\_channels} (broker socket) & PASS \\
---- & \texttt{GET /variants}, \texttt{/recommendations} & PASS \\
+API & \texttt{GET /variants}, \texttt{/recommendations} & PASS \\
 \hline
 \end{tabularx}
 \end{table}
 
 \subsection{Auditoria de conformidade}
-A matriz completa (\checkmark{} conforme, $\sim$ parcial, $\times$ não conforme) está em \texttt{COMPLIANCE\_AUDIT.md}. Resumo executivo:
-\begin{itemize}
-    \item[\checkmark] Pipeline OO, erros sintático/semântico, \texttt{gcc -O2}, \texttt{rustc}, fractal, paralelismo socket, workers MiniPar.
-    \item[$\sim$] Tipagem semântica MVP; ARM sem E2E no script; 3 containers Docker (não PCs físicos).
-    \item[$\times$] FeatureIDE (substituído por microsserviços); CI \texttt{pytest} automatizado.
-\end{itemize}
+A conformidade com os requisitos das três disciplinas foi verificada por meio do protocolo descrito no Apêndice~\ref{app:e2e}. Em termos gerais, o pipeline orientado a objetos, o paralelismo por soquetes TCP, o fractal de Sierpinski, os geradores com \texttt{gcc} e \texttt{rustc}, e a extensão em linguagem Python encontram-se implementados e validados.
 
 \subsection{Casos de validacao --- Fase 3}
 \begin{table}[htbp]
@@ -1152,7 +1161,7 @@ A matriz completa (\checkmark{} conforme, $\sim$ parcial, $\times$ não conforme
 \texttt{13\_sierpinski} & INTERPRETER + LOCAL & Matriz fractal no Console \\
 \texttt{14\_distributed\_menu} & INTERPRETER + DISTRIBUTED\_SOCKETS & 3 linhas JSON (IP:porta dos workers) \\
 \texttt{15\_channels} & INTERPRETER + LOCAL & Saída \texttt{42} (broker socket) \\
-\texttt{09\_oo\_new} & C + LOCAL & \texttt{gcc -O2} + saída \texttt{woof} (OO codegen) \\
+\texttt{09\_oo\_new} & C + LOCAL & Compilação com \texttt{gcc -O2} e saída \texttt{woof} (geração orientada a objetos) \\
 \hline
 \end{tabularx}
 \end{table}
@@ -1162,15 +1171,11 @@ A matriz completa (\checkmark{} conforme, $\sim$ parcial, $\times$ não conforme
 \section{Conclusão integrada}
 O \emph{MiniPar Framework 2026.1} integra as tres vertentes do projeto: pipeline de compilador MiniPar OO (lexer, parser, semantica, geradores), reuso sistematico via \emph{Template Method} e componentes reutilizados de 2025.1, e gestao de variabilidade LPS materializada em microsserviços REST orquestrados pelo \texttt{api-gateway}. As Fases~1--3 entregam pipeline E2E real, seis back-ends (interpretador, C/C++ com \texttt{gcc -O2}, Rust/ARM MVP, extensão Python com \texttt{python3}), teste de paralelismo distribuido em tres workers socket e simulacao do tapete de Sierpinski na interface web.
 
-\subsection{Resposta à crítica ``gerador \emph{versus} framework''}
-Arquiteturalmente, o projeto \textbf{é um framework}: frozen-spots em \texttt{translate()} e pipeline; hotspots preenchidos nas instâncias de referência (\texttt{c\_backend.py}, \texttt{interpreter.py}, \texttt{python\_backend.py}, etc.). A extensão \texttt{PythonBackend} --- implementada com fixture \texttt{16\_codegen\_python.minipar} e evidência em \texttt{docs/evidence/16\_python\_backend.md} --- demonstra instanciação sem alterar frozen-spots. O processo de instanciação está documentado na Parte~II, em \texttt{CREATING\_AN\_APPLICATION.md} (Apêndice~B) e no roteiro de banca (Apêndice~D).
+\subsection{Resposta à distinção entre gerador e framework}
+O artefato entregue constitui um framework de linha de produto de software, e não um gerador que emite repositórios independentes descartando o núcleo em tempo de execução. Os trechos invariantes compreendem a orquestração do gateway, a sequência fixa de \texttt{translate}, os microsserviços de análise compartilhados e o contrato JSON da árvore sintática abstrata. As seis variantes de tradução implementadas funcionam como instâncias de referência cujos pontos de adaptação já estão preenchidos para demonstrar o contrato; a extensão \texttt{PythonBackend}, validada com \texttt{16\_codegen\_python.minipar}, confirma que novas variantes podem ser acopladas sem alteração dos trechos invariantes. O processo de instanciação encontra-se no Apêndice~\ref{app:creating-app}; o protocolo de validação, no Apêndice~\ref{app:e2e}.
 
 \subsection{Limitações e trabalhos futuros}
-\begin{itemize}
-    \item Topologia Docker (3 contêineres) em vez de 3 PCs físicos --- equivalente lógico para demonstração.
-    \item Codegen Rust/ARM sem runtime \texttt{minipar\_rt} completo.
-    \item Formalizar hotspots de lexer/parser alternativos (autômatos, bottom-up).
-\end{itemize}
+A demonstração de paralelismo distribuído utiliza três contêineres Docker em lugar de três estações físicas, o que preserva a equivalência lógica exigida para fins acadêmicos. Os geradores para Rust e ARM ainda não incorporam \emph{runtime} completo em \texttt{minipar\_rt}. Por fim, permanece como evolução a formalização de pontos de adaptação alternativos para analisador léxico baseado em autômatos e analisador sintático ascendente.
 
 \subsection{Link para o Repositorio (GitHub)}
 \url{\CoverGitHubURL}
@@ -1186,88 +1191,9 @@ Arquiteturalmente, o projeto \textbf{é um framework}: frozen-spots em \texttt{t
 
 \appendix
 
-\section{Contrato AST JSON (resumo)}
-\label{app:ast-contract}
+\input{docs/report-embedded-pseudocode.tex}
 
-Representação JSON alinhada a \texttt{microservices/\_AST\_CONTRACT.md}. Raiz obrigatória: \texttt{type: "Program"}.
-
-\begin{table}[htbp]
-\centering
-\caption{Nós principais do contrato AST}
-\begin{tabular}{|l|l|}
-\hline
-\textbf{Tipo} & \textbf{Campos} \\
-\hline
-\texttt{Program} & \texttt{declarations[]} \\
-\texttt{ClassDecl} & \texttt{name}, \texttt{extends}, \texttt{members[]} \\
-\texttt{MethodDecl} & \texttt{name}, \texttt{returnType}, \texttt{parameters}, \texttt{body} \\
-\texttt{FuncDecl} & Função global \\
-\texttt{ParBlock}/\texttt{SeqBlock} & \texttt{statements[]} \\
-\texttt{NewInstance} & \texttt{className}, \texttt{arguments[]} \\
-\texttt{MethodCall} & \texttt{receiver}, \texttt{method}, \texttt{arguments[]} \\
-\texttt{SendStmt}/\texttt{ReceiveStmt} & Comunicação via canal \\
-\hline
-\end{tabular}
-\end{table}
-
-Serialização: \texttt{ast\_json.to\_dict} em \texttt{minipar-core}; consumo: \texttt{semantic\_full.analyze\_ast\_full}, \texttt{from\_dict} nos back-ends.
-
-\section{Guia de instanciação --- \texttt{CREATING\_AN\_APPLICATION.md}}
-\label{app:creating-app}
-
-Documento implementado na raiz do repositório (\texttt{CREATING\_AN\_APPLICATION.md}), consolidando:
-\begin{enumerate}
-    \item Definições: framework, instância, frozen-spot, hotspot, variante LPS;
-    \item Mapa do monorepo: framework \emph{versus} implementação de referência (\texttt{applications/});
-    \item Passo a passo numerado (6 passos da Parte~II), com exemplo Go e referência à extensão Python;
-    \item FAQ da banca: ``onde coloco meu algoritmo?'', ``preciso alterar o gateway?'';
-    \item Referência cruzada a \texttt{packages/minipar-core/EXTENDING.md} e \texttt{\_template\_backend.py}.
-\end{enumerate}
-
-Instâncias catalogadas em \texttt{applications/README.md}: interpretador, compilador C, extensão Python.
-
-\section{Checklist E2E}
-\label{app:e2e}
-
-Checklist derivado de \texttt{ACTIVITIES.md} e \texttt{docs/VALIDATION.md} (\textbf{15/15 PASS}, 8/jun/2026):
-\begin{itemize}
-    \item[\checkmark] \texttt{docker compose up --build} --- stack completa;
-    \item[\checkmark] \texttt{./scripts/validate-all.sh} --- evidência JSON;
-    \item[\checkmark] \texttt{POST /api/v1/process} --- INTERPRETER, C, RUST, ASSEMBLY, PYTHON;
-    \item[\checkmark] Fixtures \texttt{01}--\texttt{16} --- parse, semântica, codegen, canais;
-    \item[\checkmark] Modo \texttt{DISTRIBUTED\_SOCKETS} --- workers MiniPar + menu \texttt{14};
-    \item[\checkmark] Fractal Sierpinski (\texttt{13\_sierpinski.minipar});
-    \item[\checkmark] Extensão Python (\texttt{16\_codegen\_python}) --- TAC $\rightarrow$ Python + \texttt{python3};
-    \item[\checkmark] \texttt{GET /api/v1/variants} e \texttt{/recommendations} na UI.
-\end{itemize}
-
-\section{Roteiro de banca --- \texttt{docs/BANCA\_NARRATIVE.md}}
-\label{app:banca-narrative}
-
-Roteiro oral (~15--20 min) em \texttt{docs/BANCA\_NARRATIVE.md}, estruturado em seis blocos:
-\begin{enumerate}
-    \item Framework \emph{versus} gerador (Hollywood, frozen-spots);
-    \item Três instâncias de referência + extensão Python ao vivo;
-    \item Processo de criação de aplicação (6 passos, \texttt{\_template\_backend.py});
-    \item LPS e frontend como configuração de produto;
-    \item Compiladores, BNF e mapa de reuso 2025.1 $\rightarrow$ 2026.1;
-    \item Testes obrigatórios (fractal, 3 máquinas, OO+C, Python) com honestidade sobre limitações.
-\end{enumerate}
-
-Inclui tabela de perguntas esperadas na banca e frases-chave para demonstração.
-
-\section{Glossário}
-\label{app:glossary}
-
-\begin{description}[style=nextline]
-    \item[Frozen-spot] Trecho invariante do framework; o desenvolvedor não sobrescreve (ex.: \texttt{translate()}).
-    \item[Hotspot] Trecho variável preenchido pelo desenvolvedor da instância (ex.: corpo de \texttt{emit()}).
-    \item[Instância (de aplicação)] Configuração LPS sobre o chassi comum: stack + hotspots implementados + registry (ex.: ``Compilador C MiniPar'').
-    \item[Variabilidade] Dimensão configurável da LPS (modo, back-end, ambiente).
-    \item[Asset] Microsserviço ou módulo reutilizável em múltiplas configurações de produto.
-    \item[Binding time] Momento em que uma variante é escolhida (deploy, runtime, implement).
-    \item[Hollywood Principle] ``Don't call us, we'll call you'' --- inversão de controle; o framework invoca hotspots.
-\end{description}
+\input{docs/report-embedded-appendices.tex}
 
 \begin{thebibliography}{12}
 \bibitem{maciel2025}

@@ -22,7 +22,7 @@
 
 ## Pendências operacionais (não código)
 
-- [x] Rodar `./scripts/validate-all.sh` — **15/15 PASS** (8/jun/2026)
+- [x] Rodar `./scripts/validate-all.sh` — **16/16 PASS** (15/jun/2026)
 - [x] Compilar PDF local (`./scripts/build-pdf.sh`; artefatos no `.gitignore`)
 - [x] `./scripts/clean.sh` — limpar LaTeX/dist/caches antes do push
 - [ ] Upload opcional Overleaf (`./scripts/package-overleaf.sh` → `overleaf-report.zip`)

@@ -1,0 +1,92 @@
+{
+  "success": true,
+  "historyId": "358933c2-6a87-409b-88bb-a4314422160d",
+  "targetVariability": "PYTHON",
+  "executionMode": "LOCAL",
+  "output": "Executado com python3\nhello from Python backend\n",
+  "ast": {
+    "type": "Program",
+    "declarations": [
+      {
+        "type": "ClassDecl",
+        "name": "Main",
+        "extends": null,
+        "members": [
+          {
+            "type": "MethodDecl",
+            "name": "run",
+            "returnType": "void",
+            "isConstructor": false,
+            "parameters": [],
+            "body": {
+              "type": "Block",
+              "statements": [
+                {
+                  "type": "PrintStmt",
+                  "newline": true,
+                  "arguments": [
+                    {
+                      "type": "StringLiteral",
+                      "value": "hello from Python backend"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "symbolTable": {
+    "scopes": [
+      {
+        "name": "global",
+        "level": 0,
+        "symbols": [
+          {
+            "name": "print",
+            "kind": "function",
+            "type": "void",
+            "line": 0,
+            "parentClass": null
+          },
+          {
+            "name": "println",
+            "kind": "function",
+            "type": "void",
+            "line": 0,
+            "parentClass": null
+          },
+          {
+            "name": "input",
+            "kind": "function",
+            "type": "any",
+            "line": 0,
+            "parentClass": null
+          },
+          {
+            "name": "len",
+            "kind": "function",
+            "type": "number",
+            "line": 0,
+            "parentClass": null
+          },
+          {
+            "name": "Main",
+            "kind": "class",
+            "type": "Main",
+            "line": 0,
+            "parentClass": null
+          }
+        ]
+      }
+    ]
+  },
+  "generatedCode": "\"\"\"Gerado pelo MiniPar PythonBackend (extensão demo).\"\"\"\n\ndef Main_run():\n    print(\"hello from Python backend\")\n\nif __name__ == \"__main__\":\n    Main_run()\n",
+  "pipelineSteps": [
+    "ms-front-end: parse",
+    "ms-semantic: analyze",
+    "PYTHON: generate"
+  ]
+}

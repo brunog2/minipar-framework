@@ -1,0 +1,31 @@
+% Apêndices embutidos — sem referência a documentação externa
+
+\section{Contrato de árvore sintática abstrata e mensagens REST}
+\label{app:ast-contract}
+
+\input{docs/report-embedded-contracts.tex}
+
+\section{Processo de instanciação de nova variante de produto}
+\label{app:creating-app}
+
+A criação de uma nova configuração de produto sobre o \emph{MiniPar Framework} pressupõe a reutilização integral do núcleo compartilhado (\texttt{minipar-core}, gateway central, microsserviços de análise léxica, sintática e semântica, bem como a orquestração por contêineres). O desenvolvedor da instância implementa exclusivamente os pontos de adaptação previstos pelo padrão \emph{Template Method}, materializados nos métodos \texttt{emit} e \texttt{finalize} da classe derivada de \texttt{AbstractBackendTranslator}. Em seguida, encapsula-se a lógica em um microsserviço autônomo que expõe o endpoint REST de geração ou execução, no mesmo molde do serviço de geração de código em linguagem C. O registro da nova variante no vetor \texttt{BACKEND\_REGISTRY}, a definição da variável de ambiente correspondente e a inclusão do serviço no arquivo de composição de contêineres completam a configuração em tempo de implantação. Por fim, a interface de seleção de variabilidade deve contemplar o novo valor de \texttt{targetVariability}, de modo que o usuário final possa escolher a variante em tempo de execução sem alteração do algoritmo de orquestração.
+
+As instâncias de referência atualmente disponíveis compreendem o interpretador direto sobre a árvore sintática abstrata, o compilador com saída em linguagem C integrado ao compilador \texttt{gcc} com otimização de segundo nível, e a extensão experimental com geração de código Python, esta última destinada a demonstrar a extensibilidade do framework sem modificação dos trechos invariantes.
+
+\section{Protocolo de validação e evidências de execução}
+\label{app:e2e}
+
+A validação de ponta a ponta do sistema executou-se mediante o script automatizado \texttt{validate-all.sh}, com a stack completa em execução via \emph{Docker Compose}. Em quinze de junho de 2026, obteve-se aprovação em dezesseis verificações, entre as quais se incluem a saída do interpretador para o exemplo \texttt{08\_interpreter\_ok}, a detecção de erro sintático no exemplo \texttt{05\_parse\_extends\_missing}, a compilação com \texttt{rustc} para o exemplo \texttt{12\_codegen\_rust\_stub}, a geração do tapete de Sierpinski no exemplo \texttt{13\_sierpinski}, a coordenação distribuída nos modos legado e por menu MiniPar (\texttt{14\_distributed\_menu}), a verificação semântica de herança inválida, a geração de código C e Python, o teste de canais por soquete TCP no exemplo \texttt{15\_channels}, e a consulta aos endpoints de variantes, recomendações e saúde agregada dos microsserviços. As saídas textuais dos testes distribuído e de canais encontram-se nas Listagens~\ref{lst:evidence-distributed} e~\ref{lst:evidence-channels}.
+
+\section{Glossário}
+\label{app:glossary}
+
+\begin{description}[style=nextline]
+    \item[Trecho invariante (\emph{frozen-spot})] Segmento do framework que o desenvolvedor da instância não substitui, como o método \texttt{translate} e a orquestração do gateway.
+    \item[Ponto de adaptação (\emph{hotspot})] Segmento variável preenchido na instância, em especial \texttt{emit} e \texttt{finalize}.
+    \item[Instância de aplicação] Configuração da linha de produto sobre o chassi comum, compreendendo contêineres, pontos de adaptação implementados e registro de variantes.
+    \item[Variabilidade] Dimensão configurável da linha de produto, como modo de execução, back-end de tradução e ambiente local ou distribuído.
+    \item[\emph{Asset}] Microsserviço ou módulo reutilizável em múltiplas configurações de produto.
+    \item[\emph{Binding time}] Momento em que uma variante é vinculada, seja em tempo de implementação, implantação ou execução.
+    \item[Princípio de Hollywood] Forma de inversão de controle na qual o framework invoca os pontos de adaptação do desenvolvedor, e não o inverso.
+\end{description}

@@ -3,6 +3,7 @@ import {
   Component,
   inject,
   input,
+  OnDestroy,
   OnInit,
   signal,
 } from '@angular/core';
@@ -11,7 +12,6 @@ import { MatChipsModule } from '@angular/material/chips';
 
 import { ServiceHealth } from '../models/process.models';
 import { CompilerApiService } from '../services/compiler-api.service';
-import { environment } from '../../environments/environment';
 
 const DEFAULT_SERVICES: ServiceHealth[] = [
   { name: 'api-gateway', port: 3000, status: 'unknown' },
@@ -25,6 +25,8 @@ const DEFAULT_SERVICES: ServiceHealth[] = [
   { name: 'ms-codegen-python', port: 3008, status: 'unknown' },
 ];
 
+const REFRESH_MS = 30_000;
+
 @Component({
   selector: 'app-service-status',
   imports: [MatCardModule, MatChipsModule],
@@ -36,7 +38,11 @@ const DEFAULT_SERVICES: ServiceHealth[] = [
       <mat-card-content>
         @for (svc of services(); track svc.name) {
           <mat-chip-set>
-            <mat-chip [class.ok]="svc.status === 'ok'">
+            <mat-chip
+              [class.ok]="svc.status === 'ok'"
+              [class.down]="svc.status === 'down'"
+              [class.muted]="svc.status === 'unknown' || svc.status === 'unconfigured'"
+            >
               {{ svc.name }} :{{ svc.port }} — {{ svc.status }}
             </mat-chip>
           </mat-chip-set>
@@ -47,11 +53,15 @@ const DEFAULT_SERVICES: ServiceHealth[] = [
   styles: `
     .status-card { margin-top: 1rem; }
     mat-chip.ok { --mdc-chip-label-text-color: #2e7d32; }
+    mat-chip.down { --mdc-chip-label-text-color: #c62828; }
+    mat-chip.muted { --mdc-chip-label-text-color: #757575; }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ServiceStatusComponent implements OnInit {
+export class ServiceStatusComponent implements OnInit, OnDestroy {
   private readonly api = inject(CompilerApiService);
+  private refreshTimer?: ReturnType<typeof setInterval>;
+
   readonly compact = input(false);
   readonly services = signal<ServiceHealth[]>(DEFAULT_SERVICES);
   readonly recommendation = signal<string | null>(null);
@@ -61,20 +71,28 @@ export class ServiceStatusComponent implements OnInit {
       next: (rec) => this.recommendation.set(rec.reason),
       error: () => this.recommendation.set(null),
     });
-    this.probeGateway();
+    this.loadHealth();
+    this.refreshTimer = setInterval(() => this.loadHealth(), REFRESH_MS);
   }
 
-  private probeGateway(): void {
-    const gateway = environment.apiUrl.replace(/\/$/, '');
-    fetch(`${gateway}/health`)
-      .then((r) => (r.ok ? 'ok' : 'down'))
-      .then((status) => {
+  ngOnDestroy(): void {
+    if (this.refreshTimer) {
+      clearInterval(this.refreshTimer);
+    }
+  }
+
+  private loadHealth(): void {
+    this.api.getServicesHealth().subscribe({
+      next: (list) => this.services.set(list),
+      error: () => {
         this.services.update((list) =>
           list.map((s) =>
-            s.name === 'api-gateway' ? { ...s, status } : s,
+            s.name === 'api-gateway'
+              ? { ...s, status: 'down' }
+              : { ...s, status: 'unknown' },
           ),
         );
-      })
-      .catch(() => undefined);
+      },
+    });
   }
 }

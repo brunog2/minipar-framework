@@ -63,6 +63,7 @@ export MINIPAR_API=http://localhost:3000   # padrão do validate-all.sh
 | **5** | E5 | Codegen C | Ex. `11` · C · LOCAL | `gcc -O2` |
 | **5** | E12 | OO + C | Ex. `09` · C · LOCAL | `woof` + gcc |
 | **6** | E9 | Extensão Python | Ex. `16` · PYTHON · LOCAL | `hello from Python backend` |
+| **6** | — | Health agregado MS | `GET /api/v1/services/health` | todos `ok` |
 | **6** | — | Variantes LPS | `GET /api/v1/variants` | lista INTERPRETER, C, … |
 | **6** | — | Recomendações | `GET /api/v1/recommendations` | JSON com `suggestedVariability` |
 
@@ -146,7 +147,15 @@ print(generate_c(ast).output)
 
 **Esperado:** `Compiled with rustc -O` e `hello rust`.
 
-### 7. LPS — variantes e recomendações (Fase 6)
+### 7. LPS — variantes, health e recomendações (Fase 6)
+
+```bash
+curl -s http://localhost:3000/api/v1/variants | python3 -m json.tool
+curl -s http://localhost:3000/api/v1/services/health | python3 -m json.tool
+curl -s http://localhost:3000/api/v1/recommendations | python3 -m json.tool
+```
+
+**UI:** painel **Microsserviços** na sidebar (atualiza a cada 30s via gateway).
 
 ```bash
 curl -s http://localhost:3000/api/v1/variants | python3 -m json.tool

@@ -1,0 +1,139 @@
+% Especificação REST embutida — sem referência externa
+
+\subsection{Gateway central (\texttt{api-gateway})}
+
+O gateway constitui o ponto único de entrada do framework na porta 3000. Todas as requisições de processamento de programas MiniPar transitam por ele, o que preserva o princípio de inversão de controle e concentra a orquestração em um módulo invariante. O endpoint principal aceita o código-fonte, a variante de tradução desejada e o modo de execução, devolvendo a árvore sintática abstrata serializada, a tabela de símbolos, o texto de saída, o código gerado quando aplicável, o registro dos passos do pipeline e, no modo distribuído, os resultados agregados dos \emph{workers}.
+
+\begin{lstlisting}[caption={Corpo da requisição \texttt{POST /api/v1/process}}]
+{
+  "sourceCode": "class Main { void run() { println(\"ok\"); } }",
+  "targetVariability": "INTERPRETER",
+  "executionMode": "LOCAL"
+}
+\end{lstlisting}
+
+Os valores admitidos para \texttt{targetVariability} compreendem \texttt{INTERPRETER}, \texttt{C}, \texttt{CPP}, \texttt{RUST}, \texttt{ASSEMBLY} e \texttt{PYTHON}. O campo \texttt{executionMode} aceita \texttt{LOCAL} ou \texttt{DISTRIBUTED\_SOCKETS}. A resposta bem-sucedida inclui os campos \texttt{success}, \texttt{historyId}, \texttt{output}, \texttt{ast}, \texttt{symbolTable}, \texttt{generatedCode}, \texttt{pipelineSteps} e, quando pertinente, \texttt{distributedResults}.
+
+\begin{lstlisting}[caption={Trecho representativo da resposta agregada pelo gateway}]
+{
+  "success": true,
+  "targetVariability": "C",
+  "executionMode": "LOCAL",
+  "output": "Compiled with gcc -O2\nok\n",
+  "pipelineSteps": [
+    "ms-front-end: parse",
+    "ms-semantic: analyze",
+    "ms-codegen-c: generate"
+  ],
+  "generatedCode": "/* program.c emitido pelo SimpleCCodeGenerator */"
+}
+\end{lstlisting}
+
+O endpoint \texttt{GET /api/v1/variants} expõe as variantes registradas no vetor central de back-ends, permitindo que a interface de seleção de variabilidade se atualize sem alteração de código quando uma nova instância é adicionada. O endpoint \texttt{GET /api/v1/recommendations} consulta o histórico de compilações para sugerir configurações frequentes. O endpoint \texttt{GET /api/v1/services/health} agrega o estado de saúde de cada microsserviço configurado, consultando individualmente o recurso \texttt{/health} de cada contêiner.
+
+\subsection{Microsserviço de análise léxica e sintática (\texttt{ms-front-end})}
+
+Este ativo reutilizável executa a primeira fase do pipeline. Recebe o texto do programa na linguagem MiniPar 2026.1 e devolve a árvore sintática abstrata em formato JSON ou uma lista estruturada de erros sintáticos. O contrato permanece independente do back-end de tradução, o que materializa o desacoplamento exigido pela linha de produto de software.
+
+\begin{lstlisting}[caption={Requisição e resposta de \texttt{POST /parse} (porta 3001)}]
+// Requisicao
+{ "sourceCode": "class Animal { string name; }" }
+
+// Resposta sem erro
+{
+  "ast": { "type": "Program", "declarations": [ /* ... */ ] },
+  "errors": []
+}
+
+// Resposta com erro sintático
+{
+  "ast": null,
+  "errors": [{ "message": "Parser error at 2:11: Expected LBRACE" }]
+}
+\end{lstlisting}
+
+\subsection{Microsserviço de análise semântica (\texttt{ms-semantic})}
+
+O analisador semântico consome exclusivamente a árvore serializada produzida na fase anterior. A função \texttt{analyze\_ast\_full} desserializa o documento JSON, percorre a árvore com o visitador \texttt{SemanticAnalyzer} e constrói a tabela de símbolos hierárquica com escopos aninhados. Erros de herança inválida, declaração duplicada de classes ou membros repetidos retornam no vetor \texttt{errors}, interrompendo o pipeline antes da invocação do back-end.
+
+\begin{lstlisting}[caption={Requisição e resposta de \texttt{POST /analyze} (porta 3002)}]
+// Requisicao
+{ "ast": { "type": "Program", "declarations": [ /* ... */ ] } }
+
+// Resposta
+{
+  "ast": { "type": "Program", "declarations": [ /* ... */ ] },
+  "symbolTable": {
+    "scopes": [
+      { "name": "global", "symbols": [ /* classes, canais, funções */ ] }
+    ]
+  },
+  "errors": []
+}
+\end{lstlisting}
+
+\subsection{Microsserviço interpretador (\texttt{ms-interpreter})}
+
+A variante de execução direta sobre a árvore sintática abstrata implementa o ponto de adaptação \texttt{Interpreter.emit} dentro de um contêiner autônomo. O endpoint \texttt{POST /execute} recebe a árvore validada e opcionalmente a tabela de símbolos, executa o interpretador orientado a objetos com suporte a blocos \texttt{par}, \texttt{seq} e canais por soquete TCP, e retorna o texto capturado na saída padrão simulada.
+
+\begin{lstlisting}[caption={Contrato de \texttt{POST /execute} (porta 3003)}]
+// Requisicao
+{
+  "ast": { "type": "Program", "declarations": [ /* ... */ ] },
+  "symbolTable": { "scopes": [ /* ... */ ] },
+  "executionMode": "LOCAL",
+  "target": "INTERPRETER"
+}
+
+// Resposta
+{ "output": "woof\n", "exitCode": 0 }
+\end{lstlisting}
+
+\subsection{Microsserviços de geração de código}
+
+Os back-ends de compilação compartilham o mesmo contrato de entrada: árvore sintática abstrata validada e tabela de símbolos. A diferença reside no ponto de adaptação implementado em cada instância. O serviço \texttt{ms-codegen-c} (porta 3004) produz código em linguagem C, compila com \texttt{gcc -O2} e retorna saída e artefato gerado. O serviço \texttt{ms-codegen-rust} (porta 3005) emite código Rust e invoca \texttt{rustc} quando disponível. O serviço \texttt{ms-codegen-arm} (porta 3006) gera assembly ARMv7 a partir da representação intermediária. O serviço \texttt{ms-codegen-python} (porta 3008), configurado como extensão da linha de produto, demonstra a instanciação de nova variante sem alteração dos trechos invariantes do núcleo.
+
+\begin{lstlisting}[caption={Contrato comum \texttt{POST /generate}}]
+// Requisicao
+{
+  "ast": { "type": "Program", "declarations": [ /* ... */ ] },
+  "symbolTable": { "scopes": [ /* ... */ ] }
+}
+
+// Resposta tipica (back-end C)
+{
+  "output": "Compiled with gcc -O2\nok\n",
+  "generatedCode": "int main(void) { /* ... */ }",
+  "exitCode": 0
+}
+\end{lstlisting}
+
+O back-end C++ reutiliza o mesmo contêiner e serviço do back-end C, alterando apenas o compilador invocado para \texttt{g++} com o sinalizador \texttt{-std=c++17}, conforme a classe \texttt{CppBackend} derivada por herança.
+
+\subsection{Coordenador de paralelismo (\texttt{ms-parallel-coord})}
+
+Quando o modo de execução \texttt{DISTRIBUTED\_SOCKETS} é selecionado e o programa-fonte não utiliza canais de comunicação distribuídos, o gateway encaminha a coordenação ao serviço na porta 3007. Este componente dispara, em paralelo, requisições de execução aos três \emph{workers} socket nas portas 9001 a 9003, cada um executando um programa MiniPar independente (\texttt{worker\_quicksort.minipar}, \texttt{worker\_matrix.minipar}, \texttt{worker\_factorial.minipar}). O protocolo de transporte consiste no envio do comando textual \texttt{RUN} seguido da leitura de um documento JSON com os campos \texttt{role}, \texttt{data}, \texttt{machine}, \texttt{ip} e \texttt{port}.
+
+\begin{lstlisting}[caption={Requisição e resposta de \texttt{POST /coordinate}}]
+// Requisicao (hosts opcionais; padrão: três workers do Compose)
+{
+  "executionMode": "DISTRIBUTED_SOCKETS",
+  "ast": { "type": "Program", "declarations": [] }
+}
+
+// Resposta
+{
+  "output": "=== Coordenador Distribuido ===\n[PC1] QuickSort: ...\n...",
+  "results": [
+    { "role": "quicksort", "machine": "PC1", "data": "...", "ip": "172.x.x.x", "port": 9001 },
+    { "role": "matrix", "machine": "PC2", "data": "...", "ip": "172.x.x.x", "port": 9002 },
+    { "role": "factorial", "machine": "PC3", "data": "...", "ip": "172.x.x.x", "port": 9003 }
+  ]
+}
+\end{lstlisting}
+
+Quando o programa-fonte declara \texttt{c\_channel} e operações \texttt{send} ou \texttt{receive}, o interpretador estabelece comunicação direta entre processos por meio do módulo \texttt{socket\_channel.py}, dispensando o coordenador legado. O programa \texttt{14\_distributed\_menu.minipar} exemplifica o menu central que dispara os três \emph{workers}; o programa \texttt{15\_channels.minipar} valida a passagem de valor inteiro entre processos locais com saída esperada \texttt{42}.
+
+\subsection{Tratamento de erros e encadeamento do pipeline}
+
+O gateway interrompe o encadeamento na primeira fase que retorna erro. Erros sintáticos originam-se em \texttt{ms-front-end} com \texttt{ast} nulo; erros semânticos em \texttt{ms-semantic} com vetor \texttt{errors} não vazio; falhas de compilação externa propagam-se a partir do campo \texttt{exitCode} distinto de zero no \texttt{TranslationResult}. Cada passo bem-sucedido registra-se em \texttt{pipelineSteps}, o que permite auditoria da execução e reprodução dos testes documentados na Seção de validação.

@@ -1,0 +1,91 @@
+{
+  "success": true,
+  "historyId": "ee78db14-b8e3-4aa7-b42d-3f16e2686b98",
+  "targetVariability": "INTERPRETER",
+  "executionMode": "LOCAL",
+  "output": "ok\n",
+  "ast": {
+    "type": "Program",
+    "declarations": [
+      {
+        "type": "ClassDecl",
+        "name": "Main",
+        "extends": null,
+        "members": [
+          {
+            "type": "MethodDecl",
+            "name": "run",
+            "returnType": "void",
+            "isConstructor": false,
+            "parameters": [],
+            "body": {
+              "type": "Block",
+              "statements": [
+                {
+                  "type": "PrintStmt",
+                  "newline": true,
+                  "arguments": [
+                    {
+                      "type": "StringLiteral",
+                      "value": "ok"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "symbolTable": {
+    "scopes": [
+      {
+        "name": "global",
+        "level": 0,
+        "symbols": [
+          {
+            "name": "print",
+            "kind": "function",
+            "type": "void",
+            "line": 0,
+            "parentClass": null
+          },
+          {
+            "name": "println",
+            "kind": "function",
+            "type": "void",
+            "line": 0,
+            "parentClass": null
+          },
+          {
+            "name": "input",
+            "kind": "function",
+            "type": "any",
+            "line": 0,
+            "parentClass": null
+          },
+          {
+            "name": "len",
+            "kind": "function",
+            "type": "number",
+            "line": 0,
+            "parentClass": null
+          },
+          {
+            "name": "Main",
+            "kind": "class",
+            "type": "Main",
+            "line": 0,
+            "parentClass": null
+          }
+        ]
+      }
+    ]
+  },
+  "pipelineSteps": [
+    "ms-front-end: parse",
+    "ms-semantic: analyze",
+    "INTERPRETER: execute"
+  ]
+}

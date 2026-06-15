@@ -1,0 +1,137 @@
+% Pseudocódigos e detalhamento de implementação — embutido no relatório
+
+\section{Pseudocódigos complementares dos analisadores}
+\label{app:pseudocode}
+
+\subsection{Analisador léxico por varredura com reconhecimento de padrões}
+
+O analisador léxico implementado em \texttt{lexer.py} adota varredura linear sobre o código-fonte com funções auxiliares de reconhecimento. Embora a especificação acadêmica tradicional empregue autômatos finitos, a implementação atual privilegia clareza didática e extensibilidade para tokens orientados a objetos e de paralelismo estruturado.
+
+\begin{lstlisting}[caption={Pseudocodigo do analisador lexico}]
+funcao tokenize(fonte):
+    posicao <- 0
+    enquanto posicao < comprimento(fonte):
+        ignorar espacos em branco
+        se comentario detectado entao avancar e continuar
+        se digito entao emitir NUMBER_LITERAL
+        senao se aspas duplas entao emitir STRING_LITERAL
+        senao se letra ou sublinhado entao
+            lexema <- ler identificador ou palavra-chave
+            emitir tipo correspondente em KEYWORDS ou IDENTIFIER
+        senao
+            emitir operador ou delimitador de tabela fixa
+    emitir EOF
+    retornar lista de tokens
+\end{lstlisting}
+
+\subsection{Analisador sintático descendente recursivo}
+
+O analisador sintático consome a lista de tokens produzida na fase anterior e constrói a árvore sintática abstrata por meio de um conjunto de funções recursivas, uma para cada não-terminal da gramática BNF. A precedência de expressões materializa-se na cadeia de chamadas de \texttt{assignment}, \texttt{logical\_or}, \texttt{additive} e demais níveis, conforme a gramática da Seção de especificação da linguagem.
+
+\begin{lstlisting}[caption={Pseudocodigo simplificado de expressoes com precedencia}]
+funcao parse_expr():
+    retornar parse_assignment()
+
+funcao parse_assignment():
+    no <- parse_conditional()
+    se token atual for "=" entao
+        consumir "="
+        direita <- parse_assignment()
+        retornar no de atribuicao
+    retornar no
+
+funcao parse_additive():
+    esquerda <- parse_multiplicative()
+    enquanto token em {+, -}:
+        operador <- consumir operador
+        direita <- parse_multiplicative()
+        esquerda <- no binario(esquerda, operador, direita)
+    retornar esquerda
+\end{lstlisting}
+
+\subsection{Analisador semântico e tabela de símbolos hierárquica}
+
+O visitador semântico percorre a árvore em profundidade, mantendo pilha de escopos. Cada declaração de classe registra símbolo no escopo global; membros de classe abrem escopo filho. A verificação de herança ocorre em passagem posterior, após o registro de todas as classes, garantindo que a superclasse referenciada em \texttt{extends} já conste da tabela.
+
+\begin{lstlisting}[caption={Pseudocodigo do visitador semantico}]
+funcao visitar_programa(no):
+    para cada declaracao em no.declarations:
+        visitar(declaracao)
+    para cada classe com extends:
+        se superclasse nao registrada entao
+            registrar erro semantico
+
+funcao visitar_classe(no):
+    se no.nome ja existe entao registrar erro de duplicata
+    inserir simbolo de classe no escopo global
+    abrir escopo de classe
+    para cada membro em no.members:
+        se nome de membro repetido entao registrar erro
+        visitar(membro)
+    fechar escopo de classe
+\end{lstlisting}
+
+\subsection{Geração de código de três endereços}
+
+O gerador de representação intermediária percorre a árvore e emite instruções com temporários monotonicamente numerados. Chamadas de método em contexto orientado a objetos recebem prefixo com o nome da classe para evitar colisão de símbolos na fase de emissão para linguagem C.
+
+\begin{lstlisting}[caption={Pseudocodigo de lowering para TAC}]
+funcao gerar_programa(no):
+    para cada declaracao em no.declarations:
+        gerar(declaracao)
+    emitir CALL_MAIN
+
+funcao gerar_method(no, classe_atual):
+    nome_funcao <- classe_atual + "_" + no.nome
+    emitir FUNC_BEGIN, nome_funcao
+    para cada parametro em no.parameters:
+        emitir FUNC_PARAM, parametro.nome
+    gerar(no.corpo)
+    emitir FUNC_END, nome_funcao
+
+funcao gerar_par(no):
+    emitir PAR_BEGIN
+    para cada comando em no.statements:
+        gerar(comando)
+    emitir PAR_END
+\end{lstlisting}
+
+\subsection{Emissão de código C e invocação do compilador externo}
+
+O back-end em linguagem C percorre a lista de instruções de três endereços e produz um arquivo de texto com funções auxiliares e ponto de entrada \texttt{main}. O método \texttt{finalize} grava o artefato em arquivo temporário, invoca \texttt{gcc} com otimização de segundo nível e captura a saída padrão e o código de retorno do processo filho.
+
+\begin{lstlisting}[caption={Pseudocodigo do back-end C}]
+funcao emit(ast_serializada):
+    tac <- TACGenerator.lower(ast_serializada)
+    codigo_c <- SimpleCCodeGenerator.generate(tac)
+    armazenar codigo_c internamente
+
+funcao finalize():
+    arquivo <- gravar temporario(codigo_c)
+    resultado_compilacao <- executar(["gcc", "-O2", "-lm", arquivo])
+    se codigo de retorno diferente de zero entao
+        retornar TranslationResult com mensagem de erro
+    saida <- executar(binario gerado)
+    retornar TranslationResult(saida, codigo_c, codigo de retorno)
+\end{lstlisting}
+
+\section{Registro formal dos \emph{sprints}}
+\label{app:sprints}
+
+A Tabela~\ref{tab:sprint-backlog} consolida as entregas planejadas e realizadas em cada iteração, com responsabilidade compartilhada pela equipe do projeto integrado.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Registro de entregas por sprint}
+\label{tab:sprint-backlog}
+\begin{tabularx}{\textwidth}{|c|>{\raggedright\arraybackslash}p{2.2cm}|X|>{\raggedright\arraybackslash}p{2.8cm}|}
+\hline
+\textbf{Sprint} & \textbf{Período} & \textbf{Entregas principais} & \textbf{Responsáveis} \\
+\hline
+1 & 2 a 4 de junho de 2026 & Núcleo \texttt{minipar-core}; microsserviços de análise; AST JSON; erros sintático e semântico & Equipe Compiladores \\
+2 & 3 a 5 de junho de 2026 & Módulo \texttt{translation}; interpretador; geradores C, Rust e ARM; orquestração HTTP & Equipe Reuso \\
+3 & 5 a 7 de junho de 2026 & Coordenador distribuído; workers socket; fractal Sierpinski; extensão Python & Equipe LPS \\
+\hline
+\end{tabularx}
+\end{table}

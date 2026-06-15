@@ -7,6 +7,10 @@ TMP="$(mktemp -d)"
 
 mkdir -p "${TMP}/docs/figures/ui"
 cp "${ROOT}/report.tex" "${TMP}/"
+cp "${ROOT}/docs/report-embedded-contracts.tex" "${TMP}/docs/"
+cp "${ROOT}/docs/report-embedded-appendices.tex" "${TMP}/docs/"
+cp "${ROOT}/docs/report-embedded-api.tex" "${TMP}/docs/"
+cp "${ROOT}/docs/report-embedded-pseudocode.tex" "${TMP}/docs/"
 cp "${ROOT}/docs/report-cover-info.tex" "${TMP}/docs/"
 cp "${ROOT}/docs/figures/"*.png "${TMP}/docs/figures/" 2>/dev/null || true
 cp "${ROOT}/docs/figures/ui/"*.png "${TMP}/docs/figures/ui/" 2>/dev/null || true

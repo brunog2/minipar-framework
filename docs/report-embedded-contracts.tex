@@ -1,0 +1,60 @@
+% Conteúdo embutido: contratos JSON e comunicação entre microsserviços
+
+\subsection{Contrato de representação da árvore sintática abstrata}
+
+A comunicação entre os microsserviços do pipeline restringe-se a mensagens no formato \emph{JavaScript Object Notation} (JSON). O documento raiz deve declarar obrigatoriamente o campo \texttt{type} com valor \texttt{Program}, seguido do vetor \texttt{declarations}, que agrega declarações de classes, funções, variáveis globais e canais. A serialização produzida pelo analisador sintático utiliza o módulo \texttt{ast\_json.to\_dict}; o analisador semântico e os geradores de código consomem a estrutura por meio de \texttt{ast\_from\_json.from\_dict}.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Nós principais do contrato de árvore sintática abstrata em JSON}
+\label{tab:ast-contract-nodes}
+\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{3.2cm}|X|}
+\hline
+\textbf{Tipo} & \textbf{Campos e semântica} \\
+\hline
+\texttt{Program} & Raiz do documento; contém \texttt{declarations[]} \\
+\texttt{ClassDecl} & \texttt{name}, \texttt{extends} (opcional), \texttt{members[]} \\
+\texttt{MethodDecl} & \texttt{name}, \texttt{returnType}, \texttt{parameters}, \texttt{body} \\
+\texttt{FuncDecl} & Função global com tipo de retorno e corpo \\
+\texttt{ParBlock} / \texttt{SeqBlock} & Blocos de paralelismo e sequência; \texttt{statements[]} \\
+\texttt{SendStmt} / \texttt{ReceiveStmt} & Comunicação por canal; identificador do canal e expressão \\
+\texttt{ChannelDecl} & Declaração \texttt{s\_channel} ou \texttt{c\_channel} \\
+\texttt{NewInstance} & Instanciação \texttt{new}; \texttt{className}, \texttt{arguments[]} \\
+\texttt{MethodCall} & Chamada de método; receptor, nome e argumentos \\
+\hline
+\end{tabularx}
+\end{table}
+
+\begin{lstlisting}[caption={Exemplo mínimo de documento JSON para uma classe com herança}]
+{
+  "type": "Program",
+  "declarations": [{
+    "type": "ClassDecl",
+    "name": "Dog",
+    "extends": "Animal",
+    "members": [{
+      "type": "MethodDecl",
+      "name": "bark",
+      "returnType": "void",
+      "parameters": [],
+      "body": { "type": "Block", "statements": [] }
+    }]
+  }]
+}
+\end{lstlisting}
+
+\subsection{Contrato de resposta dos geradores de código}
+
+O resultado de qualquer variante de tradução materializa-se na estrutura \texttt{TranslationResult}, composta pelos campos \texttt{output} (texto emitido na execução), \texttt{code} (artefato gerado, quando aplicável) e \texttt{exit\_code} (código de retorno do processo externo de compilação ou interpretação). O acoplamento entre microsserviços mantém-se reduzido: o analisador semântico não conhece o back-end de destino, e os geradores de código não reimplementam a análise léxica ou sintática.
+
+\begin{lstlisting}[caption={Corpo típico de requisição ao gateway central}]
+POST /api/v1/process
+Content-Type: application/json
+
+{
+  "sourceCode": "class Main { void run() { println(\"ok\"); } }",
+  "targetVariability": "INTERPRETER",
+  "executionMode": "LOCAL"
+}
+\end{lstlisting}

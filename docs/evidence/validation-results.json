@@ -70,14 +70,14 @@
       "id": "E4",
       "name": "08_interpreter_ok.minipar",
       "status": "PASS",
-      "detail": "=== Menu Coordenador — Paralelismo Real (3 Máquinas) ===\nThreads como processos independentes · comunicação via sockets TCP\n\n[PC1 — QuickSort (114a8d683536:9001)] QuickSort PC1\n[64,34,25,12,22,11,90] -> [11,12,22,25,34,64,90]\n[PC2 — Multiplicação de Matrizes (b56d8ebf6034:9002)] Matriz 2x2 PC2\nA=[[1,2],[3,4]] x B=[[5,6],[7,8]] = [[19,22],[43,50]]\n[PC3 — Fatorial (d589e4c08d81:9003)] Fatorial PC3\n3"
+      "detail": "=== Menu Coordenador — Paralelismo Real (3 Máquinas) ===\nThreads como processos independentes · comunicação via sockets TCP\n\n[PC1 — QuickSort (c41305948de1:9001)] QuickSort PC1\n[64,34,25,12,22,11,90] -> [11,12,22,25,34,64,90]\n[PC2 — Multiplicação de Matrizes (f7bc0d4810b7:9002)] Matriz 2x2 PC2\nA=[[1,2],[3,4]] x B=[[5,6],[7,8]] = [[19,22],[43,50]]\n[PC3 — Fatorial (167c730aac65:9003)] Fatorial PC3\n3"
     },
     {
       "phase": "3",
       "id": "E10",
       "name": "14_distributed_menu.minipar",
       "status": "PASS",
-      "detail": "=== Menu Coordenador — Paralelismo Real (3 Máquinas) ===\n[PC1 114a8d683536:9001 quicksort] QuickSort PC1\n[64,34,25,12,22,11,90] -> [11,12,22,25,34,64,90]\n[PC2 b56d8ebf6034:9002 matrix] Matriz 2x2 PC2\nA=[[1,2],[3,4]] x B=[[5,6],[7,8]] = [[19,22],[43,50]]\n[PC3 d589e4c08d81:9003 factorial] Fatorial PC3\n3628800\n"
+      "detail": "=== Menu Coordenador — Paralelismo Real (3 Máquinas) ===\n[PC1 c41305948de1:9001 quicksort] QuickSort PC1\n[64,34,25,12,22,11,90] -> [11,12,22,25,34,64,90]\n[PC2 f7bc0d4810b7:9002 matrix] Matriz 2x2 PC2\nA=[[1,2],[3,4]] x B=[[5,6],[7,8]] = [[19,22],[43,50]]\n[PC3 167c730aac65:9003 factorial] Fatorial PC3\n3628800\n"
     },
     {
       "phase": "4",
@@ -105,7 +105,14 @@
       "id": "GET recommendations",
       "name": "GET recommendations",
       "status": "PASS",
-      "detail": "{'suggestedVariability': 'INTERPRETER', 'suggestedMode': 'LOCAL', 'reason': 'Com base em 100 execuções recentes, INTERPRETER + LOCAL teve melhor taxa de sucesso.', 'totalRuns': 100, 'errorRate': 0.32}"
+      "detail": "{'suggestedVariability': 'INTERPRETER', 'suggestedMode': 'LOCAL', 'reason': 'Com base em 100 execuções recentes, INTERPRETER + LOCAL teve melhor taxa de sucesso.', 'totalRuns': 100, 'errorRate': 0.23}"
+    },
+    {
+      "phase": "6",
+      "id": "GET services health",
+      "name": "GET services health",
+      "status": "PASS",
+      "detail": "[{'name': 'api-gateway', 'port': 3000, 'status': 'ok'}, {'name': 'ms-front-end', 'port': 3001, 'status': 'ok'}, {'name': 'ms-semantic', 'port': 3002, 'status': 'ok'}, {'name': 'ms-interpreter', 'port'"
     }
   ]
 }

@@ -42,10 +42,12 @@ export interface RecommendationResponse {
   errorRate: number;
 }
 
+export type ServiceHealthStatus = 'ok' | 'down' | 'unconfigured' | 'unknown';
+
 export interface ServiceHealth {
   name: string;
   port: number;
-  status: string;
+  status: ServiceHealthStatus;
 }
 
 export interface DistributedWorkerResult {

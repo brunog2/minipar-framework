@@ -1,0 +1,115 @@
+{
+  "success": true,
+  "historyId": "98038f3e-7c6f-4c67-a869-3071651cef0b",
+  "targetVariability": "INTERPRETER",
+  "executionMode": "LOCAL",
+  "output": "42\n",
+  "ast": {
+    "type": "Program",
+    "declarations": [
+      {
+        "type": "ClassDecl",
+        "name": "Main",
+        "extends": null,
+        "members": [
+          {
+            "type": "MethodDecl",
+            "name": "run",
+            "returnType": "void",
+            "isConstructor": false,
+            "parameters": [],
+            "body": {
+              "type": "Block",
+              "statements": [
+                {
+                  "type": "ChannelDecl",
+                  "channelType": "s_channel",
+                  "name": "ch",
+                  "arguments": []
+                },
+                {
+                  "type": "ParBlock",
+                  "statements": [
+                    {
+                      "type": "SendStmt",
+                      "channel": "ch",
+                      "value": {
+                        "type": "NumberLiteral",
+                        "value": 42
+                      }
+                    },
+                    {
+                      "type": "ReceiveStmt",
+                      "channel": "ch",
+                      "target": "result"
+                    }
+                  ]
+                },
+                {
+                  "type": "PrintStmt",
+                  "newline": true,
+                  "arguments": [
+                    {
+                      "type": "Variable",
+                      "name": "result"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "symbolTable": {
+    "scopes": [
+      {
+        "name": "global",
+        "level": 0,
+        "symbols": [
+          {
+            "name": "print",
+            "kind": "function",
+            "type": "void",
+            "line": 0,
+            "parentClass": null
+          },
+          {
+            "name": "println",
+            "kind": "function",
+            "type": "void",
+            "line": 0,
+            "parentClass": null
+          },
+          {
+            "name": "input",
+            "kind": "function",
+            "type": "any",
+            "line": 0,
+            "parentClass": null
+          },
+          {
+            "name": "len",
+            "kind": "function",
+            "type": "number",
+            "line": 0,
+            "parentClass": null
+          },
+          {
+            "name": "Main",
+            "kind": "class",
+            "type": "Main",
+            "line": 0,
+            "parentClass": null
+          }
+        ]
+      }
+    ]
+  },
+  "pipelineSteps": [
+    "ms-front-end: parse",
+    "ms-semantic: analyze",
+    "INTERPRETER: execute"
+  ]
+}

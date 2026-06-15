@@ -1,0 +1,7 @@
+=== Menu Coordenador — Paralelismo Real (3 Máquinas) ===
+[PC1 c41305948de1:9001 quicksort] QuickSort PC1
+[64,34,25,12,22,11,90] -> [11,12,22,25,34,64,90]
+[PC2 f7bc0d4810b7:9002 matrix] Matriz 2x2 PC2
+A=[[1,2],[3,4]] x B=[[5,6],[7,8]] = [[19,22],[43,50]]
+[PC3 167c730aac65:9003 factorial] Fatorial PC3
+3628800
