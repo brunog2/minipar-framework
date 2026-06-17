@@ -10,6 +10,6 @@ export const APP_METADATA = {
     'Tópicos — Linha de Produto de Software (LPS)',
   ],
   professor: 'Dr. Arturo Hernandez Domínguez',
-  team: 'Bruno, Alan, Karlisson e Maria',
+  team: 'Bruno Gomes, Maria Aparecida da Silva Nascimento, Alan Diogo da Rocha Oliveira e Karlisson Henrique da Silva',
   year: 2026,
 } as const;

@@ -17,7 +17,7 @@ Diagramas em [Mermaid](https://mermaid.js.org/) (`.mmd`) da arquitetura do siste
 | [uml-components.mmd](./uml-components.mmd) | Componentes UML |
 | [uml-classes-framework.mmd](./uml-classes-framework.mmd) | Classes do framework |
 
-**Conformidade vs. requisitos:** [../../COMPLIANCE_AUDIT.md](../../COMPLIANCE_AUDIT.md)
+**Especificação do projeto:** [../../PROJECT_REQUIREMENTS.md](../../PROJECT_REQUIREMENTS.md)
 
 ## Status (jun/2026)
 
@@ -30,7 +30,7 @@ Diagramas em [Mermaid](https://mermaid.js.org/) (`.mmd`) da arquitetura do siste
 | `ms-codegen-rust` (:3005) | MVP |
 | `ms-codegen-arm` (:3007) | MVP |
 | `packages/minipar-core/translation` | Template Method + TAC + interpreter |
-| `ms-parallel-coord` (:3006) | 🟡 implementado; gaps em [COMPLIANCE_AUDIT.md](../../COMPLIANCE_AUDIT.md) |
+| `ms-parallel-coord` (:3006) | 🟡 implementado (workers socket) |
 | `worker-quicksort` / `matrix` / `factorial` (:9001–9003) | Implementado (socket) |
 | `PIPELINE_MODE` | `http` |
 | `PIPELINE_BACKEND_MODE` | `http` no Docker Compose |

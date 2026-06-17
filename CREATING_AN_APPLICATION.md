@@ -28,7 +28,79 @@ frontend/                         feature-panel (+1 radio button)
 
 Catálogo de instâncias existentes: [applications/README.md](applications/README.md).
 
-## 3. Passo a passo — exemplo: Compilador MiniPar → Go
+## 3. Exemplos reais de hotspots criados do zero
+
+Os dois exemplos abaixo estão no repositório, em [`packages/minipar-core/minipar_core/translation/`](packages/minipar-core/minipar_core/translation/). São instâncias LPS de referência: o framework fornece `translate()` (frozen-spot); a equipe preencheu `emit()` e `finalize()` (hotspots).
+
+### Exemplo A — Interpretador (`interpreter.py`)
+
+| Item | Valor |
+|------|-------|
+| Variante LPS | `INTERPRETER` |
+| Microsserviço | `ms-interpreter` (`POST /execute`) |
+| Arquivo hotspot | [`interpreter.py`](packages/minipar-core/minipar_core/translation/interpreter.py) |
+| Estratégia escolhida | Execução direta da AST (sem TAC, sem codegen) |
+| Exemplo MiniPar | [`08_interpreter_ok.minipar`](sources/examples/08_interpreter_ok.minipar) → saída `ok` |
+
+O hotspot `emit()` desserializa a AST, executa o programa e guarda stdout em `self._exec_output`. O `finalize()` monta o `TranslationResult`:
+
+```python
+def emit(self, ast_dict: dict) -> None:
+    program = from_dict(ast_dict)
+    if not isinstance(program, n.Program):
+        self._errors.append("Expected Program node")
+        return
+    try:
+        self._exec_output = self.execute(program)
+    except RuntimeError as exc:
+        self._runtime_errors.append(str(exc))
+        self._exec_output = ""
+
+def finalize(self) -> TranslationResult:
+    if self._runtime_errors:
+        return TranslationResult(
+            output="; ".join(self._runtime_errors),
+            exit_code=1,
+            errors=list(self._runtime_errors),
+        )
+    return TranslationResult(output=self._exec_output, exit_code=0)
+```
+
+O restante do arquivo (~500 linhas) é lógica da instância: ambientes, OO (`new`, métodos, `extends`), blocos `par`/`seq` com processos e broker TCP, canais `s_channel`/`c_channel`. Isso **não** faz parte do contrato do framework — é código livre dentro da instância.
+
+### Exemplo B — Compilador C (`c_backend.py`)
+
+| Item | Valor |
+|------|-------|
+| Variante LPS | `C` (e `CPP` via `CppBackend`) |
+| Microsserviço | `ms-codegen-c` (`POST /generate`) |
+| Arquivo hotspot | [`c_backend.py`](packages/minipar-core/minipar_core/translation/c_backend.py) |
+| Estratégia escolhida | AST → TAC → C → `gcc -O2` → executável |
+| Exemplo MiniPar | [`11_codegen_c.minipar`](sources/examples/11_codegen_c.minipar) → C gerado + stdout |
+
+O hotspot `emit()` gera código C via IR intermediário (TAC). O `finalize()` compila com `gcc -O2` e executa o binário:
+
+```python
+def emit(self, ast_dict: dict) -> None:
+    gen = TACGenerator()
+    tac = gen.lower(ast_dict)
+    c_gen = SimpleCCodeGenerator()
+    self._code = c_gen.generate(tac)
+
+def finalize(self) -> TranslationResult:
+    result = self._compile_and_run(self._code)
+    return TranslationResult(
+        output=result["output"],
+        code=self._code,
+        exit_code=result["exit_code"],
+    )
+```
+
+`_compile_and_run()` (método privado da instância) escreve `program.c`, copia `runtime/minipar_rt.{c,h}`, invoca `gcc -O2` e retorna stdout — comportamento específico desta instância, não do framework.
+
+**Contraste entre as duas instâncias:** mesma AST de entrada, mesmo `translate()` do framework, hotspots diferentes — interpretador executa; compilador C gera artefato + roda toolchain externa.
+
+## 4. Passo a passo — exemplo hipotético: Compilador MiniPar → Go
 
 ### Passo 1 — Reusar o chassi
 
@@ -95,7 +167,7 @@ Isso **não** é escrever algoritmo de compilação — é expor a variante para
 
 Mesma UI, mesma gramática, mesma AST — saída em Go.
 
-## 4. Frontend como casca LPS (frozen-spot)
+## 5. Frontend como casca LPS (frozen-spot)
 
 O Angular em `frontend/` **não** implementa hotspots de compilador. É a **instância de referência da UI LPS**:
 
@@ -123,7 +195,7 @@ curl http://localhost:3000/api/v1/variants
 # [{ "variability": "C", "label": "Codegen C" }, ...]
 ```
 
-## 5. FAQ da banca
+## 6. FAQ da banca
 
 **Onde coloco meu algoritmo?**  
 Em `emit()` e `finalize()` da sua classe que estende `AbstractBackendTranslator`.
@@ -141,20 +213,19 @@ Método abstrato = contrato (assinatura fixa, sem implementação). Hotspot = co
 Porque todas as variantes já foram implementadas pela equipe. A extensão Python (`applications/extension-python/`) demonstra o processo de adicionar uma nova.
 
 **Duas aplicações distintas?**  
-Sim — Interpretador (`INTERPRETER`) e Compilador C (`C`) são duas instâncias sobre o mesmo chassi. Só muda o microsserviço de tradução e os hotspots `emit`/`finalize`.
+Sim — Interpretador (`INTERPRETER`) e Compilador C (`C`) são duas instâncias sobre o mesmo chassi (ver [§3](#3-exemplos-reais-de-hotspots-criados-do-zero)). Só muda o microsserviço de tradução e os hotspots `emit`/`finalize`.
 
-## 6. Resposta explícita ao Arturo
+## 7. Resposta explícita ao Arturo
 
 > *"Fornecemos a estrutura; o dev preenche os hotspots."*
 
 - A estrutura está em `minipar-core` + gateway + MS de análise.
-- O código do dev **já existe** nas instâncias de referência (`c_backend.py`, `interpreter.py`, …).
+- O código do dev **já existe** nas instâncias de referência documentadas no [§3](CREATING_AN_APPLICATION.md#3-exemplos-reais-de-hotspots-criados-do-zero) (`interpreter.py`, `c_backend.py`, …).
 - Para provar extensão nova, adicionamos `PythonBackend` sem alterar frozen-spots.
-- Hotspots futuros em lexer/parser estão documentados como roadmap; MVP usa implementação default.
 
-## 7. Referências
+## 8. Referências
 
 - [EXTENDING.md](packages/minipar-core/EXTENDING.md) — contrato técnico dos hotspots
 - [applications/](applications/) — catálogo de instâncias
 - [_template_backend.py](packages/minipar-core/minipar_core/translation/_template_backend.py) — esqueleto vazio
-- [BANCA_NARRATIVE.md](docs/BANCA_NARRATIVE.md) — roteiro de apresentação
+- [interpreter.py](packages/minipar-core/minipar_core/translation/interpreter.py) · [c_backend.py](packages/minipar-core/minipar_core/translation/c_backend.py) — hotspots reais (§3)

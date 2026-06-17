@@ -1,8 +1,7 @@
 # Guia de validação — MiniPar Framework 2026.1
 
 **Última execução:** 8 de junho de 2026 — **15/15 PASS**  
-**Evidência:** [`docs/evidence/validation-results.json`](../docs/evidence/validation-results.json)  
-**Conformidade:** [`COMPLIANCE_AUDIT.md`](../COMPLIANCE_AUDIT.md)
+**Evidência:** [`docs/evidence/validation-results.json`](../docs/evidence/validation-results.json)
 
 ---
 
@@ -208,6 +207,6 @@ Evidências adicionais:
 
 ## Referências
 
-- Checklist equipe: [`ACTIVITIES.md`](../ACTIVITIES.md)
-- Auditoria: [`COMPLIANCE_AUDIT.md`](../COMPLIANCE_AUDIT.md)
-- Relatório: [`report.md`](../report.md) · [`report.tex`](../report.tex)
+- Guia de instanciação: [`CREATING_AN_APPLICATION.md`](../CREATING_AN_APPLICATION.md)
+- Relatório: [`report.tex`](../report.tex)
+- Especificação: [`PROJECT_REQUIREMENTS.md`](../PROJECT_REQUIREMENTS.md)

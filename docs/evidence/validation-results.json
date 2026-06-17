@@ -105,7 +105,7 @@
       "id": "GET recommendations",
       "name": "GET recommendations",
       "status": "PASS",
-      "detail": "{'suggestedVariability': 'INTERPRETER', 'suggestedMode': 'LOCAL', 'reason': 'Com base em 100 execuções recentes, INTERPRETER + LOCAL teve melhor taxa de sucesso.', 'totalRuns': 100, 'errorRate': 0.23}"
+      "detail": "{'suggestedVariability': 'INTERPRETER', 'suggestedMode': 'LOCAL', 'reason': 'Com base em 100 execuções recentes, INTERPRETER + LOCAL teve melhor taxa de sucesso.', 'totalRuns': 100, 'errorRate': 0.24}"
     },
     {
       "phase": "6",

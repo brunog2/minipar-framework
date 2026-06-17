@@ -2,21 +2,42 @@
 
 Framework para compiladores e interpretadores da linguagem **MiniPar 2026.1** (OO + paralelismo real), organizado como **Linha de Produto de Software (LPS)** com arquitetura de **microsserviços**.
 
-## Como estender o framework
+## Documentação principal — framework e hotspots
 
-- **[CREATING_AN_APPLICATION.md](CREATING_AN_APPLICATION.md)** — passo a passo para criar nova instância (framework vs gerador, FAQ banca)
-- **[docs/WHAT_REMAINS.md](docs/WHAT_REMAINS.md)** — o que ainda falta vs. requisitos do Arturo
-- **[report.md](report.md)** · **[report.tex](report.tex)** — relatório integrado (Markdown + PDF/Overleaf)
-- **[applications/](applications/)** — catálogo de instâncias de referência + extensão Python
-- **[packages/minipar-core/EXTENDING.md](packages/minipar-core/EXTENDING.md)** — contrato de hotspots (`emit`/`finalize`)
-- **[packages/minipar-core/minipar_core/translation/_template_backend.py](packages/minipar-core/minipar_core/translation/_template_backend.py)** — esqueleto vazio para copiar
+> **Para o professor:** como criar uma nova instância LPS e onde estão os hotspots reais implementados no projeto.
+
+| Documento | Conteúdo |
+|-----------|----------|
+| **[CREATING_AN_APPLICATION.md](CREATING_AN_APPLICATION.md)** | Guia completo: frozen-spots vs hotspots, **dois exemplos reais** (`interpreter.py`, `c_backend.py`), passo a passo para nova variante |
+| [packages/minipar-core/EXTENDING.md](packages/minipar-core/EXTENDING.md) | Contrato técnico (`emit`/`finalize`, Template Method) |
+| [packages/minipar-core/minipar_core/translation/](packages/minipar-core/minipar_core/translation/) | Código-fonte dos hotspots (backends de tradução) |
+| [applications/](applications/) | Catálogo de instâncias de referência + extensão Python |
+| [report.tex](report.tex) | Relatório técnico integrado (PDF via Overleaf) |
+
+Hotspots de referência já no repositório:
+
+- **Interpretador** — [`interpreter.py`](packages/minipar-core/minipar_core/translation/interpreter.py) (`INTERPRETER`)
+- **Compilador C** — [`c_backend.py`](packages/minipar-core/minipar_core/translation/c_backend.py) (`C` / `CPP`)
+
+Detalhes, trechos de código e exemplos MiniPar: **[CREATING_AN_APPLICATION.md §3](CREATING_AN_APPLICATION.md#3-exemplos-reais-de-hotspots-criados-do-zero)**.
+
+## Equipe
+
+| Integrante | Disciplinas |
+|------------|-------------|
+| Bruno Gomes | Compiladores, Reuso de Software, Tópicos em Engenharia de Software |
+| Maria Aparecida da Silva Nascimento | Compiladores |
+| Alan Diogo da Rocha Oliveira | Compiladores |
+| Karlisson Henrique da Silva | Reuso de Software |
+
+**Professor:** Dr. Arturo Hernandez Domínguez — UFAL / Instituto de Computação
 
 ## Pontos de variação (LPS)
 
 | Ponto de variação | Variantes |
 |-------------------|-----------|
 | Modo de execução | Interpretador, Compilador |
-| Back-end de compilação | C, C++, Rust, Assembly ARMv7, **Python (extensão demo)** |
+| Back-end de compilação | C, C++, Rust, Assembly ARMv7, Python (extensão demo) |
 | Ambiente de execução | Local, Distribuído (sockets, 3 máquinas) |
 
 ## Pipeline de dados
@@ -62,14 +83,11 @@ minipar-framework/
 ├── docs/
 │   ├── diagrams/             # Fontes Mermaid (.mmd)
 │   ├── figures/              # PNG para relatório (diagramas + ui/)
-│   ├── WHAT_REMAINS.md       # Gaps vs. Arturo + entrega
-│   └── BANCA_NARRATIVE.md
+│   └── VALIDATION.md
 ├── report.tex                # Relatório PDF (Overleaf)
-├── report.md                 # Relatório Markdown (GitHub)
-├── overleaf-report.zip       # Gerado por ./scripts/package-overleaf.sh (não versionar)
 ├── scripts/package-overleaf.sh
 ├── sources/examples/         # Fixtures 01–16
-├── COMPLIANCE_AUDIT.md       # Conformidade vs. requisitos + backlog futuro
+├── PROJECT_REQUIREMENTS.md   # Especificação das disciplinas
 └── docker-compose.yml
 ```
 
@@ -155,13 +173,11 @@ Configure `src/environments/environment.ts` se o gateway não estiver em `http:/
 | ms-codegen-c | 3004 | ✅ POST /generate (gcc -O2) |
 | ms-codegen-rust | 3005 | ✅ POST /generate (MVP) |
 | ms-codegen-arm | 3007 | ✅ POST /generate (MVP) |
-| ms-parallel-coord | 3006 | 🟡 POST /coordinate (workers socket; ver COMPLIANCE_AUDIT.md) |
+| ms-parallel-coord | 3006 | 🟡 POST /coordinate (workers socket) |
 
 Pacote compartilhado: [`packages/minipar-core/`](packages/minipar-core/) — inclui `translation/` (Template Method).
 
 Exemplos: [`sources/examples/`](sources/examples/) (01–16).
-
-**Gestão do projeto:** [COMPLIANCE_AUDIT.md](./COMPLIANCE_AUDIT.md) · [SCHEDULE.md](./SCHEDULE.md) · [ACTIVITIES.md](./ACTIVITIES.md) · [ROADMAP.md](./ROADMAP.md).
 
 ## Referências de reuso
 
@@ -182,6 +198,8 @@ curl -X POST http://localhost:3000/api/v1/process \
 
 Interface em http://localhost:4200 — botão **Executar** (ou `Ctrl+Enter` / `F5`), painel **Console** com abas Saída / Símbolos / AST. Exemplos e erros esperados: [`sources/examples/README.md`](sources/examples/README.md).
 
+Validação automatizada: [`docs/VALIDATION.md`](docs/VALIDATION.md) · `./scripts/validate-all.sh`
+
 Histórico no Postgres:
 
 ```bash
@@ -189,30 +207,11 @@ docker exec minipar-postgres psql -U minipar -d minipar \
   -c "SELECT id, status, target_variability FROM compilation_history ORDER BY created_at DESC LIMIT 5;"
 ```
 
-## Roadmap completo
-
-| Documento | Conteúdo |
-|-----------|----------|
-| [ROADMAP.md](./ROADMAP.md) | Entregas técnicas por fase |
-| [SCHEDULE.md](./SCHEDULE.md) | Cronograma e datas |
-| [ACTIVITIES.md](./ACTIVITIES.md) | Sprints, donos, checklist E2E |
-| [COMPLIANCE_AUDIT.md](./COMPLIANCE_AUDIT.md) | O que está conforme / parcial / não conforme |
-
-## Roadmap (resumo)
-
-1. ~~Implementar `ms-front-end` e `ms-semantic`~~ (Fase 1)
-2. ~~Template Method + `ms-interpreter`, `ms-codegen-c`, Rust/ARM MVP~~ (Fase 2)
-3. ~~`ms-parallel-coord` + workers socket~~ (Fase 3 — 🟡 validar E2E; ver auditoria)
-4. ~~Fractal Sierpinski (`13_sierpinski.minipar`)~~ (Fase 3 — 🟡 validar na UI + PDF)
-
 ## Entrega acadêmica
 
 | Artefato | Caminho |
 |----------|---------|
 | Relatório PDF | [report.tex](report.tex) → Overleaf via `./scripts/package-overleaf.sh` |
-| Relatório Markdown | [report.md](report.md) |
-| Conformidade | [COMPLIANCE_AUDIT.md](COMPLIANCE_AUDIT.md) |
-| Pendências | [docs/WHAT_REMAINS.md](docs/WHAT_REMAINS.md) |
-| Roteiro banca | [docs/BANCA_NARRATIVE.md](docs/BANCA_NARRATIVE.md) |
-
-Ver [PROJECT_REQUIREMENTS.md](PROJECT_REQUIREMENTS.md) — entrega **10 de junho**.
+| Guia de instanciação / hotspots | [CREATING_AN_APPLICATION.md](CREATING_AN_APPLICATION.md) |
+| Especificação do projeto | [PROJECT_REQUIREMENTS.md](PROJECT_REQUIREMENTS.md) |
+| Validação | [docs/VALIDATION.md](docs/VALIDATION.md) |

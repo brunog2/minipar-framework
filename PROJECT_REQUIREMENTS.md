@@ -1,14 +1,10 @@
 Este documento apresenta a especificação detalhada do seu projeto de conclusão para as disciplinas do professor Arturo Hernandez Dominguez, integrando os conceitos de **Compiladores**, **Reuso de Software** e **Linhas de Produto de Software (LPS/Tópicos)**.
 
-**Documentação de gestão do projeto:**
+**Documentação do projeto:**
 
-- [COMPLIANCE_AUDIT.md](./COMPLIANCE_AUDIT.md) — conformidade ✅/🟡/❌ vs. requisitos do professor  
-- [docs/WHAT_REMAINS.md](./docs/WHAT_REMAINS.md) — o que ainda falta (framework Arturo + entrega)  
-- [CREATING_AN_APPLICATION.md](./CREATING_AN_APPLICATION.md) — como criar instância a partir do framework  
-- [report.tex](./report.tex) · [report.md](./report.md) — relatório integrado (PDF + Markdown)  
-- [SCHEDULE.md](./SCHEDULE.md) — cronograma por data  
-- [ACTIVITIES.md](./ACTIVITIES.md) — sprints, responsáveis, checklist E2E  
-- [ROADMAP.md](./ROADMAP.md) — entregas técnicas por fase
+- [CREATING_AN_APPLICATION.md](./CREATING_AN_APPLICATION.md) — como criar instância a partir do framework (hotspots reais em `translation/`)
+- [report.tex](./report.tex) — relatório integrado (PDF)
+- [docs/VALIDATION.md](./docs/VALIDATION.md) — guia de validação E2E
 
 ---
 
