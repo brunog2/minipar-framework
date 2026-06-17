@@ -9,10 +9,11 @@ Framework para compiladores e interpretadores da linguagem **MiniPar 2026.1** (O
 | Documento | Conteúdo |
 |-----------|----------|
 | **[CREATING_AN_APPLICATION.md](CREATING_AN_APPLICATION.md)** | Guia completo: frozen-spots vs hotspots, **dois exemplos reais** (`interpreter.py`, `c_backend.py`), passo a passo para nova variante |
+| **[Relatório - Minipar 2026.1.pdf](<Relatório - Minipar 2026.1.pdf>)** | Relatório técnico final integrado (3 disciplinas) — **entrega em PDF** |
+| [report.tex](report.tex) | Fonte LaTeX do relatório (recompilar com `./scripts/build-pdf.sh`) |
 | [packages/minipar-core/EXTENDING.md](packages/minipar-core/EXTENDING.md) | Contrato técnico (`emit`/`finalize`, Template Method) |
 | [packages/minipar-core/minipar_core/translation/](packages/minipar-core/minipar_core/translation/) | Código-fonte dos hotspots (backends de tradução) |
 | [applications/](applications/) | Catálogo de instâncias de referência + extensão Python |
-| [report.tex](report.tex) | Relatório técnico integrado (PDF via Overleaf) |
 
 Hotspots de referência já no repositório:
 
@@ -84,7 +85,8 @@ minipar-framework/
 │   ├── diagrams/             # Fontes Mermaid (.mmd)
 │   ├── figures/              # PNG para relatório (diagramas + ui/)
 │   └── VALIDATION.md
-├── report.tex                # Relatório PDF (Overleaf)
+├── Relatório - Minipar 2026.1.pdf   # Relatório final (entrega)
+├── report.tex                         # Fonte LaTeX do relatório
 ├── scripts/package-overleaf.sh
 ├── sources/examples/         # Fixtures 01–16
 ├── PROJECT_REQUIREMENTS.md   # Especificação das disciplinas
@@ -211,7 +213,8 @@ docker exec minipar-postgres psql -U minipar -d minipar \
 
 | Artefato | Caminho |
 |----------|---------|
-| Relatório PDF | [report.tex](report.tex) → Overleaf via `./scripts/package-overleaf.sh` |
+| **Relatório PDF (entrega)** | [**Relatório - Minipar 2026.1.pdf**](<Relatório - Minipar 2026.1.pdf>) |
+| Fonte LaTeX | [report.tex](report.tex) · recompilar: `./scripts/build-pdf.sh` |
 | Guia de instanciação / hotspots | [CREATING_AN_APPLICATION.md](CREATING_AN_APPLICATION.md) |
 | Especificação do projeto | [PROJECT_REQUIREMENTS.md](PROJECT_REQUIREMENTS.md) |
 | Validação | [docs/VALIDATION.md](docs/VALIDATION.md) |

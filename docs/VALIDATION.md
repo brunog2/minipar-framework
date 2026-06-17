@@ -194,7 +194,7 @@ Após validação bem-sucedida:
 
 ```bash
 ./scripts/validate-all.sh
-./scripts/build-pdf.sh    # report.pdf + report-md.pdf + overleaf-report.zip
+./scripts/build-pdf.sh    # report.pdf + Relatório - Minipar 2026.1.pdf + overleaf-report.zip
 ```
 
 Evidências adicionais:
@@ -208,5 +208,5 @@ Evidências adicionais:
 ## Referências
 
 - Guia de instanciação: [`CREATING_AN_APPLICATION.md`](../CREATING_AN_APPLICATION.md)
-- Relatório: [`report.tex`](../report.tex)
+- Relatório PDF: [`Relatório - Minipar 2026.1.pdf`](../Relatório%20-%20Minipar%202026.1.pdf) · fonte [`report.tex`](../report.tex)
 - Especificação: [`PROJECT_REQUIREMENTS.md`](../PROJECT_REQUIREMENTS.md)

@@ -3,7 +3,8 @@ Este documento apresenta a especificação detalhada do seu projeto de conclusã
 **Documentação do projeto:**
 
 - [CREATING_AN_APPLICATION.md](./CREATING_AN_APPLICATION.md) — como criar instância a partir do framework (hotspots reais em `translation/`)
-- [report.tex](./report.tex) — relatório integrado (PDF)
+- [**Relatório - Minipar 2026.1.pdf**](./Relatório%20-%20Minipar%202026.1.pdf) — relatório integrado (entrega em PDF)
+- [report.tex](./report.tex) — fonte LaTeX (recompilar com `./scripts/build-pdf.sh`)
 - [docs/VALIDATION.md](./docs/VALIDATION.md) — guia de validação E2E
 
 ---

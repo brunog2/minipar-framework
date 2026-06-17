@@ -26,10 +26,15 @@ if [[ ! -f "${ROOT}/report.pdf" ]]; then
 fi
 echo "    OK: ${ROOT}/report.pdf ($(du -h report.pdf | cut -f1))"
 
+DELIVERY_PDF="Relatório - Minipar 2026.1.pdf"
+cp "${ROOT}/report.pdf" "${ROOT}/${DELIVERY_PDF}"
+echo "    OK: ${ROOT}/${DELIVERY_PDF} ($(du -h "${DELIVERY_PDF}" | cut -f1))"
+
 echo "==> Pacote Overleaf..."
 bash "$ROOT/scripts/package-overleaf.sh"
 
 echo ""
 echo "Artefatos:"
-echo "  - report.pdf          (relatório LaTeX integral)"
-echo "  - overleaf-report.zip (upload Overleaf)"
+echo "  - report.pdf                    (build LaTeX)"
+echo "  - Relatório - Minipar 2026.1.pdf (cópia de entrega)"
+echo "  - overleaf-report.zip           (upload Overleaf)"
